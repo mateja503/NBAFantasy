@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="NBA.Api/NBA.Api.csproj" />
   <Project Path="NBA.Data/NBA.Data.csproj" />
+  <Project Path="NBA.Services/NBA.Services.csproj" />
   <Project Path="NBAFantasy/NBAFantasy.csproj" />
 </Solution>

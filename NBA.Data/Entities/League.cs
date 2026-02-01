@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 namespace NBA.Data.Entities;
 
 public partial class League
