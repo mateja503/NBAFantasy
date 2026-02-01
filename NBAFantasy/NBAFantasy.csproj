@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NBA.Api\NBA.Api.csproj" />
+    <ProjectReference Include="..\NBA.Data\NBA.Data.csproj" />
   </ItemGroup>
 
 </Project>

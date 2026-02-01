@@ -13,7 +13,7 @@ namespace NBA.Data.Context
         #region League
         public IQueryable<League> GetAllLeagues()
         {
-            return Leagues.AsNoTracking().AsQueryable();
+            return Leagues.AsQueryable();
         }
         public async Task<League> AddLeageue(League league) 
         {
@@ -32,7 +32,7 @@ namespace NBA.Data.Context
         #region Player
         public IQueryable<Player> GetAllPlayers()
         {
-            return Players.AsNoTracking().AsQueryable();
+            return Players.AsQueryable();
         }
         public async Task<Player> AddPlayer(Player player)
         {
@@ -51,7 +51,7 @@ namespace NBA.Data.Context
         #region RangList
         public IQueryable<Ranglist> GetAllRankLists()
         {
-            return Ranglists.AsNoTracking().AsQueryable();
+            return Ranglists.AsQueryable();
         }
 
         public async Task<Ranglist> AddRankList(Ranglist rankList)
@@ -72,7 +72,7 @@ namespace NBA.Data.Context
         #region Team
         public IQueryable<Team> GetAllTeams()
         {
-            return Teams.AsNoTracking().AsQueryable();
+            return Teams.AsQueryable();
         }
         public async Task<Team> AddTeam(Team team)
         {
@@ -91,7 +91,7 @@ namespace NBA.Data.Context
         #region LeageueTeam
         public IQueryable<Leagueteam> GetAllLeagueTeams()
         {
-            return Leagueteams.AsNoTracking().AsQueryable();
+            return Leagueteams.AsQueryable();
         }
         public async Task<Leagueteam> AddLeagueTeam(Leagueteam leagueTeam)
         {
@@ -110,7 +110,7 @@ namespace NBA.Data.Context
         #region RanglistTeam
         public IQueryable<Ranglistteam> GetAllRanglistTeams()
         {
-            return Ranglistteams.AsNoTracking().AsQueryable();
+            return Ranglistteams.AsQueryable();
         }   
         public async Task<Ranglistteam> AddRanglistTeam(Ranglistteam ranglistTeam)
         {
@@ -130,7 +130,7 @@ namespace NBA.Data.Context
 
         public IQueryable<Ranglistuser> GetRanglistusers() 
         {
-            return Ranglistusers.AsNoTracking().AsQueryable();
+            return Ranglistusers.AsQueryable();
         }
         public async Task<Ranglistuser> AddRanglistuser(Ranglistuser ranglistuser) 
         {
