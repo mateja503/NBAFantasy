@@ -15,8 +15,21 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi();
 
+builder.Services.AddCors(options => 
+{
+    options.AddPolicy("AngularPolicy", policy => 
+    {
+        policy.WithOrigins("https://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyOrigin()
+        .AllowAnyMethod();
+    });
+});
+
 
 var app = builder.Build();
+
+app.UseCors("AngularPolicy");
 
 if (app.Environment.IsDevelopment())
 {
@@ -38,6 +51,7 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
 
 app.UseAuthorization();
 
