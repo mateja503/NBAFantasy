@@ -15,7 +15,7 @@ namespace NBA.Data.Context
         {
             return Leagues.AsQueryable();
         }
-        public async Task<League> AddLeageue(League league) 
+        public async Task<League> AddLeague(League league) 
         {
             var e = await Leagues.AddAsync(league);
             _ = await SaveChangesAsync();

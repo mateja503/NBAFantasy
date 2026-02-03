@@ -1,15 +1,15 @@
+using Microsoft.EntityFrameworkCore;
 using NBA.Api.Endpoints;
 using NBA.Data.Context;
 using Scalar.AspNetCore;
-using System.Runtime.Intrinsics.X86;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddNpgsql<NbaFantasyContext>(connectionString);
-
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//builder.Services.AddNpgsql<NbaFantasyContext>(connectionString);
+builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.AddAuthorization();
 

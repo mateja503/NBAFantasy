@@ -21,13 +21,16 @@ namespace NBA.Api.Endpoints
 
             league.MapPost("/add", async (LeagueInsertRequest request,NbaFantasyContext context, [FromHeader] string userId) =>
             {
-                League leagues = new League
+                League entity = new League
                 {
                     Name = request.Name ?? "UNKOWN",
                     Usercreated = userId,
                     Tscreated = DateTime.UtcNow
                 };
-                return Results.Ok(leagues);
+
+                entity = await context.AddLeague(entity);
+
+                return Results.Ok(entity);
             }).WithTags("league");
 
             league.MapPut("/update/{leagueid:required}", async (long leagueid,LeagueUpdateRequest request, NbaFantasyContext context, [FromHeader] string userId) =>

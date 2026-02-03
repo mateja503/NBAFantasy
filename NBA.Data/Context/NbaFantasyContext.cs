@@ -42,12 +42,8 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.Tscreated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tscreated");
-            entity.Property(e => e.Tsupdated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tsupdated");
+            entity.Property(e => e.Tscreated).HasColumnName("tscreated");
+            entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Usercreated)
                 .HasMaxLength(255)
                 .HasColumnName("usercreated");
@@ -95,12 +91,8 @@ public partial class NbaFantasyContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("name");
             entity.Property(e => e.Teamid).HasColumnName("teamid");
-            entity.Property(e => e.Tscreated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tscreated");
-            entity.Property(e => e.Tsupdated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tsupdated");
+            entity.Property(e => e.Tscreated).HasColumnName("tscreated");
+            entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Usercreated)
                 .HasMaxLength(255)
                 .HasColumnName("usercreated");
@@ -130,12 +122,8 @@ public partial class NbaFantasyContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("title");
             entity.Property(e => e.Totalpoints).HasColumnName("totalpoints");
-            entity.Property(e => e.Tscreated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tscreated");
-            entity.Property(e => e.Tsupdated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tsupdated");
+            entity.Property(e => e.Tscreated).HasColumnName("tscreated");
+            entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Usercreated)
                 .HasMaxLength(255)
                 .HasColumnName("usercreated");
@@ -202,12 +190,8 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
-            entity.Property(e => e.Tscreated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tscreated");
-            entity.Property(e => e.Tsupdated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tsupdated");
+            entity.Property(e => e.Tscreated).HasColumnName("tscreated");
+            entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Usercreated)
                 .HasMaxLength(255)
                 .HasColumnName("usercreated");
@@ -228,12 +212,8 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .HasColumnName("password");
-            entity.Property(e => e.Tscreated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tscreated");
-            entity.Property(e => e.Tsupdated)
-                .HasColumnType("timestamp without time zone")
-                .HasColumnName("tsupdated");
+            entity.Property(e => e.Tscreated).HasColumnName("tscreated");
+            entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Usercreated)
                 .HasMaxLength(255)
                 .HasColumnName("usercreated");
