@@ -10,7 +10,7 @@ namespace NBA.Api.Endpoints
         public static IEndpointRouteBuilder MapPlayerEndpoints(this IEndpointRouteBuilder endpoints)
         {
             var player = endpoints.MapGroup("/player")
-                .WithTags("players");
+                .WithTags("player");
 
             player.MapGet("/", async (NbaFantasyContext context) =>
             {
