@@ -17,7 +17,12 @@
             team.MapGet("/{id:int}", (int id) =>
             {
                 return Results.Ok($"This is the team endpoint for team with ID: {id}");
-            })
+            });
+
+            team.MapPost("/", () =>
+            {
+                return Results.Ok("This is the POST endpoint for teams.");
+            });
             return team;
         }
     }
