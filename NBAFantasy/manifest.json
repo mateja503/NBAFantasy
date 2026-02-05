@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json.schemastore.org/aspire-8.0.json",
+  "resources": {
+    "password": {
+      "type": "parameter.v0",
+      "value": "{password.inputs.value}",
+      "inputs": {
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "nbafantasy-server": {
+      "type": "container.v0",
+      "connectionString": "Host={nbafantasy-server.bindings.tcp.host};Port={nbafantasy-server.bindings.tcp.port};Username=postgres;Password={password.value}",
+      "image": "docker.io/library/postgres:17.6",
+      "bindMounts": [
+        {
+          "source": "../infrastructure",
+          "target": "/docker-entrypoint-initdb.d",
+          "readOnly": false
+        },
+        {
+          "source": "../infrastructure/db/create",
+          "target": "/scripts/create",
+          "readOnly": false
+        },
+        {
+          "source": "../infrastructure/db/seed",
+          "target": "/scripts/seed",
+          "readOnly": false
+        }
+      ],
+      "env": {
+        "POSTGRES_HOST_AUTH_METHOD": "scram-sha-256",
+        "POSTGRES_INITDB_ARGS": "--auth-host=scram-sha-256 --auth-local=scram-sha-256",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "{password.value}"
+      },
+      "bindings": {
+        "tcp": {
+          "scheme": "tcp",
+          "protocol": "tcp",
+          "transport": "tcp",
+          "port": 6382,
+          "targetPort": 5432
+        }
+      }
+    },
+    "nbafantasydb": {
+      "type": "value.v0",
+      "connectionString": "{nbafantasy-server.connectionString};Database=nbafantasydb"
+    },
+    "nba-api": {
+      "type": "project.v0",
+      "path": "../NBA.Api/NBA.Api.csproj",
+      "env": {
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
+        "ASPNETCORE_FORWARDEDHEADERS_ENABLED": "true",
+        "HTTP_PORTS": "{nba-api.bindings.http.targetPort}",
+        "ConnectionStrings__nbafantasydb": "{nbafantasydb.connectionString}",
+        "NBAFANTASYDB_HOST": "{nbafantasy-server.bindings.tcp.host}",
+        "NBAFANTASYDB_PORT": "{nbafantasy-server.bindings.tcp.port}",
+        "NBAFANTASYDB_USERNAME": "postgres",
+        "NBAFANTASYDB_PASSWORD": "{password.value}",
+        "NBAFANTASYDB_URI": "postgresql://postgres:{password-uri-encoded.value}@{nbafantasy-server.bindings.tcp.host}:{nbafantasy-server.bindings.tcp.port}/nbafantasydb",
+        "NBAFANTASYDB_JDBCCONNECTIONSTRING": "jdbc:postgresql://{nbafantasy-server.bindings.tcp.host}:{nbafantasy-server.bindings.tcp.port}/nbafantasydb",
+        "NBAFANTASYDB_DATABASENAME": "nbafantasydb"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http"
+        },
+        "https": {
+          "scheme": "https",
+          "protocol": "tcp",
+          "transport": "http"
+        }
+      }
+    },
+    "web-nbafantasy": {
+      "type": "executable.v0",
+      "workingDirectory": "../../web-NBAFantasy",
+      "command": "npm",
+      "args": [
+        "run",
+        "start"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "NBA_API_HTTP": "{nba-api.bindings.http.url}",
+        "services__nba-api__http__0": "{nba-api.bindings.http.url}",
+        "NBA_API_HTTPS": "{nba-api.bindings.https.url}",
+        "services__nba-api__https__0": "{nba-api.bindings.https.url}"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "port": 6655,
+          "targetPort": 5566
+        }
+      }
+    },
+    "password-uri-encoded": {
+      "type": "annotated.string",
+      "value": "{password.value}",
+      "filter": "uri"
+    }
+  }
+}

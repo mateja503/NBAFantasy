@@ -10,7 +10,7 @@ var postgres = builder.AddPostgres("nbafantasy-server", password: password)
 
 var db = postgres.AddDatabase("nbafantasydb");
 
-builder.AddProject<Projects.NBA_Api>("nba-api")
+var backend = builder.AddProject<Projects.NBA_Api>("nba-api")
     .WithReference(db)
     .WithUrlForEndpoint("https", url =>
     {
@@ -18,6 +18,11 @@ builder.AddProject<Projects.NBA_Api>("nba-api")
         url.Url = "/scalar/v1";
     });
 
+var appHostDirectory = builder.AppHostDirectory;
+
+var frontend = builder.AddNpmApp("web-nbafantasy", "../../web-NBAFantasy")
+    .WithHttpEndpoint(targetPort: 5566, port: 6655)
+    .WithReference(backend);
 
 
 builder.Build().Run();
