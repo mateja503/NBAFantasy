@@ -1,5 +1,5 @@
 var builder = DistributedApplication.CreateBuilder(args);
-//test
+
 var password = builder.AddParameter("password", "postgres");
 
 var postgres = builder.AddPostgres("nbafantasy-server", password: password)
