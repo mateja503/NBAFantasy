@@ -13,6 +13,11 @@
             .WithName("GetTeam")
             .WithSummary("Retrieves information about NBA teams.")
             .WithDescription("This endpoint returns information about NBA teams.");
+
+            team.MapGet("/{id:int}", (int id) =>
+            {
+                return Results.Ok($"This is the team endpoint for team with ID: {id}");
+            })
             return team;
         }
     }
