@@ -1,0 +1,19 @@
+﻿namespace NBA.Api.Endpoints
+{
+    public static class TeamEndpoints
+    {
+        public static IEndpointRouteBuilder MapTeamEndpoints(this IEndpointRouteBuilder endpoints)
+        {
+            var team = endpoints.MapGroup("/team")
+                .WithTags("team");
+            team.MapGet("/", () =>
+            {
+                return Results.Ok("This is the team endpoint.");
+            })
+            .WithName("GetTeam")
+            .WithSummary("Retrieves information about NBA teams.")
+            .WithDescription("This endpoint returns information about NBA teams.");
+            return team;
+        }
+    }
+}
