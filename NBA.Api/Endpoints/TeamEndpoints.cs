@@ -23,6 +23,10 @@
             {
                 return Results.Ok("This is the POST endpoint for teams.");
             });
+            team.MapDelete("/{id:int}", (int id) =>
+            {
+                return Results.Ok($"This is the DELETE endpoint for team with ID: {id}");
+            });
             return team;
         }
     }
