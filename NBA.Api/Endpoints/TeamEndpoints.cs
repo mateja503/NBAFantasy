@@ -27,6 +27,10 @@
             {
                 return Results.Ok($"This is the DELETE endpoint for team with ID: {id}");
             });
+            team.MapPut("/{id:int}", (int id) =>
+            {
+                return Results.Ok($"This is the PUT endpoint for team with ID: {id}");
+            });
             return team;
         }
     }
