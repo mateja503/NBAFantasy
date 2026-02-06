@@ -20,9 +20,4 @@ var backend = builder.AddProject<Projects.NBA_Api>("nba-api")
 
 var appHostDirectory = builder.AppHostDirectory;
 
-var frontend = builder.AddNpmApp("web-nbafantasy", "../../web-NBAFantasy")
-    .WithHttpEndpoint(targetPort: 5566, port: 6655)
-    .WithReference(backend);
-
-
 builder.Build().Run();

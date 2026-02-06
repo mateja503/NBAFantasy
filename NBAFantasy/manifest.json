@@ -82,31 +82,6 @@
         }
       }
     },
-    "web-nbafantasy": {
-      "type": "executable.v0",
-      "workingDirectory": "../../web-NBAFantasy",
-      "command": "npm",
-      "args": [
-        "run",
-        "start"
-      ],
-      "env": {
-        "NODE_ENV": "development",
-        "NBA_API_HTTP": "{nba-api.bindings.http.url}",
-        "services__nba-api__http__0": "{nba-api.bindings.http.url}",
-        "NBA_API_HTTPS": "{nba-api.bindings.https.url}",
-        "services__nba-api__https__0": "{nba-api.bindings.https.url}"
-      },
-      "bindings": {
-        "http": {
-          "scheme": "http",
-          "protocol": "tcp",
-          "transport": "http",
-          "port": 6655,
-          "targetPort": 5566
-        }
-      }
-    },
     "password-uri-encoded": {
       "type": "annotated.string",
       "value": "{password.value}",
