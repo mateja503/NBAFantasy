@@ -44,13 +44,13 @@ pipeline {
 
         stage('Build Image') {
             steps {
-					sh """
+					sh '''
 						dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
 							-c Release
-						"""
+						'''
 				}
         }
 		
