@@ -1,5 +1,13 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'mcr.microsoft.com/dotnet/sdk:10.0' 
+            // Reuse the host's docker socket so 'dotnet publish /t:PublishContainer' works
+            args '-v /var/run/docker.sock:/var/run/docker.sock -u root'
+            // Optional: prevents checking the registry if the image exists locally
+            alwaysPull false 
+        }
+    }
 	
 	environment{
 		DOTNET_ENVIRONMENT = 'Development'
@@ -19,7 +27,7 @@ pipeline {
 					status: 'PENDING',
 					context: 'Test Repository',
 					description: "Description-test-repository"
-				)				
+				)	
 				sh 'dotnet restore' 
 				sh 'dotnet build --configuration Release'
                 sh 'echo "Tests passed"'
