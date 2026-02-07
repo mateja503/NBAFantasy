@@ -8,9 +8,17 @@ pipeline {
 	}
 
     stages {
+		
 		stage('Test Repository'){
             steps{
-				githubNotify status: 'PENDING', description: 'Jenkins build is in progress...'
+				githubNotify(
+					account: 'mateja503',
+					repo: 'NBAFantasy',
+					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					sha: env.GIT_COMMIT,
+					status: 'PENDING',
+					context: 'Test Repository'
+				)				
 				sh 'dotnet restore' 
 				sh 'dotnet build --configuration Release'
                 sh 'echo "Tests passed"'
@@ -65,10 +73,22 @@ pipeline {
 			sh "docker rmi ${IMAGE_NAME}:latest || true"
 		}
         success {
-            githubNotify status: 'SUCCESS', description: 'Build passed!'
+			githubNotify(
+					account: 'mateja503',
+					repo: 'NBAFantasy',
+					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					sha: env.GIT_COMMIT,
+					status: 'SUCCESS',
+				)			
         }
         failure {
-            githubNotify status: 'FAILURE', description: 'Build failed!'
+			githubNotify(
+					account: 'mateja503',
+					repo: 'NBAFantasy',
+					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					sha: env.GIT_COMMIT,
+					status: 'FAILURE',
+				)	
         }
 	}
 }
