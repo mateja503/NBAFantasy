@@ -106,7 +106,7 @@ pipeline {
 					sha: env.GIT_COMMIT,
 					status: 'SUCCESS',
 					context: env.GITHUB_CONTEXT,
-					description: "Description-test-success"
+					description: "Success"
 				)			
         }
         failure {
@@ -117,7 +117,7 @@ pipeline {
 					sha: env.GIT_COMMIT,
 					status: 'FAILURE',
 					context: env.GITHUB_CONTEXT,
-					description: "Description-test-failure"
+					description: "Failed"
 				)	
         }
 	}
