@@ -3,8 +3,6 @@ pipeline {
         docker {
             image 'mcr.microsoft.com/dotnet/sdk:10.0' 
             args '-v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -u root'
-            // Optional: prevents checking the registry if the image exists locally
-            alwaysPull false 
         }
     }
 	
@@ -44,13 +42,15 @@ pipeline {
 
         stage('Build Image') {
             steps {
-					sh '''
-						dotnet publish NBA.Api/NBA.Api.csproj \
+					sh """
+							dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
+							-p:ContainerRuntimeIdentifier=linux-x64 \
+							-p:PublishContainer=true \
 							-c Release
-						'''
+						"""
 				}
         }
 		
