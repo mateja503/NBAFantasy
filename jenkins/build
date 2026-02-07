@@ -12,7 +12,7 @@ pipeline {
 		DOTNET_ENVIRONMENT = 'Development'
 		IMAGE_NAME = "matejanikolikj/nba-fantasy-app"
 		IMAGE_TAG = "${env.BUILD_NUMBER}"
-		REMOTE_CREDENTIALS = 'docker-hub-credentials'
+		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 	}
 
     stages {
@@ -42,23 +42,29 @@ pipeline {
             }
         }
 
-        stage('Build & Push Image') {
+        stage('Build Image') {
             steps {
-				withCredentials([usernamePassword(credentialsId: env.REMOTE_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
-					sh '''
+					sh """
 						dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
-							-p:ContainerRegistry=registry-1.docker.io \
-							-p:ContainerCredentialsProvider=EnvVar \
-							-p:SdkContainerRegistryUsername=${DOCKER_USER} \
-							-p:SdkContainerRegistryPassword=${DOCKER_PASS} \
 							-c Release
-						'''
+						"""
 				}
-            }
         }
+		
+		stage('Push Image'){
+			steps {
+					script { // This wrapper is mandatory
+						docker.withRegistry('https://registry.hub.docker.com',"${DOCKER_HUB_CREDENTIALS}"){
+							def image = docker.image("${IMAGE_NAME}")
+							image.push("${IMAGE_TAG}")
+							image.push("latest")
+						}		
+					}		
+				}
+		}
     }
 	
 	post{
