@@ -38,7 +38,7 @@ pipeline {
             steps {
                 // This tells the AppHost to generate the manifest.json without running the app
                 // Change 'AppHost.csproj' to your actual AppHost project name
-				sh 'dotnet run --project NBAFantasy.csproj --publisher manifest --output-path manifest.json'
+				sh 'dotnet run --project NBAFantasy/NBAFantasy.csproj --publisher manifest --output-path manifest.json'
             }
         }
 
