@@ -44,7 +44,7 @@ pipeline {
 
         stage('Build & Push Image') {
             steps {
-				withCredentials([usernamePassword(credentialsId: ${REMOTE_CREDENTIALS}, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
+				withCredentials([usernamePassword(credentialsId: REMOTE_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
 					sh """
 						dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
