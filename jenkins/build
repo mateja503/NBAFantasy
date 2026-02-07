@@ -12,6 +12,7 @@ pipeline {
 		DOTNET_ENVIRONMENT = 'Development'
 		IMAGE_NAME = "matejanikolikj/nba-fantasy-app"
 		IMAGE_TAG = "${env.BUILD_NUMBER}"
+		REMOTE_CREDENTIALS = 'docker-hub-credentials'
 	}
 
     stages {
@@ -41,45 +42,25 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        stage('Build & Push Image') {
             steps {
-                // Build the image and tag it 'nba-fantasy'
-                //sh 'docker build -t nba-fantasy-app:latest .'
-				//app = docker.build("${IMAGE_NAME}")
-				sh """
-                    dotnet publish NBA.Api/NBA.Api.csproj \
-                        /t:PublishContainer \
-                        -p:ContainerRepository=${IMAGE_NAME} \
-                        -p:ContainerImageTag=latest \
-                        -c Release
-                    """
-				
-            }
-        }
-		
-		stage('Test Image'){
-			steps{
-				sh 'echo "Test Image"'
-			}
-		}
-
-        stage('Push Image') {
-            steps {
-                script {
-                  docker.withRegistry('https://registry.hub.docker.com','docker-hub-credentials'){
-					docker.image("${IMAGE_NAME}:latest").push()
-				  }
-                }
+				withCredentials([usernamePassword(credentialsId: ${REMOTE_CREDENTIALS}, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
+					sh """
+						dotnet publish NBA.Api/NBA.Api.csproj \
+							/t:PublishContainer \
+							-p:ContainerRepository=${IMAGE_NAME} \
+							-p:ContainerImageTag=latest \
+							-p:ContainerRegistry=registry-1.docker.io \
+							-p:SdkContainerRegistryUsername=$DOCKER_USER \
+							-p:SdkContainerRegistryPassword =$DOCKER_PASS \
+							-c Release
+						"""
+				}
             }
         }
     }
 	
 	post{
-		always {
-        // This removes the image from the Jenkins agent disk so it doesn't fill up
-        // but it stays safe on Docker Hub!
-			sh "docker rmi ${IMAGE_NAME}:latest || true"
-		}
         success {
 			githubNotify(
 					account: 'mateja503',
