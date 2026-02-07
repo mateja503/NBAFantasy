@@ -63,11 +63,10 @@ pipeline {
 					sh """	
 							apt-get update && apt-get install -y docker.io
 							dotnet publish NBA.Api/NBA.Api.csproj \
-							/t:PublishContainer \
+							-p:PublishContainer=true \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
-							-p:PublishContainer=true \
 							-c Release
 						"""
 				}
@@ -106,6 +105,7 @@ pipeline {
 					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'SUCCESS',
+					context: env.GITHUB_CONTEXT,
 					description: "Description-test-success"
 				)			
         }
@@ -116,6 +116,7 @@ pipeline {
 					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'FAILURE',
+					context: env.GITHUB_CONTEXT,
 					description: "Description-test-failure"
 				)	
         }
