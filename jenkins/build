@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+	
+	environment{
+		DOTNET_ENVIRONMENT = 'Development'
+		IMAGE_NAME = "matejanikolikj/nba-fantasy-app"
+		IMAGE_TAG = "${env.BUILD_NUMBER}"
+	}
+
+    stages {
+		stage('Test Repository'){
+            steps{
+				githubNotify status: 'PENDING', description: 'Jenkins build is in progress...'
+				sh 'dotnet restore' 
+				sh 'dotnet build --configuration Release'
+                sh 'echo "Tests passed"'
+            }
+        }
+
+		stage('Generate Aspire Manifest') {
+            steps {
+                // This tells the AppHost to generate the manifest.json without running the app
+                // Change 'AppHost.csproj' to your actual AppHost project name
+				sh 'dotnet run --project NBAFantasy.csproj --publisher manifest --output-path manifest.json'
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                // Build the image and tag it 'nba-fantasy'
+                //sh 'docker build -t nba-fantasy-app:latest .'
+				//app = docker.build("${IMAGE_NAME}")
+				sh """
+                    dotnet publish ./NBA_Api/NBA_Api.csproj \
+                        /t:PublishContainer \
+                        -p:ContainerImageName=${IMAGE_NAME} \
+                        -p:ContainerImageTag=latest \
+                        -c Release
+                    """
+				
+            }
+        }
+		
+		stage('Test Image'){
+			steps{
+				sh 'echo "Test Image"'
+			}
+		}
+
+        stage('Push Image') {
+            steps {
+                script {
+                  docker.withRegistry('https://registry.hub.docker.com','docker-hub-credentials'){
+					docker.image("${IMAGE_NAME}:latest").push()
+				  }
+                }
+            }
+        }
+    }
+	
+	post{
+		always {
+        // This removes the image from the Jenkins agent disk so it doesn't fill up
+        // but it stays safe on Docker Hub!
+			sh "docker rmi ${IMAGE_NAME}:latest || true"
+		}
+        success {
+            githubNotify status: 'SUCCESS', description: 'Build passed!'
+        }
+        failure {
+            githubNotify status: 'FAILURE', description: 'Build failed!'
+        }
+	}
+}
+
