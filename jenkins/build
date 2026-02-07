@@ -42,6 +42,7 @@ pipeline {
 
         stage('Build Image') {
             steps {
+					apt-get update && apt-get install -y docker.io
 					sh """
 							dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
@@ -68,6 +69,9 @@ pipeline {
     }
 	
 	post{
+		always{
+			sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+		}
         success {
 			githubNotify(
 					account: 'mateja503',
