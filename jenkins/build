@@ -48,7 +48,7 @@ pipeline {
                 //sh 'docker build -t nba-fantasy-app:latest .'
 				//app = docker.build("${IMAGE_NAME}")
 				sh """
-                    dotnet publish ./NBA_Api/NBA_Api.csproj \
+                    dotnet publish NBA.Api/NBA.Api.csproj \
                         /t:PublishContainer \
                         -p:ContainerImageName=${IMAGE_NAME} \
                         -p:ContainerImageTag=latest \
