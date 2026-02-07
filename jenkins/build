@@ -44,15 +44,15 @@ pipeline {
 
         stage('Build & Push Image') {
             steps {
-				withCredentials([usernamePassword(credentialsId: REMOTE_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
+				withCredentials([usernamePassword(credentialsId: env.REMOTE_CREDENTIALS, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]){
 					sh """
 						dotnet publish NBA.Api/NBA.Api.csproj \
 							/t:PublishContainer \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
 							-p:ContainerRegistry=registry-1.docker.io \
-							-p:SdkContainerRegistryUsername=$DOCKER_USER \
-							-p:SdkContainerRegistryPassword =$DOCKER_PASS \
+							-p:SdkContainerRegistryUsername=${DOCKER_USER} \
+							-p:SdkContainerRegistryPassword=${DOCKER_PASS} \
 							-c Release
 						"""
 				}
