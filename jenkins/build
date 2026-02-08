@@ -54,8 +54,6 @@ pipeline {
 							-p:ContainerImageTag=${IMAGE_TAG} \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
-							
-							docker images
 						"""
 				}
         }
