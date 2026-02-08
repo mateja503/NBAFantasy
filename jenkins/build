@@ -12,6 +12,7 @@ pipeline {
 		IMAGE_TAG = "${env.BUILD_NUMBER}"
 		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 		GITHUB_CONTEXT = "Jenkins CI Build"
+		GITHUB_CRED_ID = 'cb1a22d0-0e56-4363-95f5-5376109acb94'
 	}
 
     stages {
@@ -21,11 +22,11 @@ pipeline {
 				githubNotify(
 					account: 'mateja503',
 					repo: 'NBAFantasy',
-					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					credentialsId: env.GITHUB_CRED_ID, // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'PENDING',
 					context: env.GITHUB_CONTEXT,
-					description: "Running Test...."
+					description: "Building Pipeline...."
 				)	
 				sh 'dotnet restore' 
 				sh 'dotnet build --configuration Release'
@@ -35,33 +36,16 @@ pipeline {
 
 		stage('Generate Aspire Manifest') {
             steps {
-				githubNotify(
-						account: 'mateja503',
-						repo: 'NBAFantasy',
-						credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
-						sha: env.GIT_COMMIT,
-						status: 'PENDING',
-						context: env.GITHUB_CONTEXT,
-						description: "Generating Manifest...."
-					)	
+				
 				sh 'dotnet run --project NBAFantasy/NBAFantasy.csproj --publisher manifest --output-path manifest.json'
             }
         }
 
         stage('Build Image') {
             steps {
-				githubNotify(
-							account: 'mateja503',
-							repo: 'NBAFantasy',
-							credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
-							sha: env.GIT_COMMIT,
-							status: 'PENDING',
-							context: env.GITHUB_CONTEXT,
-							description: "Buliding Image...."
-						)	
-			
 					sh """	
-							apt-get update && apt-get install -y docker.io
+							command -v docker >/dev/null 2>&1 || (apt-get update && apt-get install -y docker.io)
+							
 							dotnet publish NBA.Api/NBA.Api.csproj \
 							-p:PublishContainer=true \
 							-p:ContainerRepository=${IMAGE_NAME} \
@@ -74,15 +58,6 @@ pipeline {
 		
 		stage('Push Image'){
 			steps {
-				githubNotify(
-								account: 'mateja503',
-								repo: 'NBAFantasy',
-								credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
-								sha: env.GIT_COMMIT,
-								status: 'PENDING',
-								context: env.GITHUB_CONTEXT,
-								description: "Pushing Image...."
-							)	
 					script { // This wrapper is mandatory
 						docker.withRegistry('https://registry.hub.docker.com',"${DOCKER_HUB_CREDENTIALS}"){
 							def image = docker.image("${IMAGE_NAME}")
