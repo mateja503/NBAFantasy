@@ -53,7 +53,7 @@ pipeline {
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=${IMAGE_TAG} \
 							-p:ContainerRegistry="" \
-							-p:ContainerProtocol=docker \ 
+							-p:ContainerProtocol=docker \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
 							
