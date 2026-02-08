@@ -49,7 +49,7 @@ pipeline {
 							command -v docker >/dev/null 2>&1 || (apt-get update && apt-get install -y docker.io)
 							
 							dotnet publish NBA.Api/NBA.Api.csproj \
-							-p:PublishContainer=true \
+							-p:PublishProfile=DefaultContainer \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=latest \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
