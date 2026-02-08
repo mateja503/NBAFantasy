@@ -9,11 +9,11 @@ pipeline {
 	environment{
 		DOTNET_ENVIRONMENT = 'Development'
 		IMAGE_NAME = "matejanikolikj/nba-fantasy-app"
-		IMAGE_TAG = "${env.BUILD_NUMBER}"
+		IMAGE_TAG = "latest"
 		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 		GITHUB_CONTEXT = "Jenkins CI Build"
 		GITHUB_CRED_ID = 'cb1a22d0-0e56-4363-95f5-5376109acb94'
-		GIT_REPO = 'NBAFantasy'
+		GIT_REPO = 'web-NBAFantasy'
         GIT_ACCOUNT = 'mateja503'
 	}
 
@@ -62,9 +62,7 @@ pipeline {
 			steps {
 					script { // This wrapper is mandatory
 						docker.withRegistry('https://registry.hub.docker.com',"${DOCKER_HUB_CREDENTIALS}"){
-							def image = docker.image("${IMAGE_NAME}")
-							image.push("${IMAGE_TAG}")
-							image.push(latest)
+							docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
 						}		
 					}		
 				}
@@ -99,4 +97,3 @@ pipeline {
         }
 	}
 }
-
