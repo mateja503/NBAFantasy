@@ -52,7 +52,7 @@ pipeline {
 							-p:PublishContainer=true \
 							-p:ContainerRepository=${IMAGE_NAME} \
 							-p:ContainerImageTag=${IMAGE_TAG} \
-							-p:ContainerRegistry=registry.hub.docker.com \
+							-p:ContainerRegistry="" \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
 						"""
