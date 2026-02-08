@@ -13,7 +13,7 @@ pipeline {
 		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 		GITHUB_CONTEXT = "Jenkins CI Build"
 		GITHUB_CRED_ID = 'cb1a22d0-0e56-4363-95f5-5376109acb94'
-		GIT_REPO = 'web-NBAFantasy'
+		GIT_REPO = 'NBAFantasy'
         GIT_ACCOUNT = 'mateja503'
 	}
 
