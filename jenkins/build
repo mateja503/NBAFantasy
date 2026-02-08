@@ -51,7 +51,7 @@ pipeline {
 							dotnet publish NBA.Api/NBA.Api.csproj \
 							-p:PublishContainer=true \
 							-p:ContainerRepository=${IMAGE_NAME} \
-							-p:ContainerImageTag=latest \
+							-p:ContainerImageTag=${IMAGE_TAG} \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
 						"""
@@ -71,7 +71,7 @@ pipeline {
 	
 	post{
 		always{
-			sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+		//sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
 		}
         success {
 			githubNotify(
