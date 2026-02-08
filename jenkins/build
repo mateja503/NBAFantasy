@@ -17,7 +17,7 @@ pipeline {
 
     stages {
 		
-		stage('Test Repository'){
+		stage('Build Application'){
             steps{
 				githubNotify(
 					account: 'mateja503',
@@ -28,15 +28,15 @@ pipeline {
 					context: env.GITHUB_CONTEXT,
 					description: "Building Pipeline...."
 				)	
-				sh 'dotnet restore' 
-				sh 'dotnet build --configuration Release'
+				sh 'dotnet publish NBA.Api/NBA.Api.csproj -c Release -o ./publish'
                 sh 'echo "Tests passed"'
+				
+				
             }
         }
 
-		stage('Generate Aspire Manifest') {
+		stage('Aspire Manifest For Production') {
             steps {
-				
 				sh 'dotnet run --project NBAFantasy/NBAFantasy.csproj --publisher manifest --output-path manifest.json'
             }
         }
