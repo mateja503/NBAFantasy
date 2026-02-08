@@ -13,6 +13,8 @@ pipeline {
 		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 		GITHUB_CONTEXT = "Jenkins CI Build"
 		GITHUB_CRED_ID = 'cb1a22d0-0e56-4363-95f5-5376109acb94'
+		GIT_REPO = 'web-NBAFantasy'
+        GIT_ACCOUNT = 'mateja503'
 	}
 
     stages {
@@ -20,8 +22,8 @@ pipeline {
 		stage('Build Application'){
             steps{
 				githubNotify(
-					account: 'mateja503',
-					repo: 'NBAFantasy',
+					account: env.GIT_ACCOUNT,
+					repo: env.GIT_REPO,
 					credentialsId: env.GITHUB_CRED_ID, // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'PENDING',
@@ -75,9 +77,9 @@ pipeline {
 		}
         success {
 			githubNotify(
-					account: 'mateja503',
-					repo: 'NBAFantasy',
-					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					account: env.GIT_ACCOUNT,
+					repo: env.GIT_REPO,
+					credentialsId: env.GITHUB_CRED_ID, // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'SUCCESS',
 					context: env.GITHUB_CONTEXT,
@@ -86,9 +88,9 @@ pipeline {
         }
         failure {
 			githubNotify(
-					account: 'mateja503',
-					repo: 'NBAFantasy',
-					credentialsId: 'cb1a22d0-0e56-4363-95f5-5376109acb94', // Use the ID from your logs
+					account: env.GIT_ACCOUNT,
+					repo: env.GIT_REPO,
+					credentialsId: env.GITHUB_CRED_ID, // Use the ID from your logs
 					sha: env.GIT_COMMIT,
 					status: 'FAILURE',
 					context: env.GITHUB_CONTEXT,
