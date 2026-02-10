@@ -50,8 +50,8 @@ pipeline {
 							
 							dotnet publish NBA.Api/NBA.Api.csproj \
 							-p:PublishProfile=DefaultContainer \
-							-p:ContainerRepository=${IMAGE_NAME} \
-							-p:ContainerImageTag=${IMAGE_TAG} \
+							-p:ContainerRepository=${env.IMAGE_NAME} \
+							-p:ContainerImageTag=${env.IMAGE_TAG} \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
 						"""
@@ -62,8 +62,8 @@ pipeline {
 			steps {
 					script { // This wrapper is mandatory
 						docker.withRegistry('https://registry.hub.docker.com',"${DOCKER_HUB_CREDENTIALS}"){
-							def image = docker.image("${IMAGE_NAME}")
-							image.push("${IMAGE_TAG}")
+							def image = docker.image("${env.IMAGE_NAME}")
+							image.push("${env.IMAGE_TAG}")
 						}		
 					}		
 				}
@@ -72,7 +72,7 @@ pipeline {
 	
 	post{
 		always{
-			sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+			sh "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG} || true"
 		}
         success {
 			githubNotify(
