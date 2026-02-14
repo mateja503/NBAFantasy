@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using NBA.Api.Endpoints;
 using NBA.Data.Context;
 using Scalar.AspNetCore;
 
@@ -62,10 +61,5 @@ app.MapStaticAssets();
 //    .WithStaticAssets();
 
 var v1 = app.MapGroup("/v1");
-
-v1.MapLeagueEnpoints();
-
-
-
 
 app.Run();

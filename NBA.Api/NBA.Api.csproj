@@ -17,4 +17,8 @@
     <PackageReference Include="Scalar.AspNetCore" Version="2.12.28" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Endpoints\" />
+  </ItemGroup>
+
 </Project>
