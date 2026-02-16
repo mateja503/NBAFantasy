@@ -1,8 +1,19 @@
-using Microsoft.EntityFrameworkCore;
+using ExternalClients;
+using ExternalClients.Options;
+using NBA.Api.Endpoints;
 using NBA.Data.Context;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+#region Options
+builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
+#endregion
+
+#region HttpClients
+builder.Services.AddHttpClient<BallDontLieClient>();
+#endregion
 
 // Add services to the container.
 
@@ -61,5 +72,7 @@ app.MapStaticAssets();
 //    .WithStaticAssets();
 
 var v1 = app.MapGroup("/v1");
+
+v1.TestEndpoints();
 
 app.Run();
