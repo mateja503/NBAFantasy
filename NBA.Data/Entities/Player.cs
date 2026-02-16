@@ -11,7 +11,9 @@ public partial class Player
 
     public string Name { get; set; } = null!;
 
-    public string? Playersteam { get; set; }
+    public string? Irlteamname { get; set; }
+
+    public long? Irlteamid { get; set; }
 
     public long? Points { get; set; }
 

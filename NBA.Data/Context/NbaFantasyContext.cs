@@ -172,6 +172,10 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Fieldgoalperc).HasColumnName("fieldgoalperc");
             entity.Property(e => e.Freethrowperc).HasColumnName("freethrowperc");
             entity.Property(e => e.Gameready).HasColumnName("gameready");
+            entity.Property(e => e.Irlteamid).HasColumnName("irlteamid");
+            entity.Property(e => e.Irlteamname)
+                .HasMaxLength(100)
+                .HasColumnName("irlteamname");
             entity.Property(e => e.Isdrop)
                 .HasDefaultValue(false)
                 .HasColumnName("isdrop");
@@ -186,9 +190,6 @@ public partial class NbaFantasyContext : DbContext
                 .HasColumnName("name");
             entity.Property(e => e.Playermemontoid).HasColumnName("playermemontoid");
             entity.Property(e => e.Playerposition).HasColumnName("playerposition");
-            entity.Property(e => e.Playersteam)
-                .HasMaxLength(100)
-                .HasColumnName("playersteam");
             entity.Property(e => e.Points)
                 .HasDefaultValue(0L)
                 .HasColumnName("points");
