@@ -12,6 +12,7 @@ var db = postgres.AddDatabase("nbafantasydb");
 
 var backend = builder.AddProject<Projects.NBA_Api>("nba-api")
     .WithReference(db)
+    .WaitFor(db)
     .WithUrlForEndpoint("https", url =>
     {
         url.DisplayText = $"{url.Url}/scalar";

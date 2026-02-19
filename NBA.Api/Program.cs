@@ -1,19 +1,28 @@
 using ExternalClients;
 using ExternalClients.Options;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using NBA.Api;
 using NBA.Api.Endpoints;
 using NBA.Data.Context;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 #region Options
 builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
 #endregion
 
+builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
+
+builder.Services.AddPostgreSQLHangFire(builder.Configuration);
+
+builder.Services.AddHttpContextAccessor();
+
 #region HttpClients
-builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) => 
+builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) =>
 {
     var _options = serviceProvider.GetRequiredService<IOptions<BallDontLieClientOptions>>().Value;
 
@@ -22,12 +31,6 @@ builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) =>
     client.DefaultRequestHeaders.Add("Authorization", _options.ApiKey);
 });
 #endregion
-
-// Add services to the container.
-
-//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-//builder.Services.AddNpgsql<NbaFantasyContext>(connectionString);
-builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.AddAuthorization();
 
@@ -78,6 +81,7 @@ app.MapStaticAssets();
 //    name: "default",
 //    pattern: "{controller=Home}/{action=Index}/{id?}")
 //    .WithStaticAssets();
+app.UseHangfireDashboard();
 
 var v1 = app.MapGroup("/v1");
 

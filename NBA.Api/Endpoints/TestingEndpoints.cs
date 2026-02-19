@@ -11,7 +11,7 @@ namespace NBA.Api.Endpoints
             {
                 //await client.GetTodaysGame();
 
-                await client.GetAllActivePlayers();
+                return await client.GetAllActivePlayers();
             });
             return builder;
 

@@ -17,7 +17,8 @@ namespace ExternalClients
         public async Task<List<PlayerInfoResponse>> GetAllActivePlayers()
         {
 
-            var res = await _httpClient.GetAsync("/v1/players/active");
+            //TODO call this method until meta.next_cursor is null
+            var res = await _httpClient.GetAsync("/v1/players");
 
             if (!res.IsSuccessStatusCode) 
             {
