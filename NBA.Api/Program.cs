@@ -1,5 +1,6 @@
 using ExternalClients;
 using ExternalClients.Options;
+using Microsoft.Extensions.Options;
 using NBA.Api.Endpoints;
 using NBA.Data.Context;
 using Scalar.AspNetCore;
@@ -12,7 +13,14 @@ builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSe
 #endregion
 
 #region HttpClients
-builder.Services.AddHttpClient<BallDontLieClient>();
+builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) => 
+{
+    var _options = serviceProvider.GetRequiredService<IOptions<BallDontLieClientOptions>>().Value;
+
+    client.BaseAddress = new Uri(_options.BaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.DefaultRequestHeaders.Add("Authorization", _options.ApiKey);
+});
 #endregion
 
 // Add services to the container.

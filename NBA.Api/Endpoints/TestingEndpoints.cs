@@ -7,11 +7,11 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder TestEndpoints(this IEndpointRouteBuilder builder) 
         {
-            builder.MapGet("/todaysgame", async (BallDontLieClient client) => 
+            builder.MapGet("/activePlayers", async (BallDontLieClient client) => 
             {
                 //await client.GetTodaysGame();
 
-                await client.GetAllPlayers();
+                await client.GetAllActivePlayers();
             });
             return builder;
 
