@@ -1,8 +1,6 @@
-﻿
+﻿using System.Text.Json;
 
-using System.Text.Json;
-
-namespace ApplicationDefaults
+namespace ApplicationDefaults.LogDefaults
 {
     public record Log
     {

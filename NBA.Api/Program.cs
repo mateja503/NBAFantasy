@@ -1,3 +1,4 @@
+using ApplicationDefaults.Exceptions;
 using ExternalClients;
 using ExternalClients.Options;
 using Hangfire;
@@ -47,7 +48,17 @@ builder.Services.AddCors(options =>
 });
 
 
+#region ExceptionHandlers
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+#endregion
+
+
 var app = builder.Build();
+
+
+app.UseExceptionHandler();
+
 
 
 if (app.Environment.IsDevelopment())
@@ -62,7 +73,6 @@ if (app.Environment.IsDevelopment())
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
@@ -86,5 +96,6 @@ app.UseHangfireDashboard();
 var v1 = app.MapGroup("/v1");
 
 v1.TestEndpoints();
+
 
 app.Run();

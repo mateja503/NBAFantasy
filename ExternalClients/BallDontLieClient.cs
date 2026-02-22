@@ -1,6 +1,6 @@
 ﻿
-using ApplicationDefaults;
-using ExternalClients.Options;
+using ApplicationDefaults.Exceptions;
+using ApplicationDefaults.LogDefaults;
 using ExternalClients.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -12,20 +12,25 @@ namespace ExternalClients
         ILogger<BallDontLieClient> logger)
     {
         private readonly HttpClient _httpClient = httpClient;
-        private readonly ILogger<BallDontLieClient> _logger = logger;  
-        private readonly HttpContext httpContext = httpContextAccessor.HttpContext;
-        public async Task<List<PlayerInfoResponse>> GetAllActivePlayers()
+        private readonly ILogger<BallDontLieClient> _logger = logger;
+        private readonly HttpContext httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentException();
+        public async Task<List<PlayerInfoResponse>> GetAllPlayers()
         {
-
-            //TODO call this method until meta.next_cursor is null
             var res = await _httpClient.GetAsync("/v1/players");
 
-            if (!res.IsSuccessStatusCode) 
+            if (!res.IsSuccessStatusCode)
             {
-                _logger.LogWarning("{Log}", new Log($"GET {httpContext.Request.Path} failed ").ToLogString());
+                _logger.LogWarning("{Log}", new Log($"GET {httpContext.Request.Path} failed").ToLogString());
+                throw new NBAException($"GET {httpContext.Request.Path} failed ", (int)res.StatusCode);
             }
-            var content = await res.Content.ReadFromJsonAsync<GetAllPlayersResponse>();
-            return content.data;
+            var response = await res.Content.ReadFromJsonAsync<GetAllPlayersResponse>();
+
+            if (response is null)
+            {
+                _logger.LogWarning("{Log}", new Log($"GET {httpContext.Request.Path} failed to read the api response").ToLogString());
+                throw new NBAException($"GET {httpContext.Request.Path} failed ", (int)res.StatusCode);
+            }
+            return response!.data;
         }
 
     }
