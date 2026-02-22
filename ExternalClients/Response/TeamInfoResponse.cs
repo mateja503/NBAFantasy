@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ExternalClients.Response
+﻿namespace ExternalClients.Response
 {
-    public record TeamInforResponse
+    public record TeamInfoResponse
     {
         public long id { get; init; }
         public string conference { get; init; }

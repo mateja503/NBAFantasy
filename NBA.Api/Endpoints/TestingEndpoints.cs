@@ -1,5 +1,6 @@
 ﻿using ExternalClients;
-using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore;
+using NBA.Data.Context;
 
 namespace NBA.Api.Endpoints
 {
@@ -7,11 +8,11 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder TestEndpoints(this IEndpointRouteBuilder builder) 
         {
-            builder.MapGet("/activePlayers", async (BallDontLieClient client) => 
+            builder.MapGet("/activePlayers", async (NbaFantasyContext context, BallDontLieClient client) => 
             {
-                //await client.GetTodaysGame();
+                return await context.GetAllPlayers().AsNoTracking().ToListAsync();
+                //return await client.GetAllPlayers();
 
-                return await client.GetAllPlayers();
             });
             return builder;
 

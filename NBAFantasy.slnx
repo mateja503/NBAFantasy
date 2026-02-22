@@ -3,6 +3,6 @@
   <Project Path="ExternalClients/ExternalClients.csproj" Id="897595eb-9509-4d1f-b339-c140f5201b40" />
   <Project Path="NBA.Api/NBA.Api.csproj" />
   <Project Path="NBA.Data/NBA.Data.csproj" />
-  <Project Path="NBA.Services/NBA.Services.csproj" />
+  <Project Path="NBA.Service/NBA.Service.csproj" Id="6dfd9bc2-3d53-4858-a892-eca9d2af4c40" />
   <Project Path="NBAFantasy/NBAFantasy.csproj" />
 </Solution>

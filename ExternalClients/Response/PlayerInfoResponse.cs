@@ -12,7 +12,7 @@ namespace ExternalClients.Response
     public record PlayerInfoResponse
     {
         public long id { get; init; }
-        public string fist_name { get; init; }
+        public string first_name { get; init; }
         public string last_name { get; init; }
         public string position { get; init; }
         public string height { get; init; }
@@ -23,6 +23,7 @@ namespace ExternalClients.Response
         public int? draft_year { get; init; }
         public int? draft_round { get; init; }
         public int? draft_number { get; init; }
+        public TeamInfoResponse? team { get; init; }   
 
     }
 

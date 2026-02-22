@@ -8,13 +8,12 @@ using System.Net.Http.Json;
 
 namespace ExternalClients
 {
-    public class BallDontLieClient(HttpClient httpClient, IHttpContextAccessor httpContextAccessor,
-        ILogger<BallDontLieClient> logger)
+    public class BallDontLieClient(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ILogger<BallDontLieClient> logger)
     {
         private readonly HttpClient _httpClient = httpClient;
         private readonly ILogger<BallDontLieClient> _logger = logger;
         private readonly HttpContext httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentException();
-        public async Task<List<PlayerInfoResponse>> GetAllPlayers()
+        public async Task<List<PlayerInfoResponse>> GetAllPlayers()//maybe add parameter for pagination and next Next_cursor
         {
             var res = await _httpClient.GetAsync("/v1/players");
 

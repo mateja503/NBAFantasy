@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Build.Containers" Version="10.0.102" />
+    <ProjectReference Include="..\ApplicationDefaults\ApplicationDefaults.csproj" />
+    <ProjectReference Include="..\ExternalClients\ExternalClients.csproj" />
+    <ProjectReference Include="..\NBA.Data\NBA.Data.csproj" />
   </ItemGroup>
 
 </Project>
