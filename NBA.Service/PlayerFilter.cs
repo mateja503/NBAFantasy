@@ -12,10 +12,7 @@ namespace NBA.Service
         {
             return playersInfo.Where(player => 
             {
-                if (player.draft_year <= 2003)
-                    return false;
-
-                if(string.IsNullOrEmpty(player.position))
+                if (player.draft_year <= 2003 || string.IsNullOrEmpty(player.position) || string.IsNullOrEmpty(player.jersey_number))
                     return false;
 
                 return true;
