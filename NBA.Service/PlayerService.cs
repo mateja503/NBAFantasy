@@ -1,4 +1,6 @@
 ﻿using ExternalClients;
+using ExternalClients.Poco;
+using ExternalClients.Response;
 using NBA.Data.Context;
 
 namespace NBA.Service
@@ -8,12 +10,13 @@ namespace NBA.Service
     {
         private readonly BallDontLieClient _ballClient = ballClient;    
         private readonly NbaFantasyContext _nbaContext = nbaContext;    
-        public async Task AddPlayersToDb() 
+        public async Task<GetAllPlayersResponse> AddPlayersToDb(MetaData metadata, CancellationToken cancellationToken) 
         {
-            var externalPlayers = await _ballClient.GetAllPlayers();
-            var filteredPlayers = PlayerFilter.FilterNonActivePlayers(externalPlayers);
+            var externalPlayers = await _ballClient.GetAllPlayers(metadata, cancellationToken);
+            var filteredPlayers = PlayerFilter.FilterNonActivePlayers(externalPlayers.data);
             var players = Addapter.ToPlayer(filteredPlayers);
-            await _nbaContext.AddPlayers(players);
+            await _nbaContext.AddPlayers(players, cancellationToken);
+            return externalPlayers;
         }
     }
 }

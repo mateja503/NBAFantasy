@@ -13,9 +13,9 @@ namespace NBA.Data.Context
             return Players.AsQueryable();
         }
 
-        public async Task AddPlayers(List<Player> players)
+        public async Task AddPlayers(List<Player> players,CancellationToken cancellationToken)
         {
-            await Players.AddRangeAsync(players);
+            await Players.AddRangeAsync(players, cancellationToken);
             _ = await SaveChangesAsync();
         }
     #endregion

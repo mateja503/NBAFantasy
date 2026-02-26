@@ -1,12 +1,14 @@
 ﻿
 
+using ExternalClients.Poco;
+
 namespace ExternalClients.Response
 {
 
     public record GetAllPlayersResponse 
     {
         public List<PlayerInfoResponse> data { get; init; }
-        public MetaResponse meta { get; init; }
+        public MetaData meta { get; init; }
     }
 
     public record PlayerInfoResponse

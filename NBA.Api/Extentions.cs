@@ -1,6 +1,12 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
 using Npgsql;
+using Polly;
+using System;
+using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
+using System.Threading.RateLimiting;
 namespace NBA.Api
 {
     public static class Extentions
@@ -34,6 +40,29 @@ namespace NBA.Api
             });
 
             return services;
+        }
+
+        public static IServiceCollection CreateResiliencePipeline(this IServiceCollection services)
+        {
+            return services.AddResiliencePipeline<string, HttpResponseMessage>("external-api-shield", pipelineBuilder =>
+            {
+                pipelineBuilder
+                    .AddRetry(new HttpRetryStrategyOptions
+                    {
+                        BackoffType = DelayBackoffType.Exponential,
+                        MaxRetryAttempts = 3,
+                        UseJitter = true,
+                        Delay = TimeSpan.FromSeconds(2)
+                    })
+                    .AddRateLimiter(new HttpRateLimiterStrategyOptions
+                    {
+                        DefaultRateLimiterOptions = new ConcurrencyLimiterOptions
+                        {
+                            PermitLimit = 1, 
+                            //QueueLimit = 2
+                        }
+                    });
+            });
         }
     }
 }

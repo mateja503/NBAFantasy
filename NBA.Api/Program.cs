@@ -7,8 +7,14 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using NBA.Api;
 using NBA.Api.Endpoints;
+using NBA.Api.HostedService;
 using NBA.Data.Context;
+using NBA.Service;
+using Polly;
 using Scalar.AspNetCore;
+using Microsoft.Extensions.Http.Resilience;
+using System.Threading.RateLimiting;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,8 +25,11 @@ builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSe
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.AddPostgreSQLHangFire(builder.Configuration);
+builder.Services.AddHangfireServer();
 
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.CreateResiliencePipeline();
 
 #region HttpClients
 builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) =>
@@ -47,10 +56,18 @@ builder.Services.AddCors(options =>
     });
 });
 
+#region Services
+builder.Services.AddScoped<PlayerService>();
+#endregion
 
 #region ExceptionHandlers
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+#endregion
+
+#region HostedServices
+builder.Services.AddHostedService<ApplicationHostedService>();
+builder.Services.AddHostedService<RepopulateActivePlayersHostedService>();
 #endregion
 
 
@@ -91,6 +108,7 @@ app.MapStaticAssets();
 //    name: "default",
 //    pattern: "{controller=Home}/{action=Index}/{id?}")
 //    .WithStaticAssets();
+
 app.UseHangfireDashboard();
 
 var v1 = app.MapGroup("/v1");

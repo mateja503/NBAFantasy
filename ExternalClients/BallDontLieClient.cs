@@ -1,35 +1,47 @@
 ﻿
 using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.LogDefaults;
+using ExternalClients.Poco;
 using ExternalClients.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Registry;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace ExternalClients
 {
-    public class BallDontLieClient(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ILogger<BallDontLieClient> logger)
+    public class BallDontLieClient(HttpClient httpClient, IHttpContextAccessor httpContextAccessor, ILogger<BallDontLieClient> logger, ResiliencePipelineProvider<string> pipelineProvider)
     {
         private readonly HttpClient _httpClient = httpClient;
         private readonly ILogger<BallDontLieClient> _logger = logger;
-        private readonly HttpContext httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentException();
-        public async Task<List<PlayerInfoResponse>> GetAllPlayers()//maybe add parameter for pagination and next Next_cursor
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("external-api-shield"); 
+        
+        public async Task<GetAllPlayersResponse> GetAllPlayers(MetaData metaData, CancellationToken cancellationToken)//maybe add parameter for pagination and next Next_cursor
         {
-            var res = await _httpClient.GetAsync("/v1/players");
+            var res = await _pipeline.ExecuteAsync(async token => 
+            {
+                return await _httpClient.GetAsync($"/v1/players?per_page={metaData.Per_page}&cursor={metaData.Next_cursor}", token);
+
+            }, cancellationToken);
+
+            string requestPath = _httpContextAccessor.HttpContext?.Request.Path.Value ?? $"/v1/players?per_page={metaData.Per_page}&cursor={metaData.Next_cursor}";
 
             if (!res.IsSuccessStatusCode)
             {
-                _logger.LogWarning("{Log}", new Log($"GET {httpContext.Request.Path} failed").ToLogString());
-                throw new NBAException($"GET {httpContext.Request.Path} failed ", (int)res.StatusCode);
+                _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed, {res.ReasonPhrase}").ToJson());
+                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", (int)res.StatusCode);
             }
-            var response = await res.Content.ReadFromJsonAsync<GetAllPlayersResponse>();
+            var response = await res.Content.ReadFromJsonAsync<GetAllPlayersResponse>(cancellationToken);
 
             if (response is null)
             {
-                _logger.LogWarning("{Log}", new Log($"GET {httpContext.Request.Path} failed to read the api response").ToLogString());
-                throw new NBAException($"GET {httpContext.Request.Path} failed ", (int)res.StatusCode);
+                _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed to read the api response").ToJson());
+                throw new NBAException($"GET {requestPath} failed ", (int)res.StatusCode);
             }
-            return response!.data;
+            return response;
         }
 
     }

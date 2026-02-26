@@ -11,7 +11,7 @@ namespace ApplicationDefaults.Exceptions
 
         public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
-            _logger.LogError("{Log}", new Log($"An exception occurred: {exception.Message}").ToLogString());
+            _logger.LogError("{Log}", new Log($"An exception occurred: {exception.Message}").ToJson());
 
             if (exception is NBAException nbaException)
             {

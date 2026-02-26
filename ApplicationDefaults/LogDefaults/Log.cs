@@ -13,9 +13,12 @@ namespace ApplicationDefaults.LogDefaults
             this.request = request;
             this.response = response;
         }
-        public string ToLogString() 
+        public string ToJson() 
         {
-            return $"Message: {message}, Request: {JsonSerializer.Serialize(request)}, Response: {JsonSerializer.Serialize(response)}";
+            return JsonSerializer.Serialize(this, new JsonSerializerOptions 
+            {
+                WriteIndented = true,
+            });
         }
     }
 }
