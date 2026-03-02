@@ -3,7 +3,7 @@ using ExternalClients.Poco;
 using ExternalClients.Response;
 using NBA.Data.Context;
 
-namespace NBA.Service
+namespace NBA.Service.PlayerService
 {
     //use hangfire so this service to be executaed at a spefici time 
     public class PlayerService(BallDontLieClient ballClient, NbaFantasyContext nbaContext)
@@ -18,5 +18,6 @@ namespace NBA.Service
             await _nbaContext.AddPlayers(players, cancellationToken);
             return externalPlayers;
         }
+      
     }
 }

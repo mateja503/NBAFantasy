@@ -44,5 +44,29 @@ namespace ExternalClients
             return response;
         }
 
+        public async Task<GetTodaysGamesResponse> GetTodaysGames(CancellationToken cancellationToken) 
+        {
+            var today = DateTime.UtcNow.Date.ToString("yyy-MM-dd");
+            var res = await _pipeline.ExecuteAsync(async token =>
+            {
+                return await _httpClient.GetAsync($"/v1/games?dates[]={today}", token);
+            }, cancellationToken);
+
+            string requestPath = _httpContextAccessor.HttpContext?.Request.Path.Value ?? $"/v1/games?dates[]={today}";
+            if (!res.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed, {res.ReasonPhrase}").ToJson());
+                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", (int)res.StatusCode);
+            }
+            var response = await res.Content.ReadFromJsonAsync<GetTodaysGamesResponse>(cancellationToken);
+
+            if (response is null)
+            {
+                _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed to read the api response").ToJson());
+                throw new NBAException($"GET {requestPath} failed ", (int)res.StatusCode);
+            }
+            return response;
+        }
+
     }
 }

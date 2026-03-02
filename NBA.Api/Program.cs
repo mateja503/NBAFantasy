@@ -9,14 +9,15 @@ using NBA.Api;
 using NBA.Api.Endpoints;
 using NBA.Api.HostedService;
 using NBA.Data.Context;
-using NBA.Service;
 using Polly;
 using Scalar.AspNetCore;
 using Microsoft.Extensions.Http.Resilience;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
+using NBA.Service.PlayerService;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 #region Options
 builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
@@ -25,7 +26,7 @@ builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSe
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.AddPostgreSQLHangFire(builder.Configuration);
-builder.Services.AddHangfireServer();
+
 
 builder.Services.AddHttpContextAccessor();
 
@@ -67,7 +68,7 @@ builder.Services.AddProblemDetails();
 
 #region HostedServices
 builder.Services.AddHostedService<ApplicationHostedService>();
-builder.Services.AddHostedService<RepopulateActivePlayersHostedService>();
+builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
 #endregion
 
 

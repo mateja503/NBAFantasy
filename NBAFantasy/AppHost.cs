@@ -19,6 +19,8 @@ var backend = builder.AddProject<Projects.NBA_Api>("nba-api")
         url.Url = "/scalar/v1";
     });
 
+
+
 var appHostDirectory = builder.AppHostDirectory;
 
 builder.Build().Run();

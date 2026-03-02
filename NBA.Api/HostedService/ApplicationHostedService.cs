@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using NBA.Data.Context;
-using NBA.Service;
+using NBA.Service.PlayerService;
 
 namespace NBA.Api.HostedService
 {
@@ -42,9 +42,7 @@ namespace NBA.Api.HostedService
             }
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
-        }
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        
     }
 }

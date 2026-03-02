@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 
-namespace NBA.Service
+namespace NBA.Service.PlayerService
 {
     public static class PlayerFilter
     {

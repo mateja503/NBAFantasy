@@ -1,11 +1,12 @@
 ﻿using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using Polly;
 using System;
 using System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http.Resilience;
 using System.Threading.RateLimiting;
 namespace NBA.Api
 {
@@ -34,9 +35,10 @@ namespace NBA.Api
                      )
 
                      .WithJobExpirationTimeout(TimeSpan.FromHours(1000));
-            }).AddHangfireServer(option =>
+            }).AddHangfireServer(options =>
             {
-                option.SchedulePollingInterval = TimeSpan.FromSeconds(1);
+                options.SchedulePollingInterval = TimeSpan.FromSeconds(1);
+                options.ServerName = "NBA-FANTASY";
             });
 
             return services;
