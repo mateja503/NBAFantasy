@@ -3,6 +3,7 @@ using Hangfire.PostgreSql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
+using NBA.Api.HangFire;
 using Npgsql;
 using Polly;
 using System;
@@ -12,7 +13,7 @@ namespace NBA.Api
 {
     public static class Extentions
     {
-        public static IServiceCollection AddPostgreSQLHangFire(this IServiceCollection services,IConfiguration configuration)
+        public static IServiceCollection RegisterHangFire(this IServiceCollection services,IConfiguration configuration)
         {
             string connectionString = configuration.GetConnectionString("nbafantasydb")
                         ?? throw new InvalidOperationException("Connection string 'nbafantasydb' not found.");
@@ -33,8 +34,10 @@ namespace NBA.Api
                              SchemaName = "hangfire"
                          }
                      )
-
                      .WithJobExpirationTimeout(TimeSpan.FromHours(1000));
+
+                configuration.UseFilter(new ShortenJobExpirationFilter());
+
             }).AddHangfireServer(options =>
             {
                 options.SchedulePollingInterval = TimeSpan.FromSeconds(1);

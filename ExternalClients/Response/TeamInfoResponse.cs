@@ -1,13 +1,20 @@
-﻿namespace ExternalClients.Response
+﻿using ExternalClients.Poco;
+
+namespace ExternalClients.Response
 {
+    public record GetAllTeamsResponse
+    {
+        public required List<TeamInfoResponse> data { get; init; }
+        public required MetaData meta { get; init; }
+    }
     public record TeamInfoResponse
     {
-        public long id { get; init; }
-        public string conference { get; init; }
-        public string division { get; init; }
-        public string city { get; init; }
-        public string name { get; init; }
-        public string full_name { get; init; }
-        public string abbreviation { get; init; }
+        public required long id { get; init; }
+        public required string  conference { get; init; }
+        public required string division { get; init; }
+        public required string city { get; init; }
+        public required string name { get; init; }
+        public required string full_name { get; init; }
+        public required string abbreviation { get; init; }
     }
 }

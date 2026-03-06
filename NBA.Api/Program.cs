@@ -25,7 +25,7 @@ builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSe
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
-builder.Services.AddPostgreSQLHangFire(builder.Configuration);
+builder.Services.RegisterHangFire(builder.Configuration);
 
 
 builder.Services.AddHttpContextAccessor();
