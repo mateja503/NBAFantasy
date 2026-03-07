@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="ApplicationDefaults/ApplicationDefaults.csproj" Id="6e0d237c-50f7-47d7-8c04-ec832bb65dd5" />
+  <Project Path="BoxScoreFactory/BoxScoreBuilder.csproj" Id="9338b398-a75c-42a6-80ae-df7ccde8d5b0" />
   <Project Path="ExternalClients/ExternalClients.csproj" Id="897595eb-9509-4d1f-b339-c140f5201b40" />
   <Project Path="NBA.Api/NBA.Api.csproj" />
   <Project Path="NBA.Data/NBA.Data.csproj" />

@@ -1,16 +1,16 @@
 ﻿
 
 using ExternalClients.Response;
-using NBA.Data.Entities;
 using NBA.Data.Enumerations;
+using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service
 {
     public static class Addapter
     {
-        public static List<Player> ToPlayer(List<PlayerInfoResponse> playersInfo)
+        public static List<PlayerData> ToPlayer(List<PlayerInfoResponse> playersInfo)
         {
-            return playersInfo.Select(playerInfo => new Player
+            return playersInfo.Select(playerInfo => new PlayerData
             {
                 Playerid = playerInfo.id,
                 Name = playerInfo.first_name,

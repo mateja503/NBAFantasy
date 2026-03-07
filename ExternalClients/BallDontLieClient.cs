@@ -1,6 +1,8 @@
 ﻿
 using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.LogDefaults;
+using BoxScoreBuilder;
+using BoxScoreBuilder.Model;
 using ExternalClients.Poco;
 using ExternalClients.Response;
 using Microsoft.AspNetCore.Http;
@@ -17,11 +19,11 @@ namespace ExternalClients
         private readonly HttpClient _httpClient = httpClient;
         private readonly ILogger<BallDontLieClient> _logger = logger;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-        private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("external-api-shield"); 
-        
+        private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("external-api-shield");
+
         public async Task<GetAllPlayersResponse> GetAllPlayers(MetaData metaData, CancellationToken cancellationToken)//maybe add parameter for pagination and next Next_cursor
         {
-            var res = await _pipeline.ExecuteAsync(async token => 
+            var res = await _pipeline.ExecuteAsync(async token =>
             {
                 return await _httpClient.GetAsync($"/v1/players?per_page={metaData.Per_page}&cursor={metaData.Next_cursor}", token);
 
@@ -44,7 +46,7 @@ namespace ExternalClients
             return response;
         }
 
-        public async Task<GetTodaysGamesResponse> GetTodaysGames(CancellationToken cancellationToken) 
+        public async Task<GetTodaysGamesResponse> GetTodaysGames(CancellationToken cancellationToken)
         {
             var today = DateTime.UtcNow.Date.ToString("yyy-MM-dd");
             var res = await _pipeline.ExecuteAsync(async token =>
@@ -66,6 +68,42 @@ namespace ExternalClients
                 throw new NBAException($"GET {requestPath} failed ", (int)res.StatusCode);
             }
             return response;
+        }
+
+
+        public async Task<List<PlayerStatsResponse>> GetPlayerStats(List<long> playerIds,long gameId, CancellationToken cancellationToken)
+        {
+            List<PlayerStatsResponse> result = new List<PlayerStatsResponse>();
+            foreach (var id in playerIds) 
+            {
+                PlayerStats playerStats = new BoxScoreStatsBuilder().AddPoints()
+                   .AddAssists()
+                   .AddRebounds()
+                   .AddBlocks()
+                   .AddSteals()
+                   .AddThreePointsMade()
+                   .AddTurnovers()
+                   .AddFieldGoalPercentage()
+                   .AddFreeThrowPercentage()
+                   .Build();
+
+                result.Add(new PlayerStatsResponse
+                {
+                    player_id = id,
+                    fg_pct = playerStats.fg_pct,
+                    fg3m = playerStats.fg3m,
+                    ft_pct = playerStats.ft_pct,
+                    reb = playerStats.reb,
+                    ast = playerStats.ast,
+                    stl = playerStats.stl,
+                    blk = playerStats.blk,
+                    turnover = playerStats.turnover,
+                    pts = playerStats.pts
+                });
+            }
+
+
+            return result;
         }
 
     }

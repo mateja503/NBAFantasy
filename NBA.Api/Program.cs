@@ -14,7 +14,7 @@ using Scalar.AspNetCore;
 using Microsoft.Extensions.Http.Resilience;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
-using NBA.Service.PlayerService;
+using NBA.Service.Player;
 
 var builder = WebApplication.CreateBuilder(args);
 

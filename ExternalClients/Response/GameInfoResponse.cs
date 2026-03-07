@@ -14,6 +14,7 @@ namespace ExternalClients.Response
         public required long id { get; init; }
         public required string date { get; init; } 
         public required string status { get; init; }
+        public DateTime datetime { get; init; }
         public required string time { get; init;  }
         public required bool postseason { get; init; }
         public required bool postponed { get; init; }

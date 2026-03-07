@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ApplicationDefaults\ApplicationDefaults.csproj" />
+    <ProjectReference Include="..\BoxScoreFactory\BoxScoreBuilder.csproj" />
   </ItemGroup>
 
 </Project>

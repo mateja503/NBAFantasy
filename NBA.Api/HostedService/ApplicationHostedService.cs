@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using NBA.Data.Context;
-using NBA.Service.PlayerService;
+using NBA.Service.Player;
 
 namespace NBA.Api.HostedService
 {
