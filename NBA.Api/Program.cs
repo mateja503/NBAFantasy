@@ -4,17 +4,19 @@ using ExternalClients.Options;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using NBA.Api;
 using NBA.Api.Endpoints;
 using NBA.Api.HostedService;
 using NBA.Data.Context;
+using NBA.Service.CalculateBoxScore;
+using NBA.Service.GamesService;
+using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
-using Microsoft.Extensions.Http.Resilience;
 using System.Threading.RateLimiting;
-using Microsoft.Extensions.DependencyInjection;
-using NBA.Service.Player;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,7 +60,9 @@ builder.Services.AddCors(options =>
 });
 
 #region Services
+builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<BoxScoreCalculationService>();
 #endregion
 
 #region ExceptionHandlers

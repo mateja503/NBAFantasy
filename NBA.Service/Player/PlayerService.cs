@@ -1,19 +1,22 @@
-﻿using ExternalClients;
+﻿using ApplicationDefaults.Exceptions;
+using ExternalClients;
 using ExternalClients.Poco;
 using ExternalClients.Response;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Service.CalculateBoxScore;
 using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.Player
 {
     //use hangfire so this service to be executaed at a spefici time 
-    public class PlayerService(BallDontLieClient ballClient, NbaFantasyContext nbaContext)
+    public class PlayerService(BallDontLieClient ballClient, NbaFantasyContext nbaContext, BoxScoreCalculationService boxScoreCalculationService)
     {
         private readonly BallDontLieClient _ballDontLieClient = ballClient;    
-        private readonly NbaFantasyContext _nbaContext = nbaContext;    
+        private readonly NbaFantasyContext _nbaContext = nbaContext;
+        private readonly BoxScoreCalculationService _boxScoreCalculationService = boxScoreCalculationService;
         public async Task<GetAllPlayersResponse> AddPlayersToDb(MetaData metadata, CancellationToken cancellationToken) 
         {
             var externalPlayers = await _ballDontLieClient.GetAllPlayers(metadata, cancellationToken);
@@ -21,6 +24,11 @@ namespace NBA.Service.Player
             var players = Addapter.ToPlayer(filteredPlayers);
             await _nbaContext.AddPlayers(players, cancellationToken);
             return externalPlayers;
+        }
+
+        public async Task<PlayerData?> GetSpecificPlayerById(long playerId) 
+        {
+            return await _nbaContext.GetAllPlayers().FirstOrDefaultAsync(u => u.Playerid == playerId) ?? throw new NBAException($"For playerId {playerId}",ErrorCodes.DataBaseRecordNotFound);
         }
 
         public async Task<List<PlayerData>> GetPlayersForTeams(List<long> teamIds) 
@@ -41,15 +49,9 @@ namespace NBA.Service.Player
 
             var playersStats = await _ballDontLieClient.GetPlayerStats(playerIds, gameId, cancellationToken);
 
-            await CalculatePlayersStats(playersStats);
+            await _boxScoreCalculationService.PerformCalculations(playersStats);
 
             return playersStats;
         }
-
-        public async Task CalculatePlayersStats(List<PlayerStatsResponse> playersStats) 
-        {
-            //Calculate Players Stats based on the stats returned from the API and store the calculated points in the database   
-        }
-
     }
 }

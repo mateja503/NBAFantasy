@@ -20,7 +20,7 @@ namespace ApplicationDefaults.Exceptions
                     ErrorMessage = nbaException.Message,
                     ErrorCode = nbaException.ErrorCode
                 };
-                httpContext.Response.StatusCode = errorResponse.ErrorCode;
+                //httpContext.Response.StatusCode = errorResponse.ErrorCode;
 
                 await httpContext.Response.WriteAsJsonAsync(errorResponse, cancellationToken);
             }

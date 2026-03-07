@@ -34,14 +34,14 @@ namespace ExternalClients
             if (!res.IsSuccessStatusCode)
             {
                 _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed, {res.ReasonPhrase}").ToJson());
-                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", (int)res.StatusCode);
+                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", res.StatusCode.ToString());
             }
             var response = await res.Content.ReadFromJsonAsync<GetAllPlayersResponse>(cancellationToken);
 
             if (response is null)
             {
                 _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed to read the api response").ToJson());
-                throw new NBAException($"GET {requestPath} failed ", (int)res.StatusCode);
+                throw new NBAException($"GET {requestPath} failed ", res.StatusCode.ToString());
             }
             return response;
         }
@@ -58,14 +58,14 @@ namespace ExternalClients
             if (!res.IsSuccessStatusCode)
             {
                 _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed, {res.ReasonPhrase}").ToJson());
-                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", (int)res.StatusCode);
+                throw new NBAException($"GET {requestPath} failed, {res.ReasonPhrase}", res.StatusCode.ToString());
             }
             var response = await res.Content.ReadFromJsonAsync<GetTodaysGamesResponse>(cancellationToken);
 
             if (response is null)
             {
                 _logger.LogWarning("{Log}", new Log($"GET {requestPath} failed to read the api response").ToJson());
-                throw new NBAException($"GET {requestPath} failed ", (int)res.StatusCode);
+                throw new NBAException($"GET {requestPath} failed ", res.StatusCode.ToString());
             }
             return response;
         }
