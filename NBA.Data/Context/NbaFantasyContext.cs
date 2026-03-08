@@ -164,13 +164,17 @@ public partial class NbaFantasyContext : DbContext
                 .HasDefaultValue(false)
                 .HasColumnName("allowdrop");
             entity.Property(e => e.Assists)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("assists");
             entity.Property(e => e.Blocks)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("blocks");
-            entity.Property(e => e.Fieldgoalperc).HasColumnName("fieldgoalperc");
-            entity.Property(e => e.Freethrowperc).HasColumnName("freethrowperc");
+            entity.Property(e => e.Fieldgoal)
+                .HasDefaultValue(0m)
+                .HasColumnName("fieldgoal");
+            entity.Property(e => e.Freethrow)
+                .HasDefaultValue(0m)
+                .HasColumnName("freethrow");
             entity.Property(e => e.Gameready).HasColumnName("gameready");
             entity.Property(e => e.Irlteamid).HasColumnName("irlteamid");
             entity.Property(e => e.Irlteamname)
@@ -191,27 +195,27 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Playermemontoid).HasColumnName("playermemontoid");
             entity.Property(e => e.Playerposition).HasColumnName("playerposition");
             entity.Property(e => e.Points)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("points");
             entity.Property(e => e.Rebounds)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("rebounds");
             entity.Property(e => e.Rosterrole).HasColumnName("rosterrole");
             entity.Property(e => e.Steals)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("steals");
             entity.Property(e => e.Surname)
                 .HasMaxLength(255)
                 .HasColumnName("surname");
             entity.Property(e => e.Threepointers)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("threepointers");
             entity.Property(e => e.Tscreated)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("tscreated");
             entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
             entity.Property(e => e.Turnovers)
-                .HasDefaultValue(0L)
+                .HasDefaultValue(0m)
                 .HasColumnName("turnovers");
 
             entity.HasOne(d => d.Playermemonto).WithOne(p => p.Player)

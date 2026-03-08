@@ -12,7 +12,6 @@ namespace NBA.Service.CalculateBoxScore
             //TODO: Implement the logic to calculate the box score based on the player stats received from the API
 
 
-
         }
     }
 }

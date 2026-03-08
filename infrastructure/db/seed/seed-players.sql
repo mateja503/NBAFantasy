@@ -13,7 +13,7 @@ BEGIN
     IF db_exists THEN
         -- Insert Data
         INSERT INTO nba.player
-        (playerid, surname, name, irlteamname, irlteamid, points, assists, rebounds, blocks, steals, threepointers, turnovers, freethrowperc, fieldgoalperc, isdrop, isfreeagent, allowdrop, islock, tsupdated, tscreated, playerposition, rosterrole, gameready, playermemontoid)
+        (playerid, surname, name, irlteamname, irlteamid, points, assists, rebounds, blocks, steals, threepointers, turnovers, freethrow, fieldgoal, isdrop, isfreeagent, allowdrop, islock, tsupdated, tscreated, playerposition, rosterrole, gameready, playermemontoid)
         VALUES
         (1, 'Abrines', 'Alex', 'Oklahoma City Thunder', 21, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, False, True, False, False, NULL, '2026-02-26 20:50:52.584199+00', 1, NULL, NULL, NULL),
         (2, 'Adams', 'Jaylen', 'Atlanta Hawks', 1, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, False, True, False, False, NULL, '2026-02-26 20:50:52.584502+00', 1, NULL, NULL, NULL),

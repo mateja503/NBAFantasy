@@ -15,23 +15,23 @@ public partial class Player
 
     public long? Irlteamid { get; set; }
 
-    public long? Points { get; set; }
+    public decimal? Points { get; set; }
 
-    public long? Assists { get; set; }
+    public decimal? Assists { get; set; }
 
-    public long? Rebounds { get; set; }
+    public decimal? Rebounds { get; set; }
 
-    public long? Blocks { get; set; }
+    public decimal? Blocks { get; set; }
 
-    public long? Steals { get; set; }
+    public decimal? Steals { get; set; }
 
-    public long? Threepointers { get; set; }
+    public decimal? Threepointers { get; set; }
 
-    public long? Turnovers { get; set; }
+    public decimal? Turnovers { get; set; }
 
-    public double? Freethrowperc { get; set; }
+    public decimal? Freethrow { get; set; }
 
-    public double? Fieldgoalperc { get; set; }
+    public decimal? Fieldgoal { get; set; }
 
     public bool? Isdrop { get; set; }
 
