@@ -5,7 +5,7 @@ using NBA.Service.Player;
 
 namespace NBA.Service.GamesService
 {
-    public class GameService(BallDontLieClient ballDontLieClient, PlayerService playerService)
+    public class GameService(BallDontLieClient ballDontLieClient)
     {
         private readonly BallDontLieClient _ballDontLieClient = ballDontLieClient;
         public async Task<List<GameInfoResponse>> TodaysGames(CancellationToken cancellationToken)
@@ -16,20 +16,12 @@ namespace NBA.Service.GamesService
             {
                 DateTimeOffset gameFinishes = new DateTimeOffset(game.datetime).AddMinutes(4);
                 BackgroundJob.Schedule<PlayerService>(
-                    PlayerService => PlayerService.GetPlayersGameStats(game.id,game.home_team.id,
+                    playerService => playerService.GetPlayersGameStats(game.id,game.home_team.id,
                     game.visitor_team.id, game.home_team.full_name,game.visitor_team.full_name, CancellationToken.None),
                     gameFinishes);
             }
             return games.data;
         }
-
-        
-
-
-
-
-
-
 
     }
 }

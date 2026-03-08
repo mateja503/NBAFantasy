@@ -36,9 +36,15 @@ namespace BoxScoreBuilder
             return this;
         }
 
-        public BoxScoreStatsBuilder AddThreePointsMade()
+        public BoxScoreStatsBuilder AddThreePointersMade()
         {
             gameStats.fg3m = random.Next(0, 10); // Random three-pointers made between 0 and 10
+            return this;
+        }
+
+        public BoxScoreStatsBuilder AddThreePointersAttemped()
+        {
+            gameStats.fg3a = random.Next(gameStats.fg3m, 10); // Random three-pointers made between 0 and 10
             return this;
         }
 
@@ -48,15 +54,27 @@ namespace BoxScoreBuilder
             return this;
         }
 
-        public BoxScoreStatsBuilder AddFieldGoalPercentage()
+        public BoxScoreStatsBuilder AddFieldGoalsMade()
         {
-            gameStats.fg_pct = (decimal)(random.NextDouble() * 100); // Random field goal percentage between 0 and 100
+            gameStats.fgm = random.Next(0, 20); // Random field goal percentage between 0 and 100
             return this;
         }
 
-        public BoxScoreStatsBuilder AddFreeThrowPercentage()
+        public BoxScoreStatsBuilder AddFieldGoalsAttempted()
         {
-            gameStats.ft_pct = (decimal)(random.NextDouble() * 100); // Random field goal percentage between 0 and 100
+            gameStats.fga = random.Next(gameStats.fgm, 20); // Random field goal percentage between 0 and 100
+            return this;
+        }
+
+        public BoxScoreStatsBuilder AddFreeThrowsMade()
+        {
+            gameStats.ftm = random.Next(0, 20); // Random field goal percentage between 0 and 100
+            return this;
+        }
+
+        public BoxScoreStatsBuilder AddFreeThrowsAttempted()
+        {
+            gameStats.fta = random.Next(0, 20); // Random field goal percentage between 0 and 100
             return this;
         }
 

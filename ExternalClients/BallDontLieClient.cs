@@ -81,18 +81,24 @@ namespace ExternalClients
                    .AddRebounds()
                    .AddBlocks()
                    .AddSteals()
-                   .AddThreePointsMade()
+                   .AddThreePointersMade()
+                   .AddThreePointersAttemped()
                    .AddTurnovers()
-                   .AddFieldGoalPercentage()
-                   .AddFreeThrowPercentage()
+                   .AddFieldGoalsMade()
+                   .AddFieldGoalsAttempted()
+                   .AddFreeThrowsMade()
+                   .AddFreeThrowsAttempted()
                    .Build();
 
                 result.Add(new PlayerStatsResponse
                 {
                     player_id = id,
-                    fg_pct = playerStats.fg_pct,
+                    fgm = playerStats.fgm,
+                    fga= playerStats.fga,
                     fg3m = playerStats.fg3m,
-                    ft_pct = playerStats.ft_pct,
+                    fg3a = playerStats.fg3a,
+                    ftm = playerStats.ftm,
+                    fta = playerStats.fta,
                     reb = playerStats.reb,
                     ast = playerStats.ast,
                     stl = playerStats.stl,

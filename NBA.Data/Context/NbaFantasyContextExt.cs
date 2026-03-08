@@ -2,6 +2,7 @@
 
 using NBA.Data.Entities;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace NBA.Data.Context
 {
@@ -18,6 +19,11 @@ namespace NBA.Data.Context
             await Players.AddRangeAsync(players, cancellationToken);
             _ = await SaveChangesAsync();
         }
-    #endregion
+        public async Task UpdatePlayersRange(List<Player> players, CancellationToken cancellationToken = default)
+        {
+            Players.UpdateRange(players);
+            _ = await SaveChangesAsync(cancellationToken);
+        }
+        #endregion
     }
 }
