@@ -3,6 +3,7 @@ using ExternalClients;
 using ExternalClients.Poco;
 using ExternalClients.Response;
 using Hangfire;
+using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
@@ -34,11 +35,13 @@ namespace NBA.Service.Player
         public async Task<List<PlayerData>> GetPlayersForTeams(List<long> teamIds) 
         {
             return await _nbaContext.GetAllPlayers()
+                .AsNoTracking()
                 .Where(u => teamIds.Contains(u.Irlteamid ?? 0))
                 .ToListAsync();
         }
 
         [JobDisplayName("Stats Check: {3} vs {4} (ID: {0})")]
+        [AutomaticRetry(Attempts = 3, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
         public async Task<List<PlayerStatsResponse>> GetPlayersGameStats(long gameId, long hometeamId, long awayteamId, string homeTeam, string awayTeam, CancellationToken cancellationToken)
         {
             //TODO implment observer where the calculated points are stored in database and the fantasy teams are updated with the new points
@@ -50,8 +53,13 @@ namespace NBA.Service.Player
 
             var playersStats = await _ballDontLieClient.GetPlayerStats(playerIds, gameId, cancellationToken);
 
-            await _boxScoreCalculationService.PerformCalculations(playersStats);
-
+            using (var connection = JobStorage.Current.GetConnection()) 
+            {
+                using (connection.AcquireDistributedLock("fantasy-update-lock", TimeSpan.FromSeconds(100)))
+                {
+                    await _boxScoreCalculationService.PerformCalculations(playersStats);
+                }
+            }
             return playersStats;
         }
     }
