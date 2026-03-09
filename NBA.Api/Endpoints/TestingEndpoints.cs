@@ -8,12 +8,18 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder TestEndpoints(this IEndpointRouteBuilder builder) 
         {
-            builder.MapGet("/activePlayers", async (NbaFantasyContext context, BallDontLieClient client) => 
-            {
-                return await context.GetAllPlayers().AsNoTracking().ToListAsync();
-                //return await client.GetAllPlayers();
+            //builder.MapGet("/activePlayers", async (NbaFantasyContext context, BallDontLieClient client) => 
+            //{
+            //    return await context.GetAllPlayers().AsNoTracking().ToListAsync();
+            //    //return await client.GetAllPlayers();
 
-            });
+            //}).WithTags("misc");
+
+            builder.MapGet("/players", async (NbaFantasyContext context, BallDontLieClient client) =>
+            {
+                return Results.Ok();
+
+            }).WithTags("misc");
             return builder;
 
         }

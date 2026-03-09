@@ -14,7 +14,8 @@ namespace NBA.Service.GamesService
 
             foreach (var game in games.data) 
             {
-                DateTimeOffset gameFinishes = new DateTimeOffset(game.datetime).AddMinutes(4);
+                DateTimeOffset gameFinishes = new DateTimeOffset(game.datetime).AddHours(4);
+
                 BackgroundJob.Schedule<PlayerService>(
                     playerService => playerService.GetPlayersGameStats(game.id,game.home_team.id,
                     game.visitor_team.id, game.home_team.full_name,game.visitor_team.full_name, CancellationToken.None),

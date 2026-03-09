@@ -79,7 +79,7 @@ builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
 var app = builder.Build();
 
 
-app.UseExceptionHandler();
+//app.UseExceptionHandler();
 
 
 

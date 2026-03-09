@@ -38,7 +38,7 @@ namespace NBA.Service.Player
                 .ToListAsync();
         }
 
-        [JobDisplayName("Stats Check: {4} vs {5} (ID: {0})")]
+        [JobDisplayName("Stats Check: {3} vs {4} (ID: {0})")]
         public async Task<List<PlayerStatsResponse>> GetPlayersGameStats(long gameId, long hometeamId, long awayteamId, string homeTeam, string awayTeam, CancellationToken cancellationToken)
         {
             //TODO implment observer where the calculated points are stored in database and the fantasy teams are updated with the new points

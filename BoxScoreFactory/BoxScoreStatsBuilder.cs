@@ -1,6 +1,7 @@
 ﻿
 
 using BoxScoreBuilder.Model;
+using static System.Net.WebRequestMethods;
 
 namespace BoxScoreBuilder
 {
@@ -74,7 +75,7 @@ namespace BoxScoreBuilder
 
         public BoxScoreStatsBuilder AddFreeThrowsAttempted()
         {
-            gameStats.fta = random.Next(0, 20); // Random field goal percentage between 0 and 100
+            gameStats.fta = random.Next(gameStats.ftm, 20); // Random field goal percentage between 0 and 100
             return this;
         }
 
