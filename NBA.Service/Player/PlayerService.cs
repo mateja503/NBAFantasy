@@ -42,6 +42,7 @@ namespace NBA.Service.Player
         public async Task<List<PlayerStatsResponse>> GetPlayersGameStats(long gameId, long hometeamId, long awayteamId, string homeTeam, string awayTeam, CancellationToken cancellationToken)
         {
             //TODO implment observer where the calculated points are stored in database and the fantasy teams are updated with the new points
+            //
 
             var players = await GetPlayersForTeams([hometeamId, awayteamId]);
 
