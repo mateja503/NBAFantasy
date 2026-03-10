@@ -23,6 +23,7 @@ namespace NBA.Service
                     "C" => (int)PlayerPositionEnum.C,
                     "G-F" => (int)PlayerPositionEnum.GF,
                     "C-F" => (int)PlayerPositionEnum.CF,
+                    "F-G" => (int)PlayerPositionEnum.FG,
                     _ => (int)PlayerPositionEnum.UNKOWN
                 },
                 Irlteamname = playerInfo.team?.full_name,

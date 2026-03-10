@@ -1,7 +1,6 @@
 ﻿
 
 using BoxScoreBuilder.Model;
-using static System.Net.WebRequestMethods;
 
 namespace BoxScoreBuilder
 {

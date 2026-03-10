@@ -8,6 +8,7 @@ namespace NBA.Data.Enumerations
         C = 3,
         GF = 4,
         CF = 5,
-        UNKOWN = 6
+        FG = 6,
+        UNKOWN = 7
     }
 }

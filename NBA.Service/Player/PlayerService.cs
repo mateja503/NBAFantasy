@@ -46,7 +46,6 @@ namespace NBA.Service.Player
         {
             //TODO implment observer where the calculated points are stored in database and the fantasy teams are updated with the new points
             //
-
             var players = await GetPlayersForTeams([hometeamId, awayteamId]);
 
             var playerIds = players.Select(p => p.Playerid).ToList();
@@ -55,9 +54,9 @@ namespace NBA.Service.Player
 
             using (var connection = JobStorage.Current.GetConnection()) 
             {
-                using (connection.AcquireDistributedLock("fantasy-update-lock", TimeSpan.FromSeconds(100)))
+                using (connection.AcquireDistributedLock("fantasy-update-player-lock", TimeSpan.FromSeconds(100)))
                 {
-                    await _boxScoreCalculationService.PerformCalculations(playersStats);
+                    await _boxScoreCalculationService.PerformCalculations(playersStats, players.ToDictionary(p=>p.Playerid));
                 }
             }
             return playersStats;

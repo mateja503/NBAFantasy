@@ -8,28 +8,32 @@ namespace NBA.Service.CalculateBoxScore
     public class BoxScoreCalculationService(NbaFantasyContext context)
     {
         private readonly NbaFantasyContext _context = context;  
-        public async Task PerformCalculations(List<PlayerStatsResponse> playersStats)
+        public async Task PerformCalculations(List<PlayerStatsResponse> playersStats, Dictionary<long,PlayerData> players)
         {
-           List<PlayerData> players = playersStats
-                .Select(player => 
+           List<PlayerData?> result = playersStats
+                .Select(stats => 
                     {
+                        players.TryGetValue(stats.player_id, out var player);
 
-                        return new BoxScoreCalculationBuilder()
-                            .CalculatePoints(player.pts)
-                            .CalculateAssists(player.ast)
-                            .CalculateRebounds(player.reb)
-                            .CalculateBlocks(player.blk)
-                            .CalculateSteals(player.stl)
-                            .CalculateThreePointers(player.fg3m, player.fg3a)
-                            .CalculateFieldGoals(player.fgm, player.fga)
-                            .CalculateFreeThrows(player.ftm, player.fta)
-                            .Calculate(player.player_id);
+                        if (player == null)
+                            return null;
 
-
+                        return new BoxScoreCalculationBuilder(player)
+                            .CalculatePoints(stats.pts)
+                            .CalculateAssists(stats.ast)
+                            .CalculateRebounds(stats.reb)
+                            .CalculateBlocks(stats.blk)
+                            .CalculateSteals(stats.stl)
+                            .CalculateThreePointers(stats.fg3m, stats.fg3a)
+                            .CalculateFieldGoals(stats.fgm, stats.fga)
+                            .CalculateFreeThrows(stats.ftm, stats.fta)
+                            .Calculate();
                     } 
-                ).ToList();
+                )
+                .Where(player => player != null)
+                .ToList(); ;
 
-             await _context.UpdatePlayersRange(players);
+             await _context.UpdatePlayersRange(result!);
         }
     }
 }

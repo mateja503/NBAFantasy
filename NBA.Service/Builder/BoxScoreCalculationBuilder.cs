@@ -3,9 +3,9 @@ using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.Builder
 {
-    public class BoxScoreCalculationBuilder
+    public readonly struct BoxScoreCalculationBuilder(PlayerData _player)
     {
-        private PlayerData player = new PlayerData();
+        private readonly PlayerData player = _player;
         public BoxScoreCalculationBuilder CalculatePoints(int pointsScored) 
         {
             player.Points = pointsScored * BoxScoreEvaluation.Points;
@@ -52,22 +52,10 @@ namespace NBA.Service.Builder
         }
         public BoxScoreCalculationBuilder CalculateFieldGoals(int fieldGoalsMade, int fieldGoalAttempted)
         {
-            player.Threepointers = (fieldGoalsMade * BoxScoreEvaluation.FieldGoalMade) + ((fieldGoalAttempted - fieldGoalsMade) * BoxScoreEvaluation.FieldGoalMissed);
+            player.Fieldgoal = (fieldGoalsMade * BoxScoreEvaluation.FieldGoalMade) + ((fieldGoalAttempted - fieldGoalsMade) * BoxScoreEvaluation.FieldGoalMissed);
             return this;
         }
 
-        public PlayerData Calculate(long playerId) 
-        {
-            player.Playerid = playerId;
-
-            PlayerData finalResult = player;
-
-            player = new PlayerData();
-
-            return finalResult;
-        }
-
-
-
+        public PlayerData Calculate() => player;
     }
 }
