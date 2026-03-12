@@ -25,5 +25,26 @@ namespace NBA.Data.Context
             _ = await SaveChangesAsync(cancellationToken);
         }
         #endregion
+
+        #region TeamPlayer
+        public IQueryable<Teamplayer> GetAllTeamPlayer() 
+        {
+            return Teamplayers.AsQueryable();
+        }
+        public async Task<Teamplayer> AddTeamPlayer(Teamplayer teamplayer) 
+        {
+            var e = await Teamplayers.AddAsync(teamplayer);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
+
+        public async Task<List<Teamplayer>> DeleteTeamPlayerRange(List<Teamplayer> teamplayers) 
+        {
+            Teamplayers.RemoveRange(teamplayers);
+            _ = await SaveChangesAsync();
+            return teamplayers;
+            
+        }
+        #endregion
     }
 }

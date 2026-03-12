@@ -12,7 +12,7 @@ using NBA.Api.Endpoints;
 using NBA.Api.HostedService;
 using NBA.Data.Context;
 using NBA.Service.CalculateBoxScore;
-using NBA.Service.GamesService;
+using NBA.Service.Game;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;

@@ -1,5 +1,5 @@
 ﻿using Hangfire;
-using NBA.Service.GamesService;
+using NBA.Service.Game;
 
 namespace NBA.Api.HostedService
 {

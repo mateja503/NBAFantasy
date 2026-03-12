@@ -3,7 +3,7 @@ using ExternalClients.Response;
 using Hangfire;
 using NBA.Service.Player;
 
-namespace NBA.Service.GamesService
+namespace NBA.Service.Game
 {
     public class GameService(BallDontLieClient ballDontLieClient)
     {
