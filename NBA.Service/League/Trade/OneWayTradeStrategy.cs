@@ -8,34 +8,23 @@ namespace NBA.Service.League.Trade
     public class OneWayTradeStrategy : ITradeStrategy
     {
         private readonly NbaFantasyContext context;
-        private List<long> teamPlayers;
+        private long teamA;
+        private long teamB;
+        private List<long> playersA;
+        private List<long> playersB;
 
-        public OneWayTradeStrategy(List<long> _teamPlayers, NbaFantasyContext _context)
+        public OneWayTradeStrategy(NbaFantasyContext context, long teamA, long teamB, List<long> playersA, List<long> playersB)
         {
-            context = _context;
-            teamPlayers = _teamPlayers;
+            this.context = context;
+            this.teamA = teamA;
+            this.teamB = teamB;
+            this.playersA = playersA;
+            this.playersB = playersB;
         }
 
         public async Task Trade()
         {
-            List<Teamplayer> temp = await context.GetAllTeamPlayer().Where(u => teamPlayers.Contains(u.Teamplayerid)).ToListAsync();
-
-            Dictionary<long, List<long>> completeTrade = temp.GroupBy(u => u.Teamid).Select(u => new
-            {
-                Key = u.Key,
-                Value = u.Select(u => u.Playerid).ToList()
-            }).ToDictionary(x=>x.Key,x=>x.Value);
-
-            await context.DeleteTeamPlayerRange(temp);
-
-            //foreach (var team in completeTrade) 
-            //{
-            //    foreach (var playerId in team.Value) 
-            //    {
-            //        await context.AddTeamPlayer(new Teamplayer { Teamid = team.Key, Playerid = playerId });
-            //    }
-            
-            //}
+           
         }
     }
 }
