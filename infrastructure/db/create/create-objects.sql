@@ -31,8 +31,6 @@ CREATE TABLE nba.player (
     turnovers DECIMAL DEFAULT 0,
     freethrow DECIMAL DEFAULT 0,
     fieldgoal DECIMAL DEFAULT 0,
-    isdrop BOOLEAN DEFAULT FALSE,
-    isfreeagent BOOLEAN DEFAULT TRUE,
     allowdrop BOOLEAN DEFAULT FALSE,
     islock BOOLEAN DEFAULT FALSE,
     tsupdated TIMESTAMP WITH TIME ZONE,
@@ -101,6 +99,7 @@ CREATE TABLE nba.leagueplayer (
     leagueplayerid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     playerid BIGINT NOT NULL,
     leagueid BIGINT NOT NULL,
+	isfreeagent BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_leagueplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
     CONSTRAINT fk_leagueplayer_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
 );

@@ -33,10 +33,6 @@ public partial class Player
 
     public decimal? Fieldgoal { get; set; }
 
-    public bool? Isdrop { get; set; }
-
-    public bool? Isfreeagent { get; set; }
-
     public bool? Allowdrop { get; set; }
 
     public bool? Islock { get; set; }

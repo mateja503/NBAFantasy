@@ -112,6 +112,9 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Leagueplayerid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("leagueplayerid");
+            entity.Property(e => e.Isfreeagent)
+                .HasDefaultValue(true)
+                .HasColumnName("isfreeagent");
             entity.Property(e => e.Leagueid).HasColumnName("leagueid");
             entity.Property(e => e.Playerid).HasColumnName("playerid");
 
@@ -180,12 +183,6 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Irlteamname)
                 .HasMaxLength(100)
                 .HasColumnName("irlteamname");
-            entity.Property(e => e.Isdrop)
-                .HasDefaultValue(false)
-                .HasColumnName("isdrop");
-            entity.Property(e => e.Isfreeagent)
-                .HasDefaultValue(true)
-                .HasColumnName("isfreeagent");
             entity.Property(e => e.Islock)
                 .HasDefaultValue(false)
                 .HasColumnName("islock");

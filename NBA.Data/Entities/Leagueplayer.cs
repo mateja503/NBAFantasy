@@ -11,6 +11,8 @@ public partial class Leagueplayer
 
     public long Leagueid { get; set; }
 
+    public bool Isfreeagent { get; set; }
+
     public virtual League League { get; set; } = null!;
 
     public virtual Player Player { get; set; } = null!;
