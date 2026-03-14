@@ -21,7 +21,7 @@ namespace NBA.Service.League.Trade
             var playerdIds = tradeBetweenTeams.SelectMany(u=>u.PlayersIds).Distinct().ToList();
 
             var oldEntires = await _context.GetAllTeamPlayer()
-                .Where(u=> teamIds.Any(t => t == u.Teamid) && playerdIds.Any(p=>p == u.Playerid))
+                .Where(u=> teamIds.Contains(u.Teamid) && playerdIds.Contains(u.Playerid))
                 .ToListAsync();
 
             var newEntries = oldEntires.Select(u =>

@@ -1,6 +1,6 @@
 using ApplicationDefaults.Exceptions;
+using ApplicationDefaults.Options;
 using ExternalClients;
-using ExternalClients.Options;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.SignalR;
@@ -13,6 +13,9 @@ using NBA.Api.HostedService;
 using NBA.Data.Context;
 using NBA.Service.CalculateBoxScore;
 using NBA.Service.Game;
+using NBA.Service.League.Draft;
+using NBA.Service.League.FreeAgency;
+using NBA.Service.League.Trade;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
@@ -23,6 +26,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Options
 builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
+builder.Services.Configure<DraftOptions>(builder.Configuration.GetSection("ApplicationSettings:Draft"));
+builder.Services.Configure<ApplicationOptions>(builder.Configuration.GetSection("ApplicationSettings"));
 #endregion
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
@@ -63,6 +68,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
+builder.Services.AddScoped<DraftService>();
+builder.Services.AddScoped<TradeService>();
+builder.Services.AddScoped<FreeAgencyService>();
 #endregion
 
 #region ExceptionHandlers

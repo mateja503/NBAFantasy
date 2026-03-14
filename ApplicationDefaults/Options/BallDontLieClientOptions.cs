@@ -1,6 +1,5 @@
-﻿using ExternalClients.Response;
-
-namespace ExternalClients.Options
+﻿
+namespace ApplicationDefaults.Options
 {
     public class BallDontLieClientOptions
     {

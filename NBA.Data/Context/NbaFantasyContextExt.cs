@@ -8,7 +8,7 @@ namespace NBA.Data.Context
 {
     public partial class NbaFantasyContext{
 
-    #region Players
+         #region Players
         public IQueryable<Player> GetAllPlayers()
         {
             return Players.AsQueryable();
@@ -51,6 +51,33 @@ namespace NBA.Data.Context
             await Teamplayers.AddRangeAsync(teamplayers);
             _ = await SaveChangesAsync();
             return teamplayers;
+        }
+        #endregion
+
+        #region LeaguePlayer
+        public IQueryable<Leagueplayer> GetAllLeaguePlayers() 
+        {
+            return Leagueplayers.AsQueryable();
+        }
+
+        public async Task<List<Leagueplayer>> UpdatLeaguePlayersRange(List<Leagueplayer> leagueplayers) 
+        {
+            Leagueplayers.UpdateRange(leagueplayers);
+            _ = await SaveChangesAsync();
+            return leagueplayers;
+        }
+        #endregion
+
+        #region LeagueTeam
+        public IQueryable<Leagueteam> GetAllLeagueTeam() 
+        {
+            return Leagueteams.AsQueryable();
+        }
+        #endregion
+        #region Team         
+        public IQueryable<Team> GetAllTeams() 
+        {
+            return Teams.AsQueryable();
         }
         #endregion
     }

@@ -1,15 +1,81 @@
-﻿using NBA.Data.Context;
+﻿using ApplicationDefaults.Exceptions;
+using ApplicationDefaults.Options;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Enumerations;
 using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.League.Draft
 {
-    //maybe more work needed for these service not sure what more, leave as it is for now 
-    public class DraftService(NbaFantasyContext context)
+    public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, IOptions<ApplicationOptions> appOptions)
     {
         private readonly NbaFantasyContext _context = context;
-        public async Task<PlayerData> DraftPlayer(long playerId, long teamId) 
+        private readonly DraftOptions _draftOptions = draftOptions.Value;
+        private readonly ApplicationOptions _appOptions = appOptions.Value;
+
+        public async Task<Dictionary<long,List<Team>>> DraftOrder(long leagueId) 
         {
+            var leagueTeams = await _context.GetAllLeagueTeam().Where(u => u.Leagueid == leagueId)
+                .Include(u => u.Team)
+                .Include(u => u.League)
+                .OrderBy(u => Guid.NewGuid())
+                .Select(u => new { u.League.Draftstyle, u.Team })
+                .ToListAsync();
+
+            var teams = leagueTeams.Select(u => u.Team).ToList();
+            var draftType = leagueTeams.Select(u => u.Draftstyle).FirstOrDefault() ?? (long)DraftType.Snake;
+
+            Dictionary<long, List<Team>> draft = new Dictionary<long, List<Team>>();
+
+            switch (draftType)
+            {
+                case (long)DraftType.Snake:
+
+                    for (var i = 1; i <= _draftOptions.Rounds; i++) 
+                    {
+                        if (i % 2 == 0) draft.Add(i, teams.Reverse<Team>().ToList());
+                        else draft.Add(i, teams);
+                    }
+                    return draft;
+
+                case (long)DraftType.Auction:
+                    //TODO: Implement Auction Draft Logic
+                    return draft;
+                case (long)DraftType.Linear:
+
+                    for (var i = 1; i <= _draftOptions.Rounds; i++)
+                        draft.Add(i, teams);
+
+                    return draft;
+
+                case (long)DraftType.RRR:
+                    for (var i = 1; i <= _draftOptions.Rounds; i++)
+                    {
+                        if (i % 2 == 0 || i == 3) draft.Add(i, teams.Reverse<Team>().ToList());
+                        else draft.Add(i, teams);
+                    }
+                    return draft;
+
+                case (long)DraftType.Offline:
+                    draft.Add(0, teams);
+                    return draft;
+                default:
+                    throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);
+            }
+        }
+
+
+        public async Task<PlayerData> DraftPlayer(long teamId, long playerId) 
+        {
+            var team = await _context.GetAllTeamPlayer().Where(u=>u.Teamid == teamId).ToListAsync();
+
+            if(team.Count >= _appOptions.MaxPlayersPerTeam) 
+                throw new NBAException("Team has reached maximum number of players", ErrorCodes.TeamMaxPlayersReached);
+
+            //TODO : Add logic to check if team has reached maximum number of players for centers
+
             var teamplayer = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
             return teamplayer.Player;
         }
