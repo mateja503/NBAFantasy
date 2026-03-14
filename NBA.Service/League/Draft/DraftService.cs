@@ -2,7 +2,7 @@
 using NBA.Data.Entities;
 using PlayerData = NBA.Data.Entities.Player;
 
-namespace NBA.Service.League
+namespace NBA.Service.League.Draft
 {
     //maybe more work needed for these service not sure what more, leave as it is for now 
     public class DraftService(NbaFantasyContext context)

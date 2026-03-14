@@ -45,6 +45,13 @@ namespace NBA.Data.Context
             return teamplayers;
             
         }
+
+        public async Task<List<Teamplayer>> AddTeamPlayerRange(List<Teamplayer> teamplayers) 
+        {
+            await Teamplayers.AddRangeAsync(teamplayers);
+            _ = await SaveChangesAsync();
+            return teamplayers;
+        }
         #endregion
     }
 }
