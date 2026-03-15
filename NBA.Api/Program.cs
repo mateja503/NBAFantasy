@@ -16,6 +16,8 @@ using NBA.Service.Game;
 using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;
 using NBA.Service.League.Trade;
+using NBA.Service.Observer;
+using NBA.Service.Observer.Listeners;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
@@ -42,6 +44,8 @@ builder.Services.AddSignalR().AddStackExchangeRedis("redis-cache", options => {
     options.Configuration.SyncTimeout = 1000; // 1 second timeout
 
 });
+
+
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
@@ -84,6 +88,8 @@ builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
+builder.Services.AddSingleton<EventManager>();
+builder.Services.AddSingleton<AuctionListener>();
 #endregion
 
 #region ExceptionHandlers

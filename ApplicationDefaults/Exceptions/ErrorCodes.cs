@@ -7,6 +7,7 @@ namespace ApplicationDefaults.Exceptions
         #region Generic 
         public const string DataBaseRecordNotFound = "5656-DATABASERECORDNOTFOUND";
         public const string EnumTypeDoesNotExist = "5656-ENUMTYPEDOESNOTEXIST";
+        public const string TypeIsNotSupported = "5656-TYPEISNOTSUPPORTED";
         #endregion
 
         #region Specific

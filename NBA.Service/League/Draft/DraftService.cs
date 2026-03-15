@@ -1,19 +1,25 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
+using NBA.Service.Observer;
+using NBA.Service.Observer.HubSignalR;
+using NBA.Service.Observer.Listeners;
 using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.League.Draft
 {
-    public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, IOptions<ApplicationOptions> appOptions)
+    public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, 
+        IOptions<ApplicationOptions> appOptions, AuctionListener _auctionDraftListener)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
+        private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task<Dictionary<long,List<Team>>> DraftOrder(long leagueId) 
         {
@@ -41,7 +47,7 @@ namespace NBA.Service.League.Draft
                     return draft;
 
                 case (long)DraftType.Auction:
-                    //TODO: Implement Auction Draft Logic
+
                     return draft;
                 case (long)DraftType.Linear:
 
