@@ -5,6 +5,7 @@ using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
@@ -25,7 +26,6 @@ using Polly;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,11 +50,12 @@ builder.Services.AddSingleton<EventManager>();
 builder.Services.AddSingleton<AuctionListener>();
 builder.Services.AddSingleton<AuctionHub>();
 
+
 builder.Services.AddSignalR().AddStackExchangeRedis(options =>
 {
     options.ConnectionFactory = async writer =>
     {
-        var multiplexer = builder.Services.BuildServiceProvider()//this to be fixed
+        var multiplexer = builder.Services.BuildServiceProvider()//this has to be fixed
                                      .GetRequiredService<IConnectionMultiplexer>();
         return multiplexer;
     };
@@ -67,6 +68,23 @@ builder.Services.AddSignalR().AddStackExchangeRedis(options =>
 
 });
 
+//builder.Services.AddSignalR().AddStackExchangeRedis();
+
+//// 2. Use AddOptions to "inject" the Multiplexer into the RedisOptions
+//builder.Services.AddOptions<RedisOptions>("StackExchangeRedis")
+//    .Configure<IConnectionMultiplexer>((options, multiplexer) =>
+//    {
+//        // Simply return the multiplexer that Aspire already created
+//        options.ConnectionFactory = _ => Task.FromResult(multiplexer);
+
+//        // Apply your specific configurations
+//        options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
+//        options.Configuration.AbortOnConnectFail = false;
+//        options.Configuration.ConnectRetry = 3;
+//        options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
+//        options.Configuration.ClientName = "redis-nba-fantasy";
+//        options.Configuration.SyncTimeout = 1000;
+//    });
 
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
