@@ -74,10 +74,18 @@ namespace NBA.Data.Context
             return Leagueteams.AsQueryable();
         }
         #endregion
+
         #region Team         
         public IQueryable<Team> GetAllTeams() 
         {
             return Teams.AsQueryable();
+        }
+        #endregion
+
+        #region League
+        public IQueryable<League> GetAllLeagues() 
+        {
+            return Leagues.AsQueryable();
         }
         #endregion
     }

@@ -48,6 +48,7 @@ public partial class NbaFantasyContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+
         modelBuilder.Entity<Applicationuser>(entity =>
         {
             entity.HasKey(e => e.Userid).HasName("applicationuser_pkey");

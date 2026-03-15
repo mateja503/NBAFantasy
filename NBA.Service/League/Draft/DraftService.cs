@@ -14,12 +14,12 @@ using PlayerData = NBA.Data.Entities.Player;
 namespace NBA.Service.League.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, 
-        IOptions<ApplicationOptions> appOptions, AuctionListener _auctionDraftListener)
+        IOptions<ApplicationOptions> appOptions)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
-        private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
+        //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task<Dictionary<long,List<Team>>> DraftOrder(long leagueId) 
         {

@@ -3,6 +3,7 @@ using ApplicationDefaults.Options;
 using ExternalClients;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
@@ -17,12 +18,15 @@ using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;
 using NBA.Service.League.Trade;
 using NBA.Service.Observer;
+using NBA.Service.Observer.HubSignalR;
 using NBA.Service.Observer.Listeners;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,11 +35,29 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
 builder.Services.Configure<DraftOptions>(builder.Configuration.GetSection("ApplicationSettings:Draft"));
 builder.Services.Configure<ApplicationOptions>(builder.Configuration.GetSection("ApplicationSettings"));
+
+builder.Services.Configure<JsonOptions>(options =>
+{
+    // This will keep track of objects it has already seen and use a reference ID instead of recursing
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.WriteIndented = true;
+});
 #endregion
 
 builder.AddRedisClient("redis-cache");
 
-builder.Services.AddSignalR().AddStackExchangeRedis("redis-cache", options => {
+builder.Services.AddSingleton<EventManager>();
+builder.Services.AddSingleton<AuctionListener>();
+builder.Services.AddSingleton<AuctionHub>();
+
+builder.Services.AddSignalR().AddStackExchangeRedis(options =>
+{
+    options.ConnectionFactory = async writer =>
+    {
+        var multiplexer = builder.Services.BuildServiceProvider()//this to be fixed
+                                     .GetRequiredService<IConnectionMultiplexer>();
+        return multiplexer;
+    };
     options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
     options.Configuration.AbortOnConnectFail = false;
     options.Configuration.ConnectRetry = 3;
@@ -71,9 +93,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi();
 
-builder.Services.AddCors(options => 
+builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy => 
+    options.AddDefaultPolicy(policy =>
     {
         policy.AllowAnyHeader()
         .AllowAnyOrigin()
@@ -88,8 +110,7 @@ builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
-builder.Services.AddSingleton<EventManager>();
-builder.Services.AddSingleton<AuctionListener>();
+
 #endregion
 
 #region ExceptionHandlers
@@ -105,19 +126,22 @@ builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
 
 var app = builder.Build();
 
+app.MapHub<AuctionHub>("/auctionHub");
 
 //app.UseExceptionHandler();
 
 
 
-if (app.Environment.IsDevelopment())
-{
-    // Expose the JSON endpoint
-    app.MapOpenApi();
+//if (app.Environment.IsDevelopment())
+//{
+   
+//}
 
-    // Map the Scalar UI (This replaces builder.Services.AddScalar)
-    app.MapScalarApiReference();
-}
+// Expose the JSON endpoint
+app.MapOpenApi();
+
+// Map the Scalar UI (This replaces builder.Services.AddScalar)
+app.MapScalarApiReference();
 
 //// Configure the HTTP request pipeline.
 //if (!app.Environment.IsDevelopment())
@@ -149,3 +173,4 @@ v1.TestEndpoints();
 
 
 app.Run();
+
