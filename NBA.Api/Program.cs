@@ -19,6 +19,7 @@ using NBA.Service.League.Trade;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
+using StackExchange.Redis;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +32,17 @@ builder.Services.Configure<ApplicationOptions>(builder.Configuration.GetSection(
 #endregion
 
 builder.AddRedisClient("redis-cache");
+
+builder.Services.AddSignalR().AddStackExchangeRedis("redis-cache", options => {
+    options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
+    options.Configuration.AbortOnConnectFail = false;
+    options.Configuration.ConnectRetry = 3;
+    options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
+    options.Configuration.ClientName = "redis-nba-fantasy";
+    options.Configuration.SyncTimeout = 1000; // 1 second timeout
+
+});
+
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.RegisterHangFire(builder.Configuration);
