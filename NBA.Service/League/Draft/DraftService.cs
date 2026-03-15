@@ -69,15 +69,27 @@ namespace NBA.Service.League.Draft
 
         public async Task<PlayerData> DraftPlayer(long teamId, long playerId) 
         {
-            var team = await _context.GetAllTeamPlayer().Where(u=>u.Teamid == teamId).ToListAsync();
+            var team = await _context.GetAllTeamPlayer()
+                .Where(u => u.Teamid == teamId)
+                .Include(u=>u.Player)
+                .ToListAsync();
 
-            if(team.Count >= _appOptions.MaxPlayersPerTeam) 
+            if(team.Count + 1 > _appOptions.MaxPlayersPerTeam) 
                 throw new NBAException("Team has reached maximum number of players", ErrorCodes.TeamMaxPlayersReached);
 
-            //TODO : Add logic to check if team has reached maximum number of players for centers
+            var player = await _context.GetAllPlayers().FirstOrDefaultAsync(u => u.Playerid == playerId);
 
-            var teamplayer = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
-            return teamplayer.Player;
+            if (player is { Playerposition: (int)PlayerPositionEnum.C }) 
+            {
+                var countPlayerCenters = team.Count(u=>u.Player.Playerposition == (int)PlayerPositionEnum.C);
+
+                if(countPlayerCenters + 1 > _appOptions.CenterLimit) 
+                    throw new NBAException("Team has reached maximum number of centers", ErrorCodes.MaxCenterLimitReached);
+
+            }else throw new NBAException($"Player with id {playerId} does not exist",ErrorCodes.DataBaseRecordNotFound);
+
+            _ = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
+            return player;
         }
 
     }
