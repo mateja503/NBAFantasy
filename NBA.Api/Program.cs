@@ -30,6 +30,7 @@ builder.Services.Configure<DraftOptions>(builder.Configuration.GetSection("Appli
 builder.Services.Configure<ApplicationOptions>(builder.Configuration.GetSection("ApplicationSettings"));
 #endregion
 
+builder.AddRedisClient("redis-cache");
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 
 builder.Services.RegisterHangFire(builder.Configuration);
