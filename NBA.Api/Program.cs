@@ -188,6 +188,7 @@ app.UseHangfireDashboard();
 var v1 = app.MapGroup("/v1");
 
 v1.TestEndpoints();
+v1.MapLeaguEndpoints();
 
 
 app.Run();
