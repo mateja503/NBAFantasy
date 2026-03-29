@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using NBA.Api.Requests.League;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Service;
 
 namespace NBA.Api.Endpoints
 {
@@ -22,11 +23,11 @@ namespace NBA.Api.Endpoints
             {
                 if (request == null) throw new NBAException("Body is emtpy", ErrorCodes.MissingBody);
 
-                if (string.IsNullOrEmpty(request.Name))
-                    throw new NBAException($"Missing parametar {nameof(request.Name)} for league", ErrorCodes.MissingValue);
+                if (string.IsNullOrEmpty(request.LeagueName))
+                    throw new NBAException($"Missing parametar {nameof(request.LeagueName)} for league", ErrorCodes.MissingValue);
 
-                if (!request.Typeleague.HasValue)
-                    throw new NBAException($"Missing parametar {nameof(request.Typeleague)} for league", ErrorCodes.MissingValue);
+                if (!request.LeagueType.HasValue)
+                    throw new NBAException($"Missing parametar {nameof(request.LeagueType)} for league", ErrorCodes.MissingValue);
 
                 if (!request.DraftStyle.HasValue)
                     throw new NBAException($"Missing parametar {nameof(request.DraftStyle)} for league", ErrorCodes.MissingValue);
@@ -43,32 +44,45 @@ namespace NBA.Api.Endpoints
                 if (!request.Autostart.HasValue)
                     throw new NBAException($"Missing parametar {nameof(request.Autostart)} for league", ErrorCodes.MissingValue);
 
-                if (!request.UseDefaultScorigValues.HasValue)
-                    throw new NBAException($"Missing parametar {nameof(request.UseDefaultScorigValues)} for league", ErrorCodes.MissingValue);
+                //if (!request.ScoringSystem.HasValue)
+                //    throw new NBAException($"Missing parametar {nameof(request.ScoringSystem)} for league", ErrorCodes.MissingValue);
 
-                if (request.StatsValue == null)
-                    throw new NBAException($"Missing parametar {nameof(request.StatsValue)} for league", ErrorCodes.MissingValue);
-
-
-                //TODO decide if to use the default values for ther StatsValue or custom 
-
-                var league = new League
+                var newStatsValue = new Statsvalue()
                 {
-                    Name = request.Name,
+                    Pointsvalue = request.StatsValue?.Points ?? (double)BoxScoreEvaluation.Points,
+                    Assistsvalue = request.StatsValue?.Assists ?? (double)BoxScoreEvaluation.Assists,
+                    Reboundsvalue = request.StatsValue?.Rebounds ?? (double)BoxScoreEvaluation.Rebounds,
+                    Blocksvalue = request.StatsValue?.Blocks ?? (double)BoxScoreEvaluation.Blocks,
+                    Threepointsvaluemade = request.StatsValue?.ThreePointersMade ?? (double)BoxScoreEvaluation.ThreePointsMade,
+                    Threepointsvaluemissed = request.StatsValue?.ThreePointersMissed ?? (double)BoxScoreEvaluation.ThreePointsMissed,
+                    Fieldgoalvaluemade = request.StatsValue?.FGMade ?? (double)BoxScoreEvaluation.FieldGoalMade,
+                    Fieldgoalvaluemissed = request.StatsValue?.FGMissed ?? (double)BoxScoreEvaluation.FieldGoalMissed,
+                    Freethrowvaluemade = request.StatsValue?.FTMade ?? (double)BoxScoreEvaluation.FreeThrowMade,
+                    Freethrowvaluemissed = request.StatsValue?.FTMissed ?? (double)BoxScoreEvaluation.FreeThrowMissed,
+                    Turnoversvalue = request.StatsValue?.Turnovers ?? (double)BoxScoreEvaluation.Turnovers,
+                };
+
+                newStatsValue = await context.AddStatsValue(newStatsValue);
+                var year = DateTime.UtcNow.Year;
+                var nextYear = year + 1;
+                
+                var newLeague = new League
+                {
+                    Name = request.LeagueName,
                     Commissioner = 1,//user-created id
-                    Seasonyear = "2026/2027",
+                    Seasonyear = $"{year}/{nextYear}",
                     Weeksforseason = request.WeeksForSeason,
                     Transactionlimit = request.TransactionLimit,
                     Autostart = request.Autostart,
                     Typetransactionlimits = request.TypeTransactionLimits,
-                    Typeleague = request.Typeleague,
+                    Typeleague = request.LeagueType,
                     Draftstyle = request.DraftStyle,
-                    Statsvalueid = 1
+                    Statsvalueid = newStatsValue.Statsvalueid
                 };
 
-                league = await context.AddLeague(league);
+                newLeague = await context.AddLeague(newLeague);
 
-                return Results.Ok(league);
+                return Results.Ok(newLeague);
 
             });
 

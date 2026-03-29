@@ -66,10 +66,13 @@ CREATE TABLE nba.statsvalue (
     assistsvalue DOUBLE PRECISION NOT NULL,
     reboundsvalue DOUBLE PRECISION NOT NULL,
     blocksvalue DOUBLE PRECISION NOT NULL,
-    threepointsvalue DOUBLE PRECISION NOT NULL,
+    threepointsvaluemade DOUBLE PRECISION NOT NULL,
+	threepointsvaluemissed DOUBLE PRECISION NOT NULL,
     turnoversvalue DOUBLE PRECISION NOT NULL,
-    freethrowpervalue DOUBLE PRECISION NOT NULL,
-    fieldgoalpercvalue DOUBLE PRECISION NOT NULL
+    freethrowvaluemade DOUBLE PRECISION NOT NULL,
+    freethrowvaluemissed DOUBLE PRECISION NOT NULL,
+	fieldgoalvaluemade DOUBLE PRECISION NOT NULL,
+	fieldgoalvaluemissed DOUBLE PRECISION NOT NULL
 );
 
 CREATE TABLE nba.league (

@@ -25,7 +25,18 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb"  \
 echo "Seeding players..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
      -c "SET search_path TO nba, public;" \
-     -f "/scripts/seed/seed-players.sql"
+     -f "/scripts/seed/seed-players.sql"	
+	 
+echo "Seeding statsValue..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
+     -c "SET search_path TO nba, public;" \
+     -f "/scripts/seed/seed-statsvalues.sql"
+	 
+echo "Seeding leagues..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
+     -c "SET search_path TO nba, public;" \
+     -f "/scripts/seed/seed-leagues.sql"
+	 
 
 echo "Initialization complete."
 

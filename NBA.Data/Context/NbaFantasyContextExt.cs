@@ -95,5 +95,18 @@ namespace NBA.Data.Context
             return e.Entity;
         }
         #endregion
+
+        #region StatsValue
+        public IQueryable<Statsvalue> GetAllStatsValues() 
+        {
+            return Statsvalues.AsQueryable();
+        }
+        public async Task<Statsvalue> AddStatsValue(Statsvalue statsvalue) 
+        {
+            var e = await Statsvalues.AddAsync(statsvalue);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
+        #endregion
     }
 }

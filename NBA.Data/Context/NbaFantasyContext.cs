@@ -48,7 +48,6 @@ public partial class NbaFantasyContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-
         modelBuilder.Entity<Applicationuser>(entity =>
         {
             entity.HasKey(e => e.Userid).HasName("applicationuser_pkey");
@@ -310,11 +309,14 @@ public partial class NbaFantasyContext : DbContext
                 .HasColumnName("statsvalueid");
             entity.Property(e => e.Assistsvalue).HasColumnName("assistsvalue");
             entity.Property(e => e.Blocksvalue).HasColumnName("blocksvalue");
-            entity.Property(e => e.Fieldgoalpercvalue).HasColumnName("fieldgoalpercvalue");
-            entity.Property(e => e.Freethrowpervalue).HasColumnName("freethrowpervalue");
+            entity.Property(e => e.Fieldgoalvaluemade).HasColumnName("fieldgoalvaluemade");
+            entity.Property(e => e.Fieldgoalvaluemissed).HasColumnName("fieldgoalvaluemissed");
+            entity.Property(e => e.Freethrowvaluemade).HasColumnName("freethrowvaluemade");
+            entity.Property(e => e.Freethrowvaluemissed).HasColumnName("freethrowvaluemissed");
             entity.Property(e => e.Pointsvalue).HasColumnName("pointsvalue");
             entity.Property(e => e.Reboundsvalue).HasColumnName("reboundsvalue");
-            entity.Property(e => e.Threepointsvalue).HasColumnName("threepointsvalue");
+            entity.Property(e => e.Threepointsvaluemade).HasColumnName("threepointsvaluemade");
+            entity.Property(e => e.Threepointsvaluemissed).HasColumnName("threepointsvaluemissed");
             entity.Property(e => e.Turnoversvalue).HasColumnName("turnoversvalue");
         });
 

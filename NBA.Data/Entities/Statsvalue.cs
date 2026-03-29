@@ -15,13 +15,19 @@ public partial class Statsvalue
 
     public double Blocksvalue { get; set; }
 
-    public double Threepointsvalue { get; set; }
+    public double Threepointsvaluemade { get; set; }
+
+    public double Threepointsvaluemissed { get; set; }
 
     public double Turnoversvalue { get; set; }
 
-    public double Freethrowpervalue { get; set; }
+    public double Freethrowvaluemade { get; set; }
 
-    public double Fieldgoalpercvalue { get; set; }
+    public double Freethrowvaluemissed { get; set; }
+
+    public double Fieldgoalvaluemade { get; set; }
+
+    public double Fieldgoalvaluemissed { get; set; }
 
     public virtual League? League { get; set; }
 }
