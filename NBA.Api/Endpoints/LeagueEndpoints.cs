@@ -13,7 +13,6 @@ namespace NBA.Api.Endpoints
         {
             var league = builder.MapGroup("/league").WithTags("league");
 
-
             league.MapGet("", async (NbaFantasyContext context) =>
             {
                 return await context.GetAllLeagues().AsNoTracking().ToListAsync();

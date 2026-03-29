@@ -3,6 +3,7 @@
 using NBA.Data.Entities;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace NBA.Data.Context
 {
@@ -73,12 +74,24 @@ namespace NBA.Data.Context
         {
             return Leagueteams.AsQueryable();
         }
+        public async Task<Leagueteam> AddLeagueTeam(Leagueteam leagueTeam) 
+        {
+            var e = await Leagueteams.AddAsync(leagueTeam);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
         #endregion
 
         #region Team         
         public IQueryable<Team> GetAllTeams() 
         {
             return Teams.AsQueryable();
+        }
+        public async Task<Team> AddTeam(Team entity) 
+        {
+            var e = await Teams.AddAsync(entity);
+            _ = await SaveChangesAsync();
+            return e.Entity;
         }
         #endregion
 

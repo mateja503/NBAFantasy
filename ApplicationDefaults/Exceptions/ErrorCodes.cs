@@ -18,6 +18,7 @@ namespace ApplicationDefaults.Exceptions
         public const string TradeCantBeExecuted = "5656-TRADECANTBEEXECUTED";
         public const string MaxCenterLimitReached = "5656-MAXCENTERLIMITREACHED";
         public const string TeamMaxPlayersReached = "5656-TEAMMAXPLAYERSREACHED";
+        public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
         #endregion
 
     }
