@@ -138,6 +138,7 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Leagueteamid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("leagueteamid");
+            entity.Property(e => e.Approved).HasColumnName("approved");
             entity.Property(e => e.Leagueid).HasColumnName("leagueid");
             entity.Property(e => e.Teamid).HasColumnName("teamid");
 

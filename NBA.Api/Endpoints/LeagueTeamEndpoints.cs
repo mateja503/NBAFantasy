@@ -12,31 +12,36 @@ namespace NBA.Api.Endpoints
         {
             var leagueTeam = builder.MapGroup("/league-team").WithTags("league-team");
 
-            leagueTeam.MapPost("/join", async (LeagueTeamRequest request, NbaFantasyContext context) =>
+            leagueTeam.MapPost("/join", async (List<LeagueTeamInsertRequest> request, NbaFantasyContext context) =>
             {
-                if (!request.LeagueId.HasValue)
-                    throw new NBAException($"{nameof(request.LeagueId)} is missing", ErrorCodes.MissingValue);
+                if (!request.Any())
+                    throw new NBAException($"{nameof(request)} object is missing", ErrorCodes.MissingValue);
 
-                if (string.IsNullOrEmpty(request.TeamName))
-                    throw new NBAException($"{nameof(request.TeamName)} is missing", ErrorCodes.MissingValue);
+                var getAllLeagues = request.Select(u => u.LeagueId).ToList();
+                var getAllTeamNames = request.DistinctBy(u => u.TeamName).Select(u => u.TeamName?.ToLower()).ToList();
 
-                var teamsInLeague = await context.GetAllLeagueTeam().Where(u => u.Leagueid == request.LeagueId.Value)
-                .Include(u => u.Team)
-                .Select(u => u.Team.Name)
+                var teamsInLeague = await context.GetAllLeagueTeam().Where(u => getAllLeagues.Contains(u.Leagueid) 
+                && getAllTeamNames.Contains(u.Team.Name.ToLower()))
                 .ToListAsync();
 
-                if (teamsInLeague.Contains(request.TeamName))
-                    throw new NBAException($"Team with name {request.TeamName} already exists in league with id {request.LeagueId.Value}", ErrorCodes.TeamNameAlreadyInLeague);
-
-                var newTeam = await context.AddTeam(new Team { Name = request.TeamName });
-
-                var res = await context.AddLeagueTeam(new Leagueteam
+                if (teamsInLeague is null)
                 {
-                    Leagueid = request.LeagueId.Value,
-                    Teamid = newTeam.Teamid
-                });
+                    var newTeams = request.DistinctBy(u => u.TeamName).Select(u => new Team { Name = u.TeamName ?? "FantasyTeam1" }).ToList();
+                    newTeams = await context.AddTeamRange(newTeams);
 
-                return Results.Ok(res);
+                    var leagueTeams = request.Select(u => 
+                    new Leagueteam { 
+                        Leagueid = u.LeagueId ?? 0,
+                        Teamid = newTeams.Select(u=>u.Teamid).FirstOrDefault()//this is becuse there will be only one teamName
+                    }).ToList();
+
+                    leagueTeams = await context.AddLeagueTeamRange(leagueTeams);
+
+                    return Results.Ok(leagueTeams);
+                }
+                var existingNames = string.Join(", ", teamsInLeague.Select(t => $"{t.League.Name} - {t.Team.Name}"));
+                throw new NBAException($"Team with names for leagues already exist {existingNames}", ErrorCodes.TeamNameAlreadyInLeague);
+             
             });
            
             return leagueTeam;

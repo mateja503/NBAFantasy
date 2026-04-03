@@ -94,6 +94,7 @@ CREATE TABLE nba.leagueteam (
     leagueteamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     teamid BIGINT NOT NULL,
     leagueid BIGINT NOT NULL,
+	approved BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_leagueteam_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
     CONSTRAINT fk_leagueteam_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
 );

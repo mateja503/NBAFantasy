@@ -80,6 +80,13 @@ namespace NBA.Data.Context
             _ = await SaveChangesAsync();
             return e.Entity;
         }
+
+        public async Task<List<Leagueteam>> AddLeagueTeamRange(List<Leagueteam> leagueteams) 
+        {
+            await Leagueteams.AddRangeAsync(leagueteams);
+            _ = await SaveChangesAsync();
+            return leagueteams;
+        }
         #endregion
 
         #region Team         
@@ -92,6 +99,13 @@ namespace NBA.Data.Context
             var e = await Teams.AddAsync(entity);
             _ = await SaveChangesAsync();
             return e.Entity;
+        }
+
+        public async Task<List<Team>> AddTeamRange(List<Team> teams) 
+        {
+            await Teams.AddRangeAsync(teams);
+            _ = await SaveChangesAsync();
+            return teams;
         }
         #endregion
 
