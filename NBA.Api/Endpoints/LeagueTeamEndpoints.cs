@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using NBA.Api.DTOs;
 using NBA.Api.Requests.LeagueTeam;
 using NBA.Data.Context;
 using NBA.Data.Entities;
@@ -24,7 +25,7 @@ namespace NBA.Api.Endpoints
                 && getAllTeamNames.Contains(u.Team.Name.ToLower()))
                 .ToListAsync();
 
-                if (teamsInLeague is null)
+                if (teamsInLeague is not null)
                 {
                     var newTeams = request.DistinctBy(u => u.TeamName).Select(u => new Team { Name = u.TeamName ?? "FantasyTeam1" }).ToList();
                     newTeams = await context.AddTeamRange(newTeams);
@@ -37,7 +38,17 @@ namespace NBA.Api.Endpoints
 
                     leagueTeams = await context.AddLeagueTeamRange(leagueTeams);
 
-                    return Results.Ok(leagueTeams);
+
+                    var dtos = leagueTeams.Select(u => new LeagueTeamDto 
+                    {
+                        Leagueteamid = u.Leagueteamid,
+                        Teamid = u.Teamid,
+                        Leagueid =  u.Leagueid,
+                        Approved = u.Approved,
+                    }).ToList();
+                 
+
+                    return Results.Ok(dtos);
                 }
                 var existingNames = string.Join(", ", teamsInLeague.Select(t => $"{t.League.Name} - {t.Team.Name}"));
                 throw new NBAException($"Team with names for leagues already exist {existingNames}", ErrorCodes.TeamNameAlreadyInLeague);

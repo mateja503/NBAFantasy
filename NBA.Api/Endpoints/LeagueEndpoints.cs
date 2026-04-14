@@ -1,9 +1,11 @@
 ﻿using ApplicationDefaults.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using NBA.Api.DTOs;
 using NBA.Api.Requests.League;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Service;
+using System.Data;
 
 namespace NBA.Api.Endpoints
 {
@@ -15,7 +17,21 @@ namespace NBA.Api.Endpoints
 
             league.MapGet("", async (NbaFantasyContext context) =>
             {
-                return await context.GetAllLeagues().AsNoTracking().ToListAsync();
+                return await context.GetAllLeagues().AsNoTracking()
+                .Select(u=> new LeaguDto 
+                {
+                    Leagueid = u.Leagueid,
+                    Name = u.Name,
+                    Commissioner = u.Commissioner,
+                    Seasonyear = u.Seasonyear,
+                    Weeksforseason = u.Weeksforseason,
+                    Transactionlimit = u.Transactionlimit,
+                    Autostart = u.Autostart,
+                    Typetransactionlimits = u.Typetransactionlimits,
+                    Typeleague = u.Typeleague,
+                    Draftstyle = u.Draftstyle,
+                    Statsvalueid = u.Statsvalueid,
+                }).ToListAsync();
             });
 
             league.MapPost("/add", async (LeagueRequest? request, NbaFantasyContext context) =>
@@ -64,7 +80,7 @@ namespace NBA.Api.Endpoints
                 newStatsValue = await context.AddStatsValue(newStatsValue);
                 var year = DateTime.UtcNow.Year;
                 var nextYear = year + 1;
-                
+
                 var newLeague = new League
                 {
                     Name = request.LeagueName,
@@ -81,7 +97,22 @@ namespace NBA.Api.Endpoints
 
                 newLeague = await context.AddLeague(newLeague);
 
-                return Results.Ok(newLeague);
+                var dto = new LeaguDto
+                {
+                    Leagueid = newLeague.Leagueid,
+                    Name = newLeague.Name,
+                    Commissioner = newLeague.Commissioner,
+                    Seasonyear = newLeague.Seasonyear,
+                    Weeksforseason = newLeague.Weeksforseason,
+                    Transactionlimit = newLeague.Transactionlimit,
+                    Autostart = newLeague.Autostart,
+                    Typetransactionlimits = newLeague.Typetransactionlimits,
+                    Typeleague = newLeague.Typeleague,
+                    Draftstyle = newLeague.Draftstyle,
+                    Statsvalueid = newLeague.Statsvalueid,
+                };
+
+                return Results.Ok(dto);
 
             });
 
