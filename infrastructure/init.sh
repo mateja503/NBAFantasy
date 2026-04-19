@@ -12,6 +12,7 @@ EOSQL
 # 2. Now connect to the NEW database to create the schema
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" <<-EOSQL
     CREATE SCHEMA IF NOT EXISTS nba;
+	CREATE SCHEMA IF NOT EXISTS chat;
 EOSQL
 
 # 3. Running migrations from /scripts/create...
@@ -19,7 +20,12 @@ EOSQL
 echo "Creating tables..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb"  \
      -c "SET search_path TO nba, public;" \
-	 -f "/scripts/create/create-objects.sql"
+	 -f "/scripts/create/create-objects-nba-schema.sql"
+	 
+echo "Creating tables..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb"  \
+     -c "SET search_path TO nba, public;" \
+	 -f "/scripts/create/create-objects-chat-schema.sql"
 	 
 	 
 #	 3. Running migrations from /scripts/seed...
