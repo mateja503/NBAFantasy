@@ -1,5 +1,6 @@
 ﻿
 
+using Microsoft.EntityFrameworkCore;
 using NBA.Data.Entities;
 using System.Net;
 using System.Runtime.CompilerServices;
@@ -133,6 +134,13 @@ namespace NBA.Data.Context
             var e = await Statsvalues.AddAsync(statsvalue);
             _ = await SaveChangesAsync();
             return e.Entity;
+        }
+        #endregion
+
+        #region Authentication
+        public async Task<Applicationuser?> GetApplicationuser(string username, string password) 
+        {
+            return await Applicationusers.SingleOrDefaultAsync(u => u.Username == username && u.Password == password);
         }
         #endregion
     }

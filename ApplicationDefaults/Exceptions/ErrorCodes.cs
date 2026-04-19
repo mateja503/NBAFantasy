@@ -19,6 +19,8 @@ namespace ApplicationDefaults.Exceptions
         public const string MaxCenterLimitReached = "5656-MAXCENTERLIMITREACHED";
         public const string TeamMaxPlayersReached = "5656-TEAMMAXPLAYERSREACHED";
         public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
+        public const string LoginFailed = "5656-LOGINFAILED";
+        
         #endregion
 
     }
