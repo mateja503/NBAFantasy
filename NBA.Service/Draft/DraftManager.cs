@@ -10,10 +10,10 @@ namespace NBA.Service.Draft
         {
             LeagueName = "NBA Fantasy Elite",
             IsPaused = true,
-            PickEndTime = DateTime.UtcNow.AddSeconds(60)//for now 60 configuratble latter
+            PickEndTime = DateTime.UtcNow
         };
 
-        public void StartNewPick(int seconds = 60) 
+        public void ResetTimer(int seconds = 60) 
         {
             CurrentState.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
             CurrentState.IsPaused = false;
