@@ -11,6 +11,7 @@ using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
 using NBA.Api;
 using NBA.Api.Endpoints;
+using NBA.Api.HangFire;
 using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
@@ -129,6 +130,11 @@ builder.Services.AddScoped<FreeAgencyService>();
 
 #endregion
 
+#region HangFire
+builder.Services.AddTransient<DraftResetTimerJob>();
+#endregion
+
+
 #region ExceptionHandlers
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -185,6 +191,7 @@ v1.TestEndpoints();
 v1.MapLeaguEndpoints();
 v1.MapLeagueTeamEndpoints();
 v1.MapTeamEndpoints();
+v1.MapDraftEndpoints();
 
 
 app.Run();
