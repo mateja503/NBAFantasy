@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using NBA.Api.Requests.Authentication;
 using NBA.Data.Context;
 using System.Net.Security;
@@ -22,6 +23,12 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(user);
             });
 
+
+            //auth.MapPost("sign-up", async ([FromBody] SignUpRequest request) => 
+            //{
+            //    var user = await context.GetApplicationuser(request.Username, request.Password);
+
+            //});
 
             return auth;
         

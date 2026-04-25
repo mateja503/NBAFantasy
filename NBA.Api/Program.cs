@@ -15,6 +15,7 @@ using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Service.CalculateBoxScore;
+using NBA.Service.Draft;
 using NBA.Service.Game;
 using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;
@@ -122,6 +123,7 @@ builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
+builder.Services.AddSingleton<DraftManager>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
 
@@ -170,7 +172,12 @@ app.MapStaticAssets();
 
 app.UseHangfireDashboard();
 
+#region HUBS
 app.MapHub<ChatHub>("/chatHub");
+app.MapHub<DraftHub>("/draftHub");
+
+#endregion
+
 
 var v1 = app.MapGroup("/v1");
 
