@@ -2,6 +2,7 @@ var builder = DistributedApplication.CreateBuilder(args);
 
 var redis = builder.AddRedis("redis-cache")
                    //.WithDataBindMount("../infrastructure/redis-data") // Persists data locally
+                   .WithHostPort(6379)
                    .WithRedisInsight(); 
 
 var password = builder.AddParameter("password", "postgres");

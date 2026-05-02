@@ -46,41 +46,41 @@ builder.Services.Configure<JsonOptions>(options =>
 
 builder.AddRedisClient("redis-cache");
 
-
-
-//builder.Services.AddSignalR().AddStackExchangeRedis(options =>
-//{
-//    options.ConnectionFactory = async writer =>
-//    {
-//        var multiplexer = builder.Services.BuildServiceProvider()//this has to be fixed
-//                                     .GetRequiredService<IConnectionMultiplexer>();
-//        return multiplexer;
-//    };
-//    options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
-//    options.Configuration.AbortOnConnectFail = false;
-//    options.Configuration.ConnectRetry = 3;
-//    options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
-//    options.Configuration.ClientName = "redis-nba-fantasy";
-//    options.Configuration.SyncTimeout = 1000; // 1 second timeout
-
-//});
+builder.Services.AddSignalR()
+    .AddStackExchangeRedis(options =>
+    {
+        // This ensures SignalR doesn't try to create its own connection 
+        // but waits for the one registered by builder.AddRedisClient
+        options.ConnectionFactory = async (writer) =>
+        {
+            var multiplexer = builder.Services.BuildServiceProvider().GetRequiredService<IConnectionMultiplexer>();
+            return multiplexer;
+        };
+    });
 
 //builder.Services.AddSignalR().AddStackExchangeRedis();
 
-//// 2. Use AddOptions to "inject" the Multiplexer into the RedisOptions
+//// 3. FIX THE WARNING: Configure SignalR Redis Options using DI
+//// This tells SignalR: "When you need the Redis connection, grab it from the DI container"
 //builder.Services.AddOptions<RedisOptions>("StackExchangeRedis")
 //    .Configure<IConnectionMultiplexer>((options, multiplexer) =>
 //    {
-//        // Simply return the multiplexer that Aspire already created
+//        // Link the shared ConnectionMultiplexer to SignalR
 //        options.ConnectionFactory = _ => Task.FromResult(multiplexer);
+//        //options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA_FANTASY");
 
-//        // Apply your specific configurations
-//        options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
-//        options.Configuration.AbortOnConnectFail = false;
-//        options.Configuration.ConnectRetry = 3;
-//        options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
-//        options.Configuration.ClientName = "redis-nba-fantasy";
-//        options.Configuration.SyncTimeout = 1000;
+//        //var config = ConfigurationOptions.Parse(multiplexer.Configuration);
+//        //config.ChannelPrefix = RedisChannel.Literal("NBA_FANTASY");
+//        //config.AbortOnConnectFail = false;
+//        //options.Configuration = config;
+
+//        //// Apply your specific configurations
+//        //options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
+//        //options.Configuration.AbortOnConnectFail = false;
+//        //options.Configuration.ConnectRetry = 3;
+//        //options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
+//        //options.Configuration.ClientName = "redis-nba-fantasy";
+//        //options.Configuration.SyncTimeout = 1000;
 //    });
 
 
@@ -131,7 +131,7 @@ builder.Services.AddScoped<FreeAgencyService>();
 #endregion
 
 #region HangFire
-builder.Services.AddTransient<DraftResetTimerJob>();
+builder.Services.AddTransient<DraftJobs>();
 #endregion
 
 
@@ -146,7 +146,6 @@ builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
 #endregion
 
 
-builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -193,6 +192,12 @@ v1.MapLeagueTeamEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
 
+
+v1.MapGet("/redis-check", (IConnectionMultiplexer redis) =>
+{
+    var status = redis.GetStatus();
+    return Results.Ok(new { IsConnected = redis.IsConnected, Status = status });
+});
 
 app.Run();
 
