@@ -29,7 +29,7 @@ namespace NBA.Api.HangFire
 
             var jobId =_backgroundJobClient.Schedule<DraftJobs>(job => job.ResetTimerLoop(leagueId), TimeSpan.FromSeconds(60));
 
-            var redisKey = RedisKeys.GetDraftTimerJobIdKey(leagueId);
+            var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
             await _redisDb.StringSetAsync(redisKey, jobId);
         }
     }

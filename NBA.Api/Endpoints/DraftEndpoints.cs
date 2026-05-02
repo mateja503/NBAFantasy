@@ -24,7 +24,7 @@ namespace NBA.Api.Endpoints
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
-                var redisKey = RedisKeys.GetDraftTimerJobIdKey(request.LeagueId.Value);
+                var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(request.LeagueId.Value);
                 var redisDb = redis.GetDatabase();
 
                 var jobId = await redisDb.StringGetAsync(redisKey);
