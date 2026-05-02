@@ -6,14 +6,14 @@
 
         public string Name { get; set; } = null!;
 
-        public int? Seed { get; set; }
+        public int? Seed { get; set; } = null;
 
-        public int? Waiverpriority { get; set; }
+        public int? Waiverpriority { get; set; } = null;
 
-        public double? Lastweekpoints { get; set; }
+        public double? Lastweekpoints { get; set; } = null;
 
-        public double? Categoryleaguepoints { get; set; }
+        public double? Categoryleaguepoints { get; set; } = null;
 
-        public bool? Islock { get; set; }
+        public bool? Islock { get; set; } = null;
     }
 }

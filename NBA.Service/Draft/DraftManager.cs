@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.Json;
+﻿using ApplicationDefaults.Options;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,16 +15,17 @@ using System.Text.Json;
 
 namespace NBA.Service.Draft
 {
-    public class DraftManager(IServiceScopeFactory scopeFactory, IConnectionMultiplexer redis, IOptions<JsonOptions> jsonOptions)
+    public class DraftManager(IServiceScopeFactory scopeFactory, IConnectionMultiplexer redis, 
+        IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions)
     {
         private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
         private readonly IDatabase _redisDb = redis.GetDatabase();
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
+        private readonly DraftOptions _draftOptions = draftOptions.Value;
 
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
-
             using var scope = _scopeFactory.CreateScope();
             var _context = scope.ServiceProvider.GetRequiredService<NbaFantasyContext>();
 
@@ -33,7 +35,9 @@ namespace NBA.Service.Draft
             {
                 LeagueName = leagueName ?? "NO LEAGUE",
                 IsPaused = false,
-                PickEndTime = DateTime.UtcNow
+                PickEndTime = DateTime.UtcNow,
+                IsDraftStarted = false,
+                Round = 1,
             };
 
             var redisKey = RedisKeys.GetDraftStateKey(leagueId);
@@ -54,6 +58,7 @@ namespace NBA.Service.Draft
 
         public async Task ResetTimer(long leagueId, int seconds = 60) 
         {
+            seconds = _draftOptions.DraftPickTime;
             var redisKey = RedisKeys.GetDraftStateKey(leagueId);
             var ds = await _redisDb.StringGetAsync(redisKey);
 

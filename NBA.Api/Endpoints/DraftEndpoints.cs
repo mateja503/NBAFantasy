@@ -1,8 +1,10 @@
 ﻿using ApplicationDefaults.Exceptions;
+using ExternalClients.Response;
 using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
+using NBA.Api.DTOs;
 using NBA.Api.HangFire;
 using NBA.Api.Requests.Draft;
 using NBA.Api.SignalR.Clients;
@@ -10,6 +12,7 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Service.Draft;
+using NBA.Service.League.Draft;
 using NBA.Service.Redis;
 using StackExchange.Redis;
 using StreamJsonRpc;
@@ -36,7 +39,7 @@ namespace NBA.Api.Endpoints
 
                 if (jobId.IsNull)
                 {
-                    jobId = backgroundJobs.Enqueue<DraftJobs>(job => job.StartDraft(request.LeagueId.Value));
+                    backgroundJobs.Enqueue<DraftJobs>(job => job.StartDraft(request.LeagueId.Value));
                 }
                 else
                 {
@@ -68,10 +71,41 @@ namespace NBA.Api.Endpoints
                     var draftState = JsonSerializer.Deserialize<DraftState>(state.ToString(), jsonOptions.Value.JsonSerializerOptions);
                     draftState!.PickEndTime = DateTime.UtcNow;
                     draftState!.IsPaused = false;
+                    draftState!.IsDraftStarted = false;
                     await draftHub.Clients.Group(request.LeagueId.ToString()!).UpdateDraftState(draftState!);
                 }
 
                 return Results.Ok();
+            });
+
+
+            draft.MapGet("get-draft-teams", async (long leagueId,DraftService draftService, IConnectionMultiplexer redis, IOptions<JsonOptions> jsonOptions) => 
+            {
+                //var redisDb = redis.GetDatabase();
+                //var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
+
+                //var val = await redisDb.StringGetAsync(redisKey);
+                //if (val.IsNull) 
+                //{
+                //    var dict = await draftService.DraftOrder(leagueId);
+
+                //    var res = dict.Select(k => new DraftOrderDto
+                //    {
+                //        Round = k.Key,
+                //        Teams = k.Value.Select(u => new TeamDto
+                //        {
+                //            Teamid = u.Teamid,
+                //            Name = u.Name,
+                //        }).ToList()
+                //    }).ToList();
+
+                //    await redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(res, jsonOptions.Value.JsonSerializerOptions));
+
+                //    return Results.Ok(res);
+                //}
+
+                //var cachedData = JsonSerializer.Deserialize<List<DraftOrderDto>>(val.ToString(), jsonOptions.Value.JsonSerializerOptions);
+                //return Results.Ok(cachedData);
             });
 
             return draft;

@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.SignalR;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
 using NBA.Service.Draft;
+using NBA.Service.League.Draft;
 using NBA.Service.Redis;
 using StackExchange.Redis;
 
 namespace NBA.Api.SignalR.Hubs
 {
-    public class DraftHub(DraftManager draftManager, IConnectionMultiplexer redis, IBackgroundJobClient backgroundJobClient) : Hub<IDraftHubClient>
+    public class DraftHub(DraftManager draftManager, IConnectionMultiplexer redis, IBackgroundJobClient backgroundJobClient, DraftService draftService) : Hub<IDraftHubClient>
     {
         private readonly DraftManager _draftManager = draftManager;
         private readonly IDatabase _redisDb = redis.GetDatabase();
         private readonly IBackgroundJobClient _backgroundJobClient= backgroundJobClient;
-
+        private readonly DraftService _draftService = draftService;
         // 1. Send state to a user the moment they connect/refresh
         public override async Task OnConnectedAsync()
         {
@@ -28,6 +29,7 @@ namespace NBA.Api.SignalR.Hubs
             var state = await _draftManager.GetCurrentDraftState(leagueId)
                      ?? await _draftManager.CreateDraftState(leagueId);
 
+            await _draftService.DraftOrder(leagueId);
             await Clients.Caller.UpdateDraftState(state!);
             await base.OnConnectedAsync();
         }
