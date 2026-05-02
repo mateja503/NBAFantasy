@@ -31,7 +31,7 @@ namespace NBA.Api.SignalR.Hubs
             await Clients.Caller.UpdateDraftState(state!);
             await base.OnConnectedAsync();
         }
-        // 2. Action called by the Commissioner to start a pick
+        // 2. Action called by the Commissioner refresh the timer for user that requested it
         public async Task<DraftState> ResetTimer(long leagueId) 
         {
             await _draftManager.ResetTimer(leagueId);
