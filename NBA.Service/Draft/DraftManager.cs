@@ -32,7 +32,7 @@ namespace NBA.Service.Draft
             currentState = new DraftState
             {
                 LeagueName = leagueName ?? "NO LEAGUE",
-                IsPaused = true,
+                IsPaused = false,
                 PickEndTime = DateTime.UtcNow
             };
 
@@ -65,6 +65,12 @@ namespace NBA.Service.Draft
             await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(state, _jsonOptions));
 
         }
+
+        public async Task SendUpdateDraftState() 
+        {
+        
+        }
+
         void PauseDraft() => currentState.IsPaused = true;
     }
 }

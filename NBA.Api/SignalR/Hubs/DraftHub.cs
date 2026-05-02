@@ -46,7 +46,8 @@ namespace NBA.Api.SignalR.Hubs
 
             if (!jobId.IsNull)
                 _backgroundJobClient.Delete(jobId.ToString());
-            
+
+
             return state;
         }
 
