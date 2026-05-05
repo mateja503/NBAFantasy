@@ -11,6 +11,7 @@ using System.Text.Json;
 
 namespace NBA.Data.Context
 {
+    //don't store values in redis just as a string use other types !!!! 
     public class NbaFantasyRedis(IConnectionMultiplexer redis, IOptions<JsonOptions> jsonOptions)
     {
         private readonly IDatabase _redisDb = redis.GetDatabase();
