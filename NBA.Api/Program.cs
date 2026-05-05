@@ -46,46 +46,14 @@ builder.Services.Configure<JsonOptions>(options =>
 
 builder.AddRedisClient("redis-cache");
 
+var connectionString = builder.Configuration.GetConnectionString("redis-cache");
+
 builder.Services.AddSignalR()
-    .AddStackExchangeRedis(options =>
+    .AddStackExchangeRedis(connectionString!, options =>
     {
-        // This ensures SignalR doesn't try to create its own connection 
-        // but waits for the one registered by builder.AddRedisClient
-        options.ConnectionFactory = async (writer) =>
-        {
-            var multiplexer = builder.Services.BuildServiceProvider().GetRequiredService<IConnectionMultiplexer>();
-            return multiplexer;
-        };
+        // Optional: Add a prefix if you share this Redis with other apps
+        //options.Configuration.ChannelPrefix = "YourAppName";
     });
-
-//var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis"));
-//builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
-
-//builder.Services.AddSignalR().AddStackExchangeRedis();
-
-//// 3. FIX THE WARNING: Configure SignalR Redis Options using DI
-//// This tells SignalR: "When you need the Redis connection, grab it from the DI container"
-//builder.Services.AddOptions<RedisOptions>("StackExchangeRedis")
-//    .Configure<IConnectionMultiplexer>((options, multiplexer) =>
-//    {
-//        // Link the shared ConnectionMultiplexer to SignalR
-//        options.ConnectionFactory = _ => Task.FromResult(multiplexer);
-//        //options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA_FANTASY");
-
-//        //var config = ConfigurationOptions.Parse(multiplexer.Configuration);
-//        //config.ChannelPrefix = RedisChannel.Literal("NBA_FANTASY");
-//        //config.AbortOnConnectFail = false;
-//        //options.Configuration = config;
-
-//        //// Apply your specific configurations
-//        //options.Configuration.ChannelPrefix = RedisChannel.Literal("NBA");
-//        //options.Configuration.AbortOnConnectFail = false;
-//        //options.Configuration.ConnectRetry = 3;
-//        //options.Configuration.ConfigurationChannel = "nba-fantasy-channel";
-//        //options.Configuration.ClientName = "redis-nba-fantasy";
-//        //options.Configuration.SyncTimeout = 1000;
-//    });
-
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 builder.Services.AddSingleton<NbaFantasyRedis>();
