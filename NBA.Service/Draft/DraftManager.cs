@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
-using NBA.Service.Redis;
+using NBA.Data.Redis.Entities;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -15,14 +15,13 @@ using System.Text.Json;
 
 namespace NBA.Service.Draft
 {
-    public class DraftManager(IServiceScopeFactory scopeFactory, IConnectionMultiplexer redis, 
-        IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions)
+    public class DraftManager(IServiceScopeFactory scopeFactory, 
+        IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions, NbaFantasyRedis redis)
     {
         private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
-        private readonly IDatabase _redisDb = redis.GetDatabase();
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
-
+        private readonly NbaFantasyRedis _redis = redis;
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
@@ -39,36 +38,18 @@ namespace NBA.Service.Draft
                 IsDraftStarted = false,
                 Round = 1,
             };
-
-            var redisKey = RedisKeys.GetDraftStateKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(currentState, _jsonOptions));
+            await _redis.SetDraftState(leagueId, currentState);
 
             return currentState;
         }
-
-        public async Task<DraftState?> GetCurrentDraftState(long leagueId) 
-        {
-            var redisKey = RedisKeys.GetDraftStateKey(leagueId);
-            var ds = await _redisDb.StringGetAsync(redisKey);
-
-            DraftState? state = ds.HasValue ? JsonSerializer.Deserialize<DraftState>(ds.ToString(), _jsonOptions) : null;
-
-            return state;
-        }
-
+      
         public async Task ResetTimer(long leagueId, int seconds = 60) 
         {
+            var state = await _redis.GetCurrentDraftState(leagueId);
             seconds = _draftOptions.DraftPickTime;
-            var redisKey = RedisKeys.GetDraftStateKey(leagueId);
-            var ds = await _redisDb.StringGetAsync(redisKey);
-
-            DraftState? state = ds.HasValue ? JsonSerializer.Deserialize<DraftState>(ds.ToString(), _jsonOptions) : null;
-
             state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
             state?.IsPaused = false;
-
-            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(state, _jsonOptions));
-
+            await _redis.SetDraftState(leagueId, state!);
         }
 
         public async Task SendUpdateDraftState() 

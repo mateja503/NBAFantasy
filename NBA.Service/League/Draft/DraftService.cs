@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
-using NBA.Service.Redis;
 using StackExchange.Redis;
 using System.Text.Json;
 using PlayerData = NBA.Data.Entities.Player;
@@ -15,13 +14,14 @@ using PlayerData = NBA.Data.Entities.Player;
 namespace NBA.Service.League.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, 
-        IOptions<ApplicationOptions> appOptions, IConnectionMultiplexer redis,IOptions<JsonOptions> jsonOptions)
+        IOptions<ApplicationOptions> appOptions,IOptions<JsonOptions> jsonOptions,
+        NbaFantasyRedis redis)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
-        private readonly IDatabase _redisDb = redis.GetDatabase();
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
+        private readonly NbaFantasyRedis _redis = redis;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task DraftOrder(long leagueId) 
@@ -38,7 +38,7 @@ namespace NBA.Service.League.Draft
 
             Dictionary<long, Queue<Team>> draft = new Dictionary<long, Queue<Team>>();
 
-            var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
+            //var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
 
             switch (draftType)
             {
@@ -49,21 +49,20 @@ namespace NBA.Service.League.Draft
                         if (i % 2 == 0) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
                         else draft.Add(i, new Queue<Team>(teams));
                     }
-                    //return draft;
-                    await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+                    await _redis.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<Team>(teams));
-                    await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+                    await _redis.SetDraftTeams(draft, leagueId);
                     break;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<Team>(teams));
 
-                    await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+                    await _redis.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.RRR:
@@ -72,12 +71,12 @@ namespace NBA.Service.League.Draft
                         if (i % 2 == 0 || i == 3) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
                         else draft.Add(i, new Queue<Team>(teams));
                     }
-                    await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+                    await _redis.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<Team>(teams));
-                    await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+                    await _redis.SetDraftTeams(draft, leagueId);
                     break;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);

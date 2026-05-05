@@ -2,17 +2,17 @@
 using Microsoft.AspNetCore.SignalR;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
+using NBA.Data.Redis.Entities;
 using NBA.Service.Draft;
 using NBA.Service.League.Draft;
-using NBA.Service.Redis;
 using StackExchange.Redis;
 
 namespace NBA.Api.SignalR.Hubs
 {
-    public class DraftHub(DraftManager draftManager, IConnectionMultiplexer redis, IBackgroundJobClient backgroundJobClient, DraftService draftService) : Hub<IDraftHubClient>
+    public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis, IBackgroundJobClient backgroundJobClient, DraftService draftService) : Hub<IDraftHubClient>
     {
         private readonly DraftManager _draftManager = draftManager;
-        private readonly IDatabase _redisDb = redis.GetDatabase();
+        private readonly NbaFantasyRedis _redis = redis;
         private readonly IBackgroundJobClient _backgroundJobClient= backgroundJobClient;
         private readonly DraftService _draftService = draftService;
         // 1. Send state to a user the moment they connect/refresh
@@ -26,7 +26,7 @@ namespace NBA.Api.SignalR.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, leagueId.ToString());
             }
 
-            var state = await _draftManager.GetCurrentDraftState(leagueId)
+            var state = await _redis.GetCurrentDraftState(leagueId)
                      ?? await _draftManager.CreateDraftState(leagueId);
 
             await _draftService.DraftOrder(leagueId);
@@ -38,16 +38,16 @@ namespace NBA.Api.SignalR.Hubs
         {
             await _draftManager.ResetTimer(leagueId);
 
-            var state = await _draftManager.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _redis.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
             var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
 
-            var jobId = await _redisDb.StringGetDeleteAsync(redisKey);
+            var jobId = await _redis.GetDeleteDraftTimerJobId(leagueId);
 
-            if (!jobId.IsNull)
-                _backgroundJobClient.Delete(jobId.ToString());
+            if (!string.IsNullOrEmpty(jobId))
+                _backgroundJobClient.Delete(jobId);
 
 
             return state;

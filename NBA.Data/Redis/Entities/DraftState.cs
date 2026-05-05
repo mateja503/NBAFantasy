@@ -1,4 +1,4 @@
-﻿namespace NBA.Service.Draft
+﻿namespace NBA.Data.Redis.Entities
 {
     public class DraftState
     {

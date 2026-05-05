@@ -58,6 +58,9 @@ builder.Services.AddSignalR()
         };
     });
 
+//var multiplexer = ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis"));
+//builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
 //builder.Services.AddSignalR().AddStackExchangeRedis();
 
 //// 3. FIX THE WARNING: Configure SignalR Redis Options using DI
@@ -85,6 +88,7 @@ builder.Services.AddSignalR()
 
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
+builder.Services.AddSingleton<NbaFantasyRedis>();
 
 builder.Services.RegisterHangFire(builder.Configuration);
 
