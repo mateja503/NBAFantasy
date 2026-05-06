@@ -44,29 +44,12 @@ namespace NBA.Api.Endpoints
                 }
             });
 
-            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, IBackgroundJobClient backgroundJobClient, 
-                IHubContext<DraftHub,IDraftHubClient> draftHub, IOptions<JsonOptions> jsonOptions, NbaFantasyRedis redis) => 
+            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager) => 
             {
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
-
-                var jobId = await redis.GetDeleteDraftTimerJobId(request.LeagueId.Value);
-                if (!string.IsNullOrEmpty(jobId)) 
-                {
-                    backgroundJobClient.Delete(jobId);
-                }
-
-                var state = await redis.GetCurrentDraftState(request.LeagueId.Value);
-                if (state is not null) 
-                {
-                    var draftState = JsonSerializer.Deserialize<DraftState>(state.ToString(), jsonOptions.Value.JsonSerializerOptions);
-                    draftState!.PickEndTime = DateTime.UtcNow;
-                    draftState!.IsPaused = false;
-                    draftState!.IsDraftStarted = false;
-                    await draftHub.Clients.Group(request.LeagueId.ToString()!).UpdateDraftState(draftState!);
-                }
-
+                await draftManager.EndDraft(request.LeagueId.Value);
                 return Results.Ok();
             });
 

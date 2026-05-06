@@ -73,6 +73,12 @@ namespace NBA.Data.Context
 
         }
 
+        public async Task DeleteDraftTeams(long leagueId) 
+        {
+            var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
+            _ = await _redisDb.StringGetDeleteAsync(redisKey);
+        }
+
         public async Task<Dictionary<long, Queue<Team>>?> GetDraftTeams(long leagueId) 
         {
             var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
@@ -84,6 +90,12 @@ namespace NBA.Data.Context
         {
             var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
             await _redisDb.StringSetAsync(redisKey, jobId);
+        }
+
+        public async Task<string?> GetDeleteStartPickJobId(long leagueId) 
+        {
+            var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
+            return await _redisDb.StringGetDeleteAsync(redisKey);
         }
 
         #endregion

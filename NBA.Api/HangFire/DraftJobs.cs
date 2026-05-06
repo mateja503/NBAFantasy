@@ -59,14 +59,28 @@ namespace NBA.Api.HangFire
                 draftTeams = await _redis.GetDraftTeams(leagueId);
             }
             var state = await _redis.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
-            //var deserializedTeams = JsonSerializer.Deserialize<Dictionary<long, Queue<Team>>>(value.ToString(), _jsonOptions);
 
-            //TODO when to chenge the value of the ROUND in the draftState?
             Team? teamToPick = null;
-            if (draftTeams!.TryGetValue(state.Round ?? 1, out var teams)) 
+            while (teamToPick is null) 
             {
-                teamToPick = teams.Dequeue();
-                await _redis.SetDraftTeams(draftTeams, leagueId);
+                if (draftTeams!.TryGetValue(state.Round ?? 1, out var teams))
+                {
+                    if (teams.Count != 0)
+                    {
+                        teamToPick = teams.Dequeue();
+                        await _redis.SetDraftTeams(draftTeams, leagueId);
+                    }
+                    else
+                    {
+                        state.Round = (state.Round ?? 1) + 1;
+                    }
+                }
+                else
+                {
+                    await _draftManager.EndDraft(leagueId); 
+                    //send signalR message that draft has ended
+                    return;
+                }
             }
 
             state.TeamName = teamToPick!.Name;

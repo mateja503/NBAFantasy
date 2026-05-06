@@ -1,4 +1,5 @@
 ﻿using ApplicationDefaults.Options;
+using Hangfire;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -15,13 +16,14 @@ using System.Text.Json;
 
 namespace NBA.Service.Draft
 {
-    public class DraftManager(IServiceScopeFactory scopeFactory, 
+    public class DraftManager(IServiceScopeFactory scopeFactory, IBackgroundJobClient backgroundJobClient,
         IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions, NbaFantasyRedis redis)
     {
         private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
+        private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
@@ -50,6 +52,23 @@ namespace NBA.Service.Draft
             state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
             state?.IsPaused = false;
             await _redis.SetDraftState(leagueId, state!);
+        }
+
+
+        public async Task EndDraft(long leagueId) 
+        {
+            var jobid = await _redis.GetDeleteDraftTimerJobId(leagueId);
+            if (!string.IsNullOrEmpty(jobid))
+                _backgroundJobClient.Delete(jobid);
+
+
+            jobid = await _redis.GetDeleteStartPickJobId(leagueId);
+            if (!string.IsNullOrEmpty(jobid))
+                _backgroundJobClient.Delete(jobid);
+
+            _ = await _redis.DeleteStringDraftState(leagueId);
+
+            await _redis.DeleteDraftTeams(leagueId);
         }
 
         public async Task SendUpdateDraftState() 
