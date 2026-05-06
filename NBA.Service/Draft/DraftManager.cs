@@ -40,35 +40,34 @@ namespace NBA.Service.Draft
                 IsDraftStarted = false,
                 Round = 1,
             };
-            await _redis.SetDraftState(leagueId, currentState);
+            await _redis.Draft.SetDraftState(leagueId, currentState);
 
             return currentState;
         }
       
         public async Task ResetTimer(long leagueId, int seconds = 60) 
         {
-            var state = await _redis.GetCurrentDraftState(leagueId);
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId);
             seconds = _draftOptions.DraftPickTime;
             state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
             state?.IsPaused = false;
-            await _redis.SetDraftState(leagueId, state!);
+            await _redis.Draft.SetDraftState(leagueId, state!);
         }
 
 
         public async Task EndDraft(long leagueId) 
         {
-            var jobid = await _redis.GetDeleteDraftTimerJobId(leagueId);
+            var jobid = await _redis.Draft.GetDeleteDraftTimerJobId(leagueId);
             if (!string.IsNullOrEmpty(jobid))
                 _backgroundJobClient.Delete(jobid);
 
 
-            jobid = await _redis.GetDeleteStartPickJobId(leagueId);
+            jobid = await _redis.Draft.GetDeleteStartPickJobId(leagueId);
             if (!string.IsNullOrEmpty(jobid))
                 _backgroundJobClient.Delete(jobid);
 
-            _ = await _redis.DeleteStringDraftState(leagueId);
-
-            await _redis.DeleteDraftTeams(leagueId);
+            _ = await _redis.Draft.DeleteStringDraftState(leagueId);
+            await _redis.Draft.DeleteDraftTeams(leagueId);
         }
 
         public async Task SendUpdateDraftState() 

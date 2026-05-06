@@ -49,20 +49,20 @@ namespace NBA.Service.League.Draft
                         if (i % 2 == 0) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
                         else draft.Add(i, new Queue<Team>(teams));
                     }
-                    await _redis.SetDraftTeams(draft, leagueId);
+                    await _redis.Draft.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<Team>(teams));
-                    await _redis.SetDraftTeams(draft, leagueId);
+                    await _redis.Draft.SetDraftTeams(draft, leagueId);
                     break;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<Team>(teams));
 
-                    await _redis.SetDraftTeams(draft, leagueId);
+                    await _redis.Draft.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.RRR:
@@ -71,12 +71,12 @@ namespace NBA.Service.League.Draft
                         if (i % 2 == 0 || i == 3) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
                         else draft.Add(i, new Queue<Team>(teams));
                     }
-                    await _redis.SetDraftTeams(draft, leagueId);
+                    await _redis.Draft.SetDraftTeams(draft, leagueId);
                     break;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<Team>(teams));
-                    await _redis.SetDraftTeams(draft, leagueId);
+                    await _redis.Draft.SetDraftTeams(draft, leagueId);
                     break;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);

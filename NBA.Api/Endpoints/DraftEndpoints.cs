@@ -32,7 +32,7 @@ namespace NBA.Api.Endpoints
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
-                var jobId = await redis.GetStartDraftTimerJobId(request.LeagueId.Value);
+                var jobId = await redis.Draft.GetStartDraftTimerJobId(request.LeagueId.Value);
 
                 if (string.IsNullOrEmpty(jobId))
                 {

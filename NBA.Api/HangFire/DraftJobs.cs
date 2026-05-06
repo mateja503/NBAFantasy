@@ -34,31 +34,31 @@ namespace NBA.Api.HangFire
         {
             await _draftManager.ResetTimer(leagueId);
 
-            var state = await _redis.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             if (!state.IsDraftStarted)
             {
                 state.IsDraftStarted = true;
-                await _redis.SetDraftState(leagueId, state);
+                await _redis.Draft.SetDraftState(leagueId, state);
             }
 
             await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
             var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.ResetTimerLoop(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
-            await _redis.SetDraftTimerJobId(leagueId, jobId);
+            await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
 
         }
 
         public async Task StartPick(long leagueId)
         {
-            var draftTeams = await _redis.GetDraftTeams(leagueId);
+            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
 
             if (draftTeams is null)
             {
                 await _draftService.DraftOrder(leagueId);
-                draftTeams = await _redis.GetDraftTeams(leagueId);
+                draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
             }
-            var state = await _redis.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             Team? teamToPick = null;
             while (teamToPick is null) 
@@ -68,7 +68,7 @@ namespace NBA.Api.HangFire
                     if (teams.Count != 0)
                     {
                         teamToPick = teams.Dequeue();
-                        await _redis.SetDraftTeams(draftTeams, leagueId);
+                        await _redis.Draft.SetDraftTeams(draftTeams, leagueId);
                     }
                     else
                     {
@@ -86,12 +86,12 @@ namespace NBA.Api.HangFire
             state.TeamName = teamToPick!.Name;
             state.TeamId = teamToPick.Teamid;
 
-            await _redis.SetDraftState(leagueId, state);
+            await _redis.Draft.SetDraftState(leagueId, state);
 
             await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
             var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartPick(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
-            await _redis.SetStartPickJobId(leagueId, jobId);
+            await _redis.Draft.SetStartPickJobId(leagueId, jobId);
         }
     }
 }
