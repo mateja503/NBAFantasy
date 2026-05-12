@@ -44,12 +44,17 @@ namespace NBA.Api.Endpoints
                 }
             });
 
-            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager) => 
+            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, IHubContext<DraftHub,IDraftHubClient> draftHub) => 
             {
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
                 await draftManager.EndDraft(request.LeagueId.Value);
+
+                var state = new DraftState { IsDraftEnded = true };
+
+                await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
+
                 return Results.Ok();
             });
 

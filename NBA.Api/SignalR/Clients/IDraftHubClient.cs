@@ -6,5 +6,7 @@ namespace NBA.Api.SignalR.Clients
     public interface IDraftHubClient
     {
         Task UpdateDraftState(DraftState state);
+
+
     }
 }

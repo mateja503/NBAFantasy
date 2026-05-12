@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace NBA.Data.Redis.Entities
+namespace NBA.Data.Redis.Keys
 {
     public static class RedisKeys
     {

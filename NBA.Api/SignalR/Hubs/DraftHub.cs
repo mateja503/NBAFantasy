@@ -42,13 +42,10 @@ namespace NBA.Api.SignalR.Hubs
 
             await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
-            var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
-
             var jobId = await _redis.Draft.GetDeleteDraftTimerJobId(leagueId);
 
             if (!string.IsNullOrEmpty(jobId))
                 _backgroundJobClient.Delete(jobId);
-
 
             return state;
         }

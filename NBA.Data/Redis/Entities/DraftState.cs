@@ -9,5 +9,6 @@
         public long? Round { get; set; } = null;    
         public bool IsPaused { get; set; }
         public bool IsDraftStarted { get; set; } = false;
+        public bool? IsDraftEnded { get; set; } = false;
     }
 }

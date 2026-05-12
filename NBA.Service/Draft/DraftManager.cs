@@ -1,6 +1,7 @@
 ﻿using ApplicationDefaults.Options;
 using Hangfire;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,6 +69,8 @@ namespace NBA.Service.Draft
 
             _ = await _redis.Draft.DeleteStringDraftState(leagueId);
             await _redis.Draft.DeleteDraftTeams(leagueId);
+
+
         }
 
         public async Task SendUpdateDraftState() 
