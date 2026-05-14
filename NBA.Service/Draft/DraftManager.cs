@@ -74,7 +74,6 @@ namespace NBA.Service.Draft
 
         }
 
-
         public async Task<DraftState?> NextPick(DraftState state, long leagueId)
         {
             var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
@@ -89,10 +88,10 @@ namespace NBA.Service.Draft
                     if (teams.Count != 0)
                     {
                         teamToPick = teams.Dequeue();
+                        if (teams.Count == 0) draftTeams.Remove(currentRound);
                     }
                     else
                     {
-                        draftTeams.Remove(currentRound);
                         currentRound = currentRound + 1;
                     }
                 }

@@ -10,6 +10,7 @@ using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Service.Draft;
+using Polly.CircuitBreaker;
 using StackExchange.Redis;
 using System.Text.Json;
 using PlayerData = NBA.Data.Entities.Player;
@@ -86,9 +87,11 @@ namespace NBA.Service.League.Draft
             }
         }
 
-        public DraftBoardTeams PrepareDraftBoard(Dictionary<long, Queue<Team>> teams) 
+        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<Team>> teams) 
         {
             var currentRound = teams.Keys.FirstOrDefault();
+            if (currentRound == 0) return null;
+
             var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.Teamid , TeamName = t.Name}).FirstOrDefault();
             var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.Teamid, TeamName = t.Name }).Skip(1).Take(3).ToList();
 
