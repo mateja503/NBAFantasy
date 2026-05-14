@@ -26,8 +26,8 @@ namespace NBA.Api.Endpoints
             var draft = builder.MapGroup("draft").WithTags("draft");
 
             draft.MapPost("start-draft", async ([FromBody] DraftRequest request,
-                IBackgroundJobClient backgroundJobs, IHubContext<DraftHub,
-                IDraftHubClient> draftHub, DraftJobs draftJob, NbaFantasyRedis redis) =>
+                IBackgroundJobClient backgroundJobs, IHubContext<DraftHub,IDraftHubClient> draftHub,
+                DraftJobs draftJob, NbaFantasyRedis redis) =>
             {
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);

@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
+using Hangfire.States;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,8 @@ using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
+using NBA.Data.Redis.Entities;
+using NBA.Service.Draft;
 using StackExchange.Redis;
 using System.Text.Json;
 using PlayerData = NBA.Data.Entities.Player;
@@ -24,7 +27,7 @@ namespace NBA.Service.League.Draft
         private readonly NbaFantasyRedis _redis = redis;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
-        public async Task DraftOrder(long leagueId) 
+        public async Task<Dictionary<long, Queue<Team>>> DraftOrder(long leagueId) 
         {
             var leagueTeams = await _context.GetAllLeagueTeam().Where(u => u.Leagueid == leagueId)
                 .Include(u => u.Team)
@@ -50,20 +53,20 @@ namespace NBA.Service.League.Draft
                         else draft.Add(i, new Queue<Team>(teams));
                     }
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
-                    break;
+                    return draft;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<Team>(teams));
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
-                    break;
+                    return draft;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<Team>(teams));
 
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
-                    break;
+                    return draft;
 
                 case (long)DraftType.RRR:
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
@@ -72,17 +75,30 @@ namespace NBA.Service.League.Draft
                         else draft.Add(i, new Queue<Team>(teams));
                     }
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
-                    break;
+                    return draft;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<Team>(teams));
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
-                    break;
+                    return draft;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);
             }
         }
 
+        public DraftBoardTeams PrepareDraftBoard(Dictionary<long, Queue<Team>> teams) 
+        {
+            var currentRound = teams.Keys.FirstOrDefault();
+            var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.Teamid , TeamName = t.Name}).FirstOrDefault();
+            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.Teamid, TeamName = t.Name }).Skip(1).Take(3).ToList();
+
+            return new DraftBoardTeams
+            {
+                CurrentRound = currentRound,
+                onTheClockTeam = onTheClockTeam,
+                DraftOrder = onTheClockTeams
+            };
+        }
 
         public async Task<PlayerData> DraftPlayer(long teamId, long playerId) 
         {

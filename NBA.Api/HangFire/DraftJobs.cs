@@ -8,6 +8,7 @@ using NBA.Api.SignalR.Clients;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Redis.Entities;
 using NBA.Service.Draft;
 using NBA.Service.League.Draft;
 using System.Text.Json;
@@ -27,71 +28,19 @@ namespace NBA.Api.HangFire
         private readonly NbaFantasyRedis _redis = redis;
         public async Task StartDraft(long leagueId)
         {
-            await ResetTimerLoop(leagueId);
-            await StartPick(leagueId);
+            await DraftCycle(leagueId);
         }
-        public async Task ResetTimerLoop(long leagueId)
+        public async Task DraftCycle(long leagueId)
         {
-            await _draftManager.ResetTimer(leagueId);
+            var state = await _draftManager.ResetTimer(leagueId);
 
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
-
-            if (!state.IsDraftStarted)
-            {
-                state.IsDraftStarted = true;
-                await _redis.Draft.SetDraftState(leagueId, state);
-            }
+            state = await _draftManager.NextPick(state, leagueId);
 
             await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
-            var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.ResetTimerLoop(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.DraftCycle(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
 
-        }
-
-        public async Task StartPick(long leagueId)
-        {
-            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
-
-            if (draftTeams is null)
-            {
-                await _draftService.DraftOrder(leagueId);
-                draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
-            }
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
-
-            Team? teamToPick = null;
-            while (teamToPick is null) 
-            {
-                if (draftTeams!.TryGetValue(state.Round ?? 1, out var teams))
-                {
-                    if (teams.Count != 0)
-                    {
-                        teamToPick = teams.Dequeue();
-                        await _redis.Draft.SetDraftTeams(draftTeams, leagueId);
-                    }
-                    else
-                    {
-                        state.Round = (state.Round ?? 1) + 1;
-                    }
-                }
-                else
-                {
-                    await _draftManager.EndDraft(leagueId); 
-                    //send signalR message that draft has ended
-                    return;
-                }
-            }
-
-            state.TeamName = teamToPick!.Name;
-            state.TeamId = teamToPick.Teamid;
-
-            await _redis.Draft.SetDraftState(leagueId, state);
-
-            await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
-
-            var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartPick(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
-            await _redis.Draft.SetStartPickJobId(leagueId, jobId);
         }
     }
 }

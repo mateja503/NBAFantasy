@@ -29,7 +29,10 @@ namespace NBA.Api.SignalR.Hubs
             var state = await _redis.Draft.GetCurrentDraftState(leagueId)
                      ?? await _draftManager.CreateDraftState(leagueId);
 
-            await _draftService.DraftOrder(leagueId);
+            var draft = await _draftService.DraftOrder(leagueId);
+
+            state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+            
             await Clients.Caller.UpdateDraftState(state!);
             await base.OnConnectedAsync();
         }

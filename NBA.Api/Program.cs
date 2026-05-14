@@ -97,7 +97,7 @@ builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
-builder.Services.AddSingleton<DraftManager>();
+builder.Services.AddScoped<DraftManager>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
 

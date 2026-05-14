@@ -4,11 +4,12 @@
     {
         public string LeagueName { get; set; }
         public DateTime PickEndTime { get; set; } = DateTime.UtcNow;
-        public string? TeamName { get; set; } = string.Empty;
-        public long? TeamId { get; set; } = null;
-        public long? Round { get; set; } = null;    
+        //public string? TeamName { get; set; } = string.Empty;
+        //public long? TeamId { get; set; } = null;
+        //public long? Round { get; set; } = null;    
         public bool IsPaused { get; set; }
         public bool IsDraftStarted { get; set; } = false;
         public bool? IsDraftEnded { get; set; } = false;
+        public DraftBoardTeams? DraftBoardTeams { get; set; }
     }
 }

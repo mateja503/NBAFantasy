@@ -27,10 +27,11 @@ namespace NBA.Data.Redis.Operations
             return state;
         }
 
-        public async Task SetDraftState(long leagueId, DraftState state)
+        public async Task<DraftState> SetDraftState(long leagueId, DraftState state)
         {
             var redisKey = RedisKeys.GetDraftStateKey(leagueId);
             await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(state, _jsonOptions));
+            return state;
         }
 
         public async Task<DraftState?> DeleteStringDraftState(long leagueId)
@@ -81,16 +82,16 @@ namespace NBA.Data.Redis.Operations
             return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<Team>>>(value.ToString(), _jsonOptions) : null;
         }
 
-        public async Task SetStartPickJobId(long leagueId, string jobId)
-        {
-            var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, jobId);
-        }
+        //public async Task SetStartPickJobId(long leagueId, string jobId)
+        //{
+        //    var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
+        //    await _redisDb.StringSetAsync(redisKey, jobId);
+        //}
 
-        public async Task<string?> GetDeleteStartPickJobId(long leagueId)
-        {
-            var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
-            return await _redisDb.StringGetDeleteAsync(redisKey);
-        }
+        //public async Task<string?> GetDeleteStartPickJobId(long leagueId)
+        //{
+        //    var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);
+        //    return await _redisDb.StringGetDeleteAsync(redisKey);
+        //}
     }
 }
