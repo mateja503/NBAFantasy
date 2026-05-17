@@ -32,7 +32,6 @@ namespace NBA.Service.Draft
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
-
             var leagueName = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId).Select(u => u.Name).SingleOrDefaultAsync();
 
             currentState = new DraftState

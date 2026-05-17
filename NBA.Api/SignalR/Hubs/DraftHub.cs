@@ -13,13 +13,13 @@ namespace NBA.Api.SignalR.Hubs
     {
         private readonly DraftManager _draftManager = draftManager;
         private readonly NbaFantasyRedis _redis = redis;
-        private readonly IBackgroundJobClient _backgroundJobClient= backgroundJobClient;
+        private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         private readonly DraftService _draftService = draftService;
         // 1. Send state to a user the moment they connect/refresh
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
-            var leagueIdString = long.TryParse(httpContext?.Request.Query["leagueId"],out long leagueId);
+            var leagueIdString = long.TryParse(httpContext?.Request.Query["leagueId"], out long leagueId);
 
             if (leagueIdString)
             {
@@ -30,14 +30,13 @@ namespace NBA.Api.SignalR.Hubs
                      ?? await _draftManager.CreateDraftState(leagueId);
 
             var draft = await _draftService.DraftOrder(leagueId);
-
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
-            
+
             await Clients.Caller.UpdateDraftState(state!);
             await base.OnConnectedAsync();
         }
         // 2. Action called by the Commissioner refresh the timer for user that requested it
-        public async Task<DraftState> ResetTimer(long leagueId) 
+        public async Task<DraftState> ResetTimer(long leagueId)
         {
             await _draftManager.ResetTimer(leagueId);
 

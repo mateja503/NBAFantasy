@@ -30,6 +30,12 @@ namespace NBA.Service.League.Draft
 
         public async Task<Dictionary<long, Queue<Team>>> DraftOrder(long leagueId) 
         {
+            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
+
+            if (draftTeams is not null)
+                return draftTeams;
+
+
             var leagueTeams = await _context.GetAllLeagueTeam().Where(u => u.Leagueid == leagueId)
                 .Include(u => u.Team)
                 .Include(u => u.League)
@@ -41,8 +47,6 @@ namespace NBA.Service.League.Draft
             var draftType = leagueTeams.Select(u => u.Draftstyle).FirstOrDefault() ?? (long)DraftType.Snake;
 
             Dictionary<long, Queue<Team>> draft = new Dictionary<long, Queue<Team>>();
-
-            //var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
 
             switch (draftType)
             {
