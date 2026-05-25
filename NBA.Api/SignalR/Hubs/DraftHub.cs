@@ -1,5 +1,8 @@
-﻿using Hangfire;
+﻿using ApplicationDefaults.Options;
+using Hangfire;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
+using NBA.Api.HangFire;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
 using NBA.Data.Entities;
@@ -8,18 +11,20 @@ using NBA.Service.League.Draft;
 using NBA.Service.Player;
 using Pipelines.Sockets.Unofficial;
 using StackExchange.Redis;
+using StreamJsonRpc;
 
 namespace NBA.Api.SignalR.Hubs
 {
     public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis,
         IBackgroundJobClient backgroundJobClient, PlayerManager playerManager,
-        DraftService draftService) : Hub<IDraftHubClient>
+        DraftService draftService, IOptions<DraftOptions> draftOptions) : Hub<IDraftHubClient>
     {
         private readonly DraftManager _draftManager = draftManager;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         private readonly DraftService _draftService = draftService;
         private readonly PlayerManager _playerManager = playerManager;
+        private readonly DraftOptions _draftOptions = draftOptions.Value;
         // 1. Send state to a user the moment they connect/refresh
         public override async Task OnConnectedAsync()
         {
@@ -73,6 +78,13 @@ namespace NBA.Api.SignalR.Hubs
 
             await Clients.Group(leagueid.ToString()).UpdateDraftState(state);
 
+            var jobId = await _redis.Draft.GetDeleteDraftTimerJobId(leagueid);
+
+            if (!string.IsNullOrEmpty(jobId))
+                _backgroundJobClient.Delete(jobId);
+
+            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueid), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            await _redis.Draft.SetDraftTimerJobId(leagueid, jobId);
         }
 
 

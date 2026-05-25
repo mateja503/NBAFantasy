@@ -117,5 +117,10 @@ namespace NBA.Service.League.Draft
             return await _redis.Draft.SetDraftState(leagueId, state);
         }
 
+        public async Task CreateNewDraftTimer(string jobId)
+        {
+
+        }
+
     }
 }
