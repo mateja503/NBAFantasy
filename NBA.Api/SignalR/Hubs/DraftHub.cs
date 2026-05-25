@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.SignalR;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
+using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.Player;
+using Pipelines.Sockets.Unofficial;
 using StackExchange.Redis;
 
 namespace NBA.Api.SignalR.Hubs
@@ -64,6 +66,12 @@ namespace NBA.Api.SignalR.Hubs
         public async Task DraftPlayer(long leagueid, long playerid, int pick) 
         {
             await _playerManager.AddDraftedPlayers(leagueid, playerid, pick);
+
+            var state = await _draftManager.ResetTimer(leagueid);
+
+            await _draftManager.NextPick(state, leagueid);
+
+            await Clients.Group(leagueid.ToString()).UpdateDraftState(state);
 
         }
 
