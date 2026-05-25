@@ -28,6 +28,32 @@ namespace NBA.Data.Redis.Operations
             return player;
         }
 
+        public async Task<List<PlayerShort>> GetAllPlayers()
+        {
+            var redisKey = RedisKeys.GetMasterPlayerKey();
+            var playerIds = await _redisDb.SetMembersAsync(redisKey);
+
+            if (playerIds.Length == 0) return new List<PlayerShort>();
+
+            RedisKey[] playerKeys = playerIds
+                .Select(id => (RedisKey)RedisKeys.GetPlayerKey((long)id))
+                .ToArray();
+
+            RedisValue[] jsonResults = await _redisDb.StringGetAsync(playerKeys);
+
+            var players = new List<PlayerShort>();
+            foreach (var json in jsonResults)
+            {
+                if (json.HasValue)
+                {
+                    var player = JsonSerializer.Deserialize<PlayerShort>(json.ToString(), _jsonOptions);
+                    if (player != null) players.Add(player);
+                }
+            }
+
+            return players;
+        }
+
         public async Task<PlayerShort> SetPlayer(Player player)
         {
             var rediKey = RedisKeys.GetPlayerKey(player.Playerid);
@@ -55,6 +81,10 @@ namespace NBA.Data.Redis.Operations
         {
             var processedPlayers = new List<PlayerShort>();
             var batchEntries = new List<KeyValuePair<RedisKey, RedisValue>>();
+
+            var masterBatchEntries = new List<RedisValue>();
+            var masterRedisKey = RedisKeys.GetMasterPlayerKey();
+
             players.ForEach(p =>
              {
                  var redisKey = RedisKeys.GetPlayerKey(p.Playerid ?? 0);
@@ -63,12 +93,18 @@ namespace NBA.Data.Redis.Operations
 
                  var json = JsonSerializer.Serialize(p, _jsonOptions);
                  batchEntries.Add(new KeyValuePair<RedisKey, RedisValue>(redisKey, json));
+                 masterBatchEntries.Add(p.Playerid);
              });
 
             await _redisDb.StringSetAsync(batchEntries.ToArray());
 
-            var expiryTasks = batchEntries.Select(entry => _redisDb.KeyExpireAsync(entry.Key, TimeSpan.FromDays(30)));
+            await _redisDb.SetAddAsync(masterRedisKey, masterBatchEntries.ToArray());
 
+            var expiryTasks = batchEntries.Select(entry => _redisDb.KeyExpireAsync(entry.Key, TimeSpan.FromDays(30))).ToList();
+
+            expiryTasks.Add(_redisDb.KeyExpireAsync(masterRedisKey, TimeSpan.FromDays(30)));
+            
+            
             await Task.WhenAll(expiryTasks);
 
             return processedPlayers;
