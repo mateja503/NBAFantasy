@@ -1,4 +1,5 @@
-﻿using NBA.Data.Entities;
+﻿using k8s.Models;
+using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Keys;
@@ -73,7 +74,32 @@ namespace NBA.Data.Redis.Operations
             return processedPlayers;
         }
 
+        public async Task AddLeaguesDraftedPlayer(long leagueid, long playerid, int pick)
+        {
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
+            await _redisDb.SortedSetAddAsync(redisKey, playerid,pick);
+            await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
+        }
 
+        public async Task AddTeamsDrafterPlayer(long teamid, long playerid) 
+        {
+            var redisKey = RedisKeys.GetTeamsDrafterPlayersKey(teamid);
+            await _redisDb.SetAddAsync(redisKey, playerid);
+            await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
+        }
 
+        public async Task<HashSet<long>> GetLeaguesDrafterPlayers(long leagueid, long playerid, long pick) 
+        {
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
+            var redisValues = await _redisDb.SortedSetRangeByRankAsync(redisKey, 0, -1, Order.Ascending);
+            return redisValues.Select(v => (long)v).ToHashSet();
+        }
+
+        public async Task<bool> IsPlayerDrafted(long leagueid, long playerid) 
+        {
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
+            var score = await _redisDb.SortedSetScoreAsync(redisKey, playerid);
+            return score.HasValue;
+        }
     }
 }

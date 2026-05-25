@@ -4,33 +4,39 @@ using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
+using NBA.Service.Player;
 using StackExchange.Redis;
 
 namespace NBA.Api.SignalR.Hubs
 {
-    public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis, IBackgroundJobClient backgroundJobClient, DraftService draftService) : Hub<IDraftHubClient>
+    public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis,
+        IBackgroundJobClient backgroundJobClient, PlayerManager playerManager,
+        DraftService draftService) : Hub<IDraftHubClient>
     {
         private readonly DraftManager _draftManager = draftManager;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         private readonly DraftService _draftService = draftService;
+        private readonly PlayerManager _playerManager = playerManager;
         // 1. Send state to a user the moment they connect/refresh
         public override async Task OnConnectedAsync()
         {
             var httpContext = Context.GetHttpContext();
             var leagueIdString = long.TryParse(httpContext?.Request.Query["leagueId"], out long leagueId);
 
-             await _draftService.CheckDraftCompleted(leagueId);
+            await _draftService.CheckDraftCompleted(leagueId);
 
             if (leagueIdString)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, leagueId.ToString());
             }
 
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _draftManager.GetDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             var draft = await _draftService.DraftOrder(leagueId);
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+
+
 
             await _draftManager.UpdaterDraftState(leagueId, state);
 
@@ -52,6 +58,13 @@ namespace NBA.Api.SignalR.Hubs
                 _backgroundJobClient.Delete(jobId);
 
             return state;
+        }
+
+
+        public async Task DraftPlayer(long leagueid, long playerid, int pick) 
+        {
+            await _playerManager.AddDraftedPlayers(leagueid, playerid, pick);
+
         }
 
 

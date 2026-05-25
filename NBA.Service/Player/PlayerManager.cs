@@ -13,7 +13,7 @@ using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.Player
 {
-    public class PlayerManager(NbaFantasyContext context,IOptions<JsonOptions> jsonOptions,
+    public class PlayerManager(NbaFantasyContext context, IOptions<JsonOptions> jsonOptions,
         NbaFantasyRedis redis, PlayerService playerService)
     {
         private readonly NbaFantasyContext _context = context;
@@ -21,19 +21,28 @@ namespace NBA.Service.Player
         private readonly NbaFantasyRedis _redis = redis;
         private readonly PlayerService _playerService = playerService;
 
-        public async Task AddPlayersToRedis(List<PlayerInfoResponse> players) 
+        public async Task AddPlayersToRedis(List<PlayerInfoResponse> players)
         {
             var playersToRedis = Addapter.ToPlayerRedis(players);
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 
-        //temporary
-        public async Task AddPlayerToRedisFromDB(List<PlayerData> players) 
+        public async Task AddPlayerToRedisFromDB(List<PlayerData> players)
         {
             var playersToRedis = Addapter.ToPlayerRedisFromDB(players);
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 
+        public async Task AddDraftedPlayers(long leagueid, long playerid, int pick) 
+        {
+            await _redis.Player.AddLeaguesDraftedPlayer(leagueid, playerid, pick);
 
+            var draftState = await _redis.Draft.GetCurrentDraftState(leagueid);
+
+            await _redis.Player.AddTeamsDrafterPlayer(draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId, playerid);
+        }
+
+
+      
     }
 }
