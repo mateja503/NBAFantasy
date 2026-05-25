@@ -77,7 +77,7 @@ namespace NBA.Service.Draft
         {
             var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
 
-            Team? teamToPick = null;
+            TeamDraftBoard? teamToPick = null;
             var currentRound = draftTeams.Keys!.FirstOrDefault();
 
             while (teamToPick is null)

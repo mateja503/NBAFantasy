@@ -26,8 +26,7 @@ namespace NBA.Api.SignalR.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, leagueId.ToString());
             }
 
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId)
-                     ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             var draft = await _draftService.DraftOrder(leagueId);
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);

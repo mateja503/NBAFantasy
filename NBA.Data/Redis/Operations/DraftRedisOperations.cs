@@ -62,7 +62,7 @@ namespace NBA.Data.Redis.Operations
             await _redisDb.StringSetAsync(redisKey, jobId);
         }
 
-        public async Task SetDraftTeams(Dictionary<long, Queue<Team>> draft, long leagueId)
+        public async Task SetDraftTeams(Dictionary<long, Queue<TeamDraftBoard>> draft, long leagueId)
         {
             var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
             await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
@@ -75,11 +75,11 @@ namespace NBA.Data.Redis.Operations
             _ = await _redisDb.StringGetDeleteAsync(redisKey);
         }
 
-        public async Task<Dictionary<long, Queue<Team>>?> GetDraftTeams(long leagueId)
+        public async Task<Dictionary<long, Queue<TeamDraftBoard>>?> GetDraftTeams(long leagueId)
         {
             var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
             var value = await _redisDb.StringGetAsync(redisKey);
-            return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<Team>>>(value.ToString(), _jsonOptions) : null;
+            return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(value.ToString(), _jsonOptions) : null;
         }
 
         //public async Task SetStartPickJobId(long leagueId, string jobId)

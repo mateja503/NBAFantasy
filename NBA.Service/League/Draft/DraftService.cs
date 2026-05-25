@@ -28,7 +28,7 @@ namespace NBA.Service.League.Draft
         private readonly NbaFantasyRedis _redis = redis;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
-        public async Task<Dictionary<long, Queue<Team>>> DraftOrder(long leagueId) 
+        public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId) 
         {
             var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
 
@@ -43,32 +43,33 @@ namespace NBA.Service.League.Draft
                 .Select(u => new { u.League.Draftstyle, u.Team })
                 .ToListAsync();
 
-            var teams = leagueTeams.Select(u => u.Team).ToList();
+            var teams = leagueTeams.Select(u => new TeamDraftBoard { TeamId = u.Team.Teamid, TeamName = u.Team.Name }).ToList();
             var draftType = leagueTeams.Select(u => u.Draftstyle).FirstOrDefault() ?? (long)DraftType.Snake;
 
-            Dictionary<long, Queue<Team>> draft = new Dictionary<long, Queue<Team>>();
-
+            Dictionary<long, Queue<TeamDraftBoard>> draft = new Dictionary<long, Queue<TeamDraftBoard>>();
+            int pick = 1;
             switch (draftType)
             {
                 case (long)DraftType.Snake:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++) 
                     {
-                        if (i % 2 == 0) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
-                        else draft.Add(i, new Queue<Team>(teams));
+                        if (i % 2 == 0) draft.Add(i, new Queue<TeamDraftBoard>(teams.AsEnumerable()
+                            .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
+                        else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
                     return draft;
 
                 case (long)DraftType.Auction:
 
-                    draft.Add(1, new Queue<Team>(teams));
+                    draft.Add(1, new Queue<TeamDraftBoard>(teams));
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
                     return draft;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
-                        draft.Add(i, new Queue<Team>(teams));
+                        draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
 
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
                     return draft;
@@ -76,14 +77,15 @@ namespace NBA.Service.League.Draft
                 case (long)DraftType.RRR:
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                     {
-                        if (i % 2 == 0 || i == 3) draft.Add(i, new Queue<Team>(teams.AsEnumerable().Reverse()));
-                        else draft.Add(i, new Queue<Team>(teams));
+                        if (i % 2 == 0 || i == 3) draft.Add(i, new Queue<TeamDraftBoard>(teams.AsEnumerable()
+                            .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
+                        else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
                     return draft;
 
                 case (long)DraftType.Offline:
-                    draft.Add(0, new Queue<Team>(teams));
+                    draft.Add(0, new Queue<TeamDraftBoard>(teams));
                     await _redis.Draft.SetDraftTeams(draft, leagueId);
                     return draft;
                 default:
@@ -91,13 +93,13 @@ namespace NBA.Service.League.Draft
             }
         }
 
-        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<Team>> teams) 
+        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<TeamDraftBoard>> teams) 
         {
             var currentRound = teams.Keys.FirstOrDefault();
             if (currentRound == 0) return null;
 
-            var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.Teamid , TeamName = t.Name}).FirstOrDefault();
-            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.Teamid, TeamName = t.Name }).Skip(1).Take(3).ToList();
+            var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.TeamId , TeamName = t.TeamName!, Pick = t.Pick }).FirstOrDefault();
+            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).Skip(1).Take(3).ToList();
 
             return new DraftBoardTeams
             {
