@@ -80,8 +80,6 @@ namespace NBA.Service.Draft
 
             _ = await _redis.Draft.DeleteStringDraftState(leagueId);
             await _redis.Draft.DeleteDraftTeams(leagueId);
-
-
         }
 
         public async Task<DraftState?> NextPick(DraftState state, long leagueId)
@@ -108,7 +106,9 @@ namespace NBA.Service.Draft
                 else
                 {
                     await EndDraft(leagueId);
-                    state.IsDraftStarted = true;
+                    state.IsDraftEnded = true;
+                    break;
+                    //state.IsDraftStarted = true;
                 }
             }
 

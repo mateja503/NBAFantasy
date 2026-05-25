@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Options;
 using Hangfire;
+using Hangfire.States;
 using k8s.ClientSets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -11,6 +12,7 @@ using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
 using NBA.Service.Draft;
 using NBA.Service.League.Draft;
+using StreamJsonRpc;
 using System.Text.Json;
 
 namespace NBA.Api.HangFire
@@ -28,15 +30,22 @@ namespace NBA.Api.HangFire
         private readonly NbaFantasyRedis _redis = redis;
         public async Task StartDraft(long leagueId)
         {
+            await draftService.CheckDraftCompleted(leagueId);
             await DraftCycle(leagueId);
         }
         public async Task DraftCycle(long leagueId)
         {
             var state = await _draftManager.ResetTimer(leagueId);
 
-            await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
-            
+            await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state!);
+
             state = await _draftManager.NextPick(state, leagueId);
+
+            if (state!.DraftBoardTeams == null) 
+            {
+                await _draftService.EndDraft(leagueId);
+                return;
+            }
 
             var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.DraftCycle(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
