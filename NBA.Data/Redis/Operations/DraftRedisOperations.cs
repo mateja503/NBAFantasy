@@ -30,7 +30,7 @@ namespace NBA.Data.Redis.Operations
         public async Task<DraftState> SetDraftState(long leagueId, DraftState state)
         {
             var redisKey = RedisKeys.GetDraftStateKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(state, _jsonOptions));
+            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(state, _jsonOptions), expiry: TimeSpan.FromDays(3));
             return state;
         }
 
@@ -59,13 +59,13 @@ namespace NBA.Data.Redis.Operations
         public async Task SetDraftTimerJobId(long leagueId, string jobId)
         {
             var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, jobId);
+            await _redisDb.StringSetAsync(redisKey, jobId, expiry: TimeSpan.FromDays(3));
         }
 
         public async Task SetDraftTeams(Dictionary<long, Queue<TeamDraftBoard>> draft, long leagueId)
         {
             var redisKey = RedisKeys.GetDraftTeamsKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions));
+            await _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(draft, _jsonOptions), expiry: TimeSpan.FromDays(3));
 
         }
 
