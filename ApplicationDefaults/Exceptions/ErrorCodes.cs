@@ -21,6 +21,8 @@ namespace ApplicationDefaults.Exceptions
         public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
         public const string LoginFailed = "5656-LOGINFAILED";
         public const string DraftAlreadyStarted = "5656-DRAFTALREADYSTARTED";  
+        public const string DraftCompleted = "5656-DRAFTCOMPLETED";  
+
 
         #endregion
 

@@ -27,10 +27,13 @@ namespace NBA.Api.Endpoints
 
             draft.MapPost("start-draft", async ([FromBody] DraftRequest request,
                 IBackgroundJobClient backgroundJobs, IHubContext<DraftHub,IDraftHubClient> draftHub,
-                DraftJobs draftJob, NbaFantasyRedis redis) =>
+                DraftJobs draftJob, NbaFantasyRedis redis, DraftService draftService) =>
             {
+
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
+
+                await draftService.CheckDraftCompleted(request.LeagueId.Value);
 
                 var jobId = await redis.Draft.GetStartDraftTimerJobId(request.LeagueId.Value);
 
@@ -44,7 +47,7 @@ namespace NBA.Api.Endpoints
                 }
             });
 
-            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, IHubContext<DraftHub,IDraftHubClient> draftHub) => 
+            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, DraftService draftService, IHubContext<DraftHub,IDraftHubClient> draftHub) => 
             {
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
@@ -54,6 +57,7 @@ namespace NBA.Api.Endpoints
                 var state = new DraftState { IsDraftEnded = true };
 
                 await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
+
 
                 return Results.Ok();
             });

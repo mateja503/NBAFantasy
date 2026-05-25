@@ -34,9 +34,9 @@ namespace NBA.Api.HangFire
         {
             var state = await _draftManager.ResetTimer(leagueId);
 
-            state = await _draftManager.NextPick(state, leagueId);
-
             await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
+            
+            state = await _draftManager.NextPick(state, leagueId);
 
             var jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.DraftCycle(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);

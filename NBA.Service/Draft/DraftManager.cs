@@ -46,6 +46,16 @@ namespace NBA.Service.Draft
 
             return currentState;
         }
+
+        public async Task<DraftState> UpdaterDraftState(long leagueId, DraftState state) 
+        {
+            return await _redis.Draft.SetDraftState(leagueId, state);
+        }
+
+        public async Task<DraftState?> GetDraftState(long leagueId) 
+        {
+            return await _redis.Draft.GetCurrentDraftState(leagueId);
+        }
         public async Task<DraftState> ResetTimer(long leagueId, int seconds = 60) 
         {
             var state = await _redis.Draft.GetCurrentDraftState(leagueId);
@@ -62,10 +72,11 @@ namespace NBA.Service.Draft
             if (!string.IsNullOrEmpty(jobid))
                 _backgroundJobClient.Delete(jobid);
 
-
             //jobid = await _redis.Draft.GetDeleteStartPickJobId(leagueId);
             //if (!string.IsNullOrEmpty(jobid))
             //    _backgroundJobClient.Delete(jobid);
+
+            await _draftService.EndDraft(leagueId);
 
             _ = await _redis.Draft.DeleteStringDraftState(leagueId);
             await _redis.Draft.DeleteDraftTeams(leagueId);

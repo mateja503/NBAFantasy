@@ -122,6 +122,14 @@ namespace NBA.Data.Context
             _ = await SaveChangesAsync();
             return e.Entity;
         }
+
+        public async Task<League> UpdateLeague(League league) 
+        {
+            var e = Leagues.Update(league);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
+
         #endregion
 
         #region StatsValue

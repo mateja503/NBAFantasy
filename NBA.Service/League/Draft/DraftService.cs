@@ -1,6 +1,7 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
 using Hangfire.States;
+using MessagePack.Formatters;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -132,6 +133,30 @@ namespace NBA.Service.League.Draft
 
             _ = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
             return player;
+        }
+
+
+        public async Task EndDraft(long leagueId) 
+        {
+            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid);
+
+            if (league is null)
+                throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
+
+            league.Draftcompleted = true;
+
+            await _context.UpdateLeague(league);
+        }
+
+
+        public async Task CheckDraftCompleted(long leagueId) 
+        {
+            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid);
+
+            if (league is null)
+                throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
+
+            if (league.Draftcompleted == true) throw new NBAException($"Draft was alraedy complted for league {leagueId}", ErrorCodes.DraftCompleted);
         }
 
     }

@@ -21,6 +21,8 @@ namespace NBA.Api.SignalR.Hubs
             var httpContext = Context.GetHttpContext();
             var leagueIdString = long.TryParse(httpContext?.Request.Query["leagueId"], out long leagueId);
 
+             await _draftService.CheckDraftCompleted(leagueId);
+
             if (leagueIdString)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, leagueId.ToString());
@@ -30,6 +32,8 @@ namespace NBA.Api.SignalR.Hubs
 
             var draft = await _draftService.DraftOrder(leagueId);
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+
+            await _draftManager.UpdaterDraftState(leagueId, state);
 
             await Clients.Caller.UpdateDraftState(state!);
             await base.OnConnectedAsync();
