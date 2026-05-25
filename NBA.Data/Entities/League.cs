@@ -25,6 +25,8 @@ public partial class League
 
     public int? Draftstyle { get; set; }
 
+    public bool? Draftcompleted { get; set; }
+
     public long? Statsvalueid { get; set; }
 
     public virtual ICollection<Leagueplayer> Leagueplayers { get; set; } = new List<Leagueplayer>();

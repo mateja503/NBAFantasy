@@ -85,6 +85,9 @@ public partial class NbaFantasyContext : DbContext
                 .HasColumnName("leagueid");
             entity.Property(e => e.Autostart).HasColumnName("autostart");
             entity.Property(e => e.Commissioner).HasColumnName("commissioner");
+            entity.Property(e => e.Draftcompleted)
+                .HasDefaultValue(false)
+                .HasColumnName("draftcompleted");
             entity.Property(e => e.Draftstyle).HasColumnName("draftstyle");
             entity.Property(e => e.Name)
                 .HasMaxLength(255)

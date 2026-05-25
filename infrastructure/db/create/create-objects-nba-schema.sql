@@ -86,6 +86,7 @@ CREATE TABLE nba.league (
     typetransactionlimits INTEGER,
     typeleague INTEGER,
     draftstyle INTEGER,
+	draftcompleted BOOLEAN DEFAULT FALSE,
     statsvalueid BIGINT UNIQUE,
     FOREIGN KEY (statsvalueid) REFERENCES nba.statsvalue(statsvalueid)
 );
