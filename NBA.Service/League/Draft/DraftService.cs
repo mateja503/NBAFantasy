@@ -10,7 +10,7 @@ using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
-using NBA.Service.Draft;
+using NBA.Service.League.Draft;
 using Polly.CircuitBreaker;
 using StackExchange.Redis;
 using System.Text.Json;

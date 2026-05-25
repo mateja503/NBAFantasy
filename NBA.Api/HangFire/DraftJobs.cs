@@ -10,7 +10,6 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
-using NBA.Service.Draft;
 using NBA.Service.League.Draft;
 using StreamJsonRpc;
 using System.Text.Json;

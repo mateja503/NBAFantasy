@@ -16,7 +16,6 @@ using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Service.CalculateBoxScore;
-using NBA.Service.Draft;
 using NBA.Service.Game;
 using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;

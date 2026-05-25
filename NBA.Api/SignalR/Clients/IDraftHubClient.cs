@@ -1,5 +1,5 @@
 ﻿using NBA.Data.Redis.Entities;
-using NBA.Service.Draft;
+using NBA.Service.League.Draft;
 
 namespace NBA.Api.SignalR.Clients
 {
