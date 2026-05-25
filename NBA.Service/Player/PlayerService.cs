@@ -7,6 +7,8 @@ using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Enumerations;
+using NBA.Data.Redis.Entities;
 using NBA.Service.CalculateBoxScore;
 using PlayerData = NBA.Data.Entities.Player;
 
@@ -22,7 +24,7 @@ namespace NBA.Service.Player
         {
             var externalPlayers = await _ballDontLieClient.GetAllPlayers(metadata, cancellationToken);
             var filteredPlayers = PlayerFilter.FilterNonActivePlayers(externalPlayers.data);
-            var players = Addapter.ToPlayer(filteredPlayers);
+            var players = Addapter.ToPlayerDb(filteredPlayers);
             await _nbaContext.AddPlayers(players, cancellationToken);
             return externalPlayers;
         }

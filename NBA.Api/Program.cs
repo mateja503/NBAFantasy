@@ -94,6 +94,7 @@ builder.Services.AddCors(options =>
 #region Services
 builder.Services.AddScoped<GameService>();
 builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<DraftManager>();

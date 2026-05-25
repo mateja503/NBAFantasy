@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
 using NBA.Data.Context;
+using NBA.Data.Redis.Entities;
 using NBA.Service.Player;
 
 namespace NBA.Api.HostedService
@@ -16,11 +17,13 @@ namespace NBA.Api.HostedService
         private readonly BallDontLieClientOptions _options = options.Value;
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            using var score = _serviceProvider.CreateScope();
-            var context = score.ServiceProvider.GetRequiredService<NbaFantasyContext>();
-            var playerService = score.ServiceProvider.GetRequiredService<PlayerService>();
+            using var scope = _serviceProvider.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<NbaFantasyContext>();
+            var playerService = scope.ServiceProvider.GetRequiredService<PlayerService>();
+            var playerManager = scope.ServiceProvider.GetRequiredService<PlayerManager>();
 
-            if (!await context.GetAllPlayers().AnyAsync()) 
+            //this is done because balldontlie api isn't payed and getActivePlayers is much better api to use rather than get all 
+            if (!await context.GetAllPlayers().AnyAsync())
             {
                 _logger.LogInformation("{Log}", new Log("Start populating db with active players.......").ToJson());
                 long? next_cursor = 0;
@@ -34,11 +37,17 @@ namespace NBA.Api.HostedService
                     if (!res.data.Any())
                         break;
 
+                    await playerManager.AddPlayersToRedis(res.data);
+
                     _logger.LogInformation("{Log}", new Log("Start populating db with active players.......", meta, res.data).ToJson());
 
                     next_cursor = res.meta.Next_cursor;
                 }
-
+            }
+            else 
+            {
+                var players = await context.GetAllPlayers().ToListAsync();
+                await playerManager.AddPlayerToRedisFromDB(players);
             }
         }
 
