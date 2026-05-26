@@ -57,8 +57,8 @@ namespace NBA.Data.Redis.Operations
             var rediKey = RedisKeys.GetPlayerKey(player.Playerid);
             var entity = new PlayerShort
             {
-                Playerid = player.Playerid,
-                Fullname = $"{player.Name} {player.Surname}",
+                PlayerId = player.Playerid,
+                FullName = $"{player.Name} {player.Surname}",
                 Position = (long)player.Playerposition! switch
                 {
                     (long)PlayerPositionEnum.G => "G",
@@ -85,13 +85,13 @@ namespace NBA.Data.Redis.Operations
 
             players.ForEach(p =>
              {
-                 var redisKey = RedisKeys.GetPlayerKey(p.Playerid ?? 0);
+                 var redisKey = RedisKeys.GetPlayerKey(p.PlayerId ?? 0);
 
                  processedPlayers.Add(p);
 
                  var json = JsonSerializer.Serialize(p, _jsonOptions);
                  batchEntries.Add(new KeyValuePair<RedisKey, RedisValue>(redisKey, json));
-                 masterBatchEntries.Add(p.Playerid);
+                 masterBatchEntries.Add(p.PlayerId);
              });
 
             await _redisDb.StringSetAsync(batchEntries.ToArray());

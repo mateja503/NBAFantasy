@@ -37,8 +37,8 @@ namespace NBA.Service
         {
             return playersInfo.Select(p => new PlayerShort
             {
-                Playerid = p.id,
-                Fullname = $"{p.first_name} {p.last_name}",
+                PlayerId = p.id,
+                FullName = $"{p.first_name} {p.last_name}",
                 Position = p.position!
             }).ToList();
         }
@@ -47,8 +47,8 @@ namespace NBA.Service
         {
             return players.Select(player => new PlayerShort
             {
-                Playerid = player.Playerid,
-                Fullname = $"{player.Name} {player.Surname}",
+                PlayerId = player.Playerid,
+                FullName = $"{player.Name} {player.Surname}",
                 Position = (long)player.Playerposition! switch
                 {
                     (long)PlayerPositionEnum.G => "G",

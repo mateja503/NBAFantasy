@@ -62,7 +62,7 @@ namespace NBA.Service.Player
                 return leaguesAvailablePlayers.ToList();
             }
 
-            return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.Playerid ?? 0))
+            return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.PlayerId ?? 0))
                 .ToList();
         }
       

@@ -6,8 +6,8 @@ namespace NBA.Data.Redis.Entities
 {
     public class PlayerShort
     {
-        public long? Playerid { get; set; } = null;
-        public string? Fullname { get; set; } = null;
+        public long? PlayerId { get; set; } = null;
+        public string? FullName { get; set; } = null;
         public string? Position { get; set; } = null;
     }
 }
