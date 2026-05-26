@@ -4,6 +4,7 @@ using Hangfire;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
+using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,26 @@ namespace NBA.Service.Player
             var draftState = await _redis.Draft.GetCurrentDraftState(leagueid);
 
             await _redis.Player.AddTeamsDrafterPlayer(draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId, playerid);
+        }
+
+        public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
+        {
+            var leaguesAvailablePlayers = await _redis.Player.GetLeaguesAvailableDraftPlayers(leagueid);
+
+            if(leaguesAvailablePlayers is null) 
+            {
+                var players = await _redis.Player.GetAllPlayers();
+                leaguesAvailablePlayers = await _redis.Player.AddLeaguesAvailableDraftPlayers(leagueid,players);
+            }
+
+            var draftedPlayers = await _redis.Player.GetLeaguesDrafterPlayers(leagueid);
+
+            if (draftedPlayers is null) 
+            {
+                return leaguesAvailablePlayers.ToList();
+            }
+
+            return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.Playerid ?? 0)).ToList();
         }
 
 

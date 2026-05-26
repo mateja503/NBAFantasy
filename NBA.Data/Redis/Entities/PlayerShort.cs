@@ -9,6 +9,5 @@ namespace NBA.Data.Redis.Entities
         public long? Playerid { get; set; } = null;
         public string? Fullname { get; set; } = null;
         public string? Position { get; set; } = null;
-        public bool? Isdrafted { get; set; } = null;
     }
 }
