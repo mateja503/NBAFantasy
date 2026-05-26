@@ -5,5 +5,6 @@ namespace ApplicationDefaults.Options
     {
         public int Rounds { get; set; }
         public int DraftPickTime { get; set; }
+        public int ShowTeamDraftBoardCount { get; set; }
     }
 }

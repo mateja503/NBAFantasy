@@ -100,7 +100,7 @@ namespace NBA.Service.League.Draft
             if (currentRound == 0) return null;
 
             var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.TeamId , TeamName = t.TeamName!, Pick = t.Pick }).FirstOrDefault();
-            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).Skip(1).Take(3).ToList();
+            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).Skip(1).Take(_draftOptions.ShowTeamDraftBoardCount).ToList();
 
             return new DraftBoardTeams
             {
