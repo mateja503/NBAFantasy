@@ -43,7 +43,7 @@ namespace NBA.Api.SignalR.Hubs
             var draft = await _draftService.DraftOrder(leagueId);
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
 
-
+            state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
 
             await _draftManager.UpdaterDraftState(leagueId, state);
 

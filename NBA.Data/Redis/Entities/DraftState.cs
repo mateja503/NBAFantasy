@@ -11,5 +11,6 @@
         public bool IsDraftStarted { get; set; } = false;
         public bool? IsDraftEnded { get; set; } = false;
         public DraftBoardTeams? DraftBoardTeams { get; set; }
+        public List<PlayerShort>? DraftPlayers { get; set; }
     }
 }
