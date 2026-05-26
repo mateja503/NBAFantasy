@@ -1,6 +1,7 @@
 ﻿using ApplicationDefaults.Options;
 using ExternalClients.Response;
 using Hangfire;
+using k8s.ClientSets;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
@@ -45,6 +46,7 @@ namespace NBA.Service.Player
 
         public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
         {
+            
             var leaguesAvailablePlayers = await _redis.Player.GetLeaguesAvailableDraftPlayers(leagueid);
 
             if(leaguesAvailablePlayers is null) 
@@ -60,7 +62,8 @@ namespace NBA.Service.Player
                 return leaguesAvailablePlayers.ToList();
             }
 
-            return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.Playerid ?? 0)).ToList();
+            return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.Playerid ?? 0))
+                .ToList();
         }
       
     }

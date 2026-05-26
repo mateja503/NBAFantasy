@@ -76,6 +76,8 @@ namespace NBA.Api.SignalR.Hubs
 
             await _draftManager.NextPick(state, leagueid);
 
+            state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueid);
+
             await Clients.Group(leagueid.ToString()).UpdateDraftState(state);
 
             var jobId = await _redis.Draft.GetDeleteDraftTimerJobId(leagueid);
