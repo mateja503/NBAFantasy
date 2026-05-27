@@ -30,12 +30,17 @@ namespace NBA.Api.HangFire
         public async Task StartDraft(long leagueId)
         {
             await draftService.CheckDraftCompleted(leagueId);
-            await DraftCycle(leagueId, false);
+
+            var state = await _draftManager.GetDraftState(leagueId);
+            state!.IsDraftStarted = true;
+            state = await _draftManager.UpdaterDraftState(leagueId, state);
+
+            await DraftCycle(leagueId, false, state);
         }
-        public async Task DraftCycle(long leagueId, bool nextPick)
+        public async Task DraftCycle(long leagueId, bool nextPick, DraftState? state = null)
         {
             
-            var state = await _draftManager.ResetTimer(leagueId);
+            state = await _draftManager.ResetTimer(leagueId);
 
             if (nextPick)
             {
