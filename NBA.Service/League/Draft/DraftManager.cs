@@ -116,11 +116,5 @@ namespace NBA.Service.League.Draft
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
             return await _redis.Draft.SetDraftState(leagueId, state);
         }
-
-        public async Task CreateNewDraftTimer(string jobId)
-        {
-
-        }
-
     }
 }

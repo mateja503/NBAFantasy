@@ -53,9 +53,7 @@ namespace NBA.Api.SignalR.Hubs
         // 2. Action called by the Commissioner refresh the timer for user that requested it
         public async Task<DraftState> ResetTimer(long leagueId)
         {
-            await _draftManager.ResetTimer(leagueId);
-
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
+            var state = await _draftManager.ResetTimer(leagueId);
 
             await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
