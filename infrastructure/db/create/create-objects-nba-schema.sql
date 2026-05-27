@@ -42,23 +42,8 @@ CREATE TABLE nba.player (
     FOREIGN KEY (playermemontoid) REFERENCES nba.playermemento(playermemontoid)
 );
 
-CREATE TABLE nba.team (
-    teamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    seed INTEGER,
-    waiverpriority INTEGER,
-    lastweekpoints DOUBLE PRECISION DEFAULT 0,
-    categoryleaguepoints DOUBLE PRECISION DEFAULT 0,
-    islock BOOLEAN DEFAULT FALSE
-);
 
-CREATE TABLE nba.teamplayer (
-    teamplayerid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    playerid BIGINT NOT NULL,
-    teamid BIGINT NOT NULL,
-    CONSTRAINT fk_teamplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
-    CONSTRAINT fk_teamplayer_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid)
-);
+
 
 CREATE TABLE nba.statsvalue (
     statsvalueid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -91,14 +76,6 @@ CREATE TABLE nba.league (
     FOREIGN KEY (statsvalueid) REFERENCES nba.statsvalue(statsvalueid)
 );
 
-CREATE TABLE nba.leagueteam (
-    leagueteamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    teamid BIGINT NOT NULL,
-    leagueid BIGINT NOT NULL,
-	approved BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_leagueteam_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
-    CONSTRAINT fk_leagueteam_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
-);
 
 CREATE TABLE nba.leagueplayer (
     leagueplayerid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -149,13 +126,36 @@ CREATE TABLE nba.applicationuser (
     managerlevel INTEGER
 );
 
-CREATE TABLE nba.userteam (
-    userteamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    teamid BIGINT NOT NULL,
-    userid BIGINT NOT NULL,
-    CONSTRAINT fk_userteam_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
-    CONSTRAINT fk_userteam_user FOREIGN KEY (userid) REFERENCES nba.applicationuser(userid)
+CREATE TABLE nba.team (
+    teamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    seed INTEGER,
+    waiverpriority INTEGER,
+    lastweekpoints DOUBLE PRECISION DEFAULT 0,
+    categoryleaguepoints DOUBLE PRECISION DEFAULT 0,
+    islock BOOLEAN DEFAULT FALSE,
+	userid BIGINT, -- Links the team to a single user
+    CONSTRAINT fk_team_user FOREIGN KEY (userid) REFERENCES nba.applicationuser(userid) ON DELETE CASCADE
 );
+
+
+CREATE TABLE nba.teamplayer (
+    teamplayerid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    playerid BIGINT NOT NULL,
+    teamid BIGINT NOT NULL,
+    CONSTRAINT fk_teamplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
+    CONSTRAINT fk_teamplayer_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid)
+);
+
+CREATE TABLE nba.leagueteam (
+    leagueteamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    teamid BIGINT NOT NULL,
+    leagueid BIGINT NOT NULL,
+	approved BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_leagueteam_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
+    CONSTRAINT fk_leagueteam_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
+);
+
 
 CREATE TABLE nba.userleague (
     userleagueid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

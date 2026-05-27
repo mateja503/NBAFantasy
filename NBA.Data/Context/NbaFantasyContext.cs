@@ -42,8 +42,6 @@ public partial class NbaFantasyContext : DbContext
 
     public virtual DbSet<Userleague> Userleagues { get; set; }
 
-    public virtual DbSet<Userteam> Userteams { get; set; }
-
     public virtual DbSet<Usertrophie> Usertrophies { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -346,7 +344,13 @@ public partial class NbaFantasyContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("name");
             entity.Property(e => e.Seed).HasColumnName("seed");
+            entity.Property(e => e.Userid).HasColumnName("userid");
             entity.Property(e => e.Waiverpriority).HasColumnName("waiverpriority");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Teams)
+                .HasForeignKey(d => d.Userid)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_team_user");
         });
 
         modelBuilder.Entity<Teamplayer>(entity =>
@@ -447,29 +451,6 @@ public partial class NbaFantasyContext : DbContext
                 .HasForeignKey(d => d.Userid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_userleague_user");
-        });
-
-        modelBuilder.Entity<Userteam>(entity =>
-        {
-            entity.HasKey(e => e.Userteamid).HasName("userteam_pkey");
-
-            entity.ToTable("userteam", "nba");
-
-            entity.Property(e => e.Userteamid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("userteamid");
-            entity.Property(e => e.Teamid).HasColumnName("teamid");
-            entity.Property(e => e.Userid).HasColumnName("userid");
-
-            entity.HasOne(d => d.Team).WithMany(p => p.Userteams)
-                .HasForeignKey(d => d.Teamid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_userteam_team");
-
-            entity.HasOne(d => d.User).WithMany(p => p.Userteams)
-                .HasForeignKey(d => d.Userid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_userteam_user");
         });
 
         modelBuilder.Entity<Usertrophie>(entity =>

@@ -19,9 +19,11 @@ public partial class Team
 
     public bool? Islock { get; set; }
 
+    public long? Userid { get; set; }
+
     public virtual ICollection<Leagueteam> Leagueteams { get; set; } = new List<Leagueteam>();
 
     public virtual ICollection<Teamplayer> Teamplayers { get; set; } = new List<Teamplayer>();
 
-    public virtual ICollection<Userteam> Userteams { get; set; } = new List<Userteam>();
+    public virtual Applicationuser? User { get; set; }
 }

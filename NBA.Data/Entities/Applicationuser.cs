@@ -17,9 +17,9 @@ public partial class Applicationuser
 
     public int? Managerlevel { get; set; }
 
-    public virtual ICollection<Userleague> Userleagues { get; set; } = new List<Userleague>();
+    public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
 
-    public virtual ICollection<Userteam> Userteams { get; set; } = new List<Userteam>();
+    public virtual ICollection<Userleague> Userleagues { get; set; } = new List<Userleague>();
 
     public virtual ICollection<Usertrophie> Usertrophies { get; set; } = new List<Usertrophie>();
 }
