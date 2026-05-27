@@ -156,7 +156,7 @@ namespace NBA.Service.League.Draft
             if (league is null)
                 throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
-            if (league.Draftcompleted == true) throw new NBAException($"Draft was alraedy complted for league {leagueId}", ErrorCodes.DraftCompleted);
+            if (league.Draftcompleted == true) throw new NBAException($"Draft was allready completed for league {leagueId}", ErrorCodes.DraftCompleted);
         }
 
     }

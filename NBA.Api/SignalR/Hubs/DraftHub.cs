@@ -64,29 +64,32 @@ namespace NBA.Api.SignalR.Hubs
             if (!string.IsNullOrEmpty(jobId))
                 _backgroundJobClient.Delete(jobId);
 
+            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
+
             return state;
         }
 
 
-        public async Task DraftPlayer(long leagueid, long playerid, int pick) 
+        public async Task DraftPlayer(long leagueId, long playerId, int pick) 
         {
-            await _playerManager.AddDraftedPlayers(leagueid, playerid, pick);
+            await _playerManager.AddDraftedPlayers(leagueId, playerId, pick);
 
-            var state = await _draftManager.ResetTimer(leagueid);
+            var state = await _draftManager.ResetTimer(leagueId);
 
-            await _draftManager.NextPick(state, leagueid);
+            await _draftManager.NextPick(state, leagueId);
 
-            state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueid);
+            state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
 
-            await Clients.Group(leagueid.ToString()).UpdateDraftState(state);
+            await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
-            var jobId = await _redis.Draft.GetDeleteDraftTimerJobId(leagueid);
+            var jobId = await _redis.Draft.GetDeleteDraftTimerJobId(leagueId);
 
             if (!string.IsNullOrEmpty(jobId))
                 _backgroundJobClient.Delete(jobId);
 
-            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueid), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
-            await _redis.Draft.SetDraftTimerJobId(leagueid, jobId);
+            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
         }
 
 
