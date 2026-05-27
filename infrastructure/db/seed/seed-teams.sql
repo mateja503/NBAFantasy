@@ -11,17 +11,18 @@ BEGIN
 			waiverpriority,
 			lastweekpoints,
 			categoryleaguepoints,
-			islock
+			islock,
+			userid
         ) 
         VALUES 
-            ('Bulls', 1, 1,0,0,false),
-            ('Warriors', 2, 1,0,0,false),
-            ('Boston', 3, 1,0,0,false),
-            ('Knicks', 4, 1,0,0,false),
-            ('Atlanta', 5, 1,0,0,false),
-            ('Kumanovo', 6, 1,0,0,false),
-            ('Skopje', 1, 1,0,0,false),
-            ('SRB', 1, 1,0,0,false);
+            ('Bulls', 1, 1,0,0,false,1),
+            ('Warriors', 2, 1,0,0,false,2),
+            ('Boston', 3, 1,0,0,false,3),
+            ('Knicks', 4, 1,0,0,false,4),
+            ('Atlanta', 5, 1,0,0,false,5),
+            ('Kumanovo', 6, 1,0,0,false,6),
+            ('Skopje', 1, 1,0,0,false,7),
+            ('SRB', 1, 1,0,0,false,8);
             
         RAISE NOTICE '8 rows successfully inserted into nba.team.';
     ELSE
