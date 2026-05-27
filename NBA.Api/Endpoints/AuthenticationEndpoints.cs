@@ -1,6 +1,7 @@
 ﻿using ApplicationDefaults.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NBA.Api.DTOs;
 using NBA.Api.Requests.Authentication;
 using NBA.Data.Context;
 using System.Net.Security;
@@ -20,7 +21,45 @@ namespace NBA.Api.Endpoints
                 if(user is null)
                     throw new NBAException($"Failed To login", ErrorCodes.LoginFailed);
 
-                return Results.Ok(user);
+                //TODO get leagues and teams in a different way
+                var leagues = await context.GetAllLeagues().Where(l => l.Commissioner == user.Userid)
+               .Select(u => new LeagueDto
+               {
+                   Leagueid = u.Leagueid,
+                   Name = u.Name,
+                   Commissioner = u.Commissioner,
+                   Seasonyear = u.Seasonyear,
+                   Weeksforseason = u.Weeksforseason,
+                   Transactionlimit = u.Transactionlimit,
+                   Autostart = u.Autostart,
+                   Typetransactionlimits = u.Typetransactionlimits,
+                   Typeleague = u.Typeleague,
+                   Draftstyle = u.Draftstyle,
+                   Statsvalueid = u.Statsvalueid,
+               }).ToListAsync();
+
+
+                var teams = await context.GetAllTeams().Where(t => t.Userid == user.Userid)
+                .Select(t => new TeamDto
+                {
+                    Teamid = t.Teamid,
+                    Name = t.Name,
+                    Seed = t.Seed,
+                    Waiverpriority = t.Waiverpriority,
+                    Lastweekpoints = t.Lastweekpoints,
+                    Categoryleaguepoints = t.Categoryleaguepoints,
+                    Islock = t.Islock
+                })
+                .ToListAsync();
+
+                var res = new LoginDto
+                {
+                    Username = user.Username!,
+                    Teams = teams,
+                    Leagues = leagues
+                };
+
+                return Results.Ok(res);
             });
 
 

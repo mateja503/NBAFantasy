@@ -18,7 +18,7 @@ namespace NBA.Api.Endpoints
             league.MapGet("", async (NbaFantasyContext context) =>
             {
                 return await context.GetAllLeagues().AsNoTracking()
-                .Select(u=> new LeaguDto 
+                .Select(u=> new LeagueDto 
                 {
                     Leagueid = u.Leagueid,
                     Name = u.Name,
@@ -97,7 +97,7 @@ namespace NBA.Api.Endpoints
 
                 newLeague = await context.AddLeague(newLeague);
 
-                var dto = new LeaguDto
+                var dto = new LeagueDto
                 {
                     Leagueid = newLeague.Leagueid,
                     Name = newLeague.Name,

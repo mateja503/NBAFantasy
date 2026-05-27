@@ -164,6 +164,7 @@ v1.MapLeaguEndpoints();
 v1.MapLeagueTeamEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
+v1.MapAuthenticationEndpoints();
 
 
 v1.MapGet("/redis-check", (IConnectionMultiplexer redis) =>

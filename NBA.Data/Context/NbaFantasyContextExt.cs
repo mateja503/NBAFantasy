@@ -150,6 +150,7 @@ namespace NBA.Data.Context
         {
             return await Applicationusers.SingleOrDefaultAsync(u => u.Username == username && u.Password == password);
         }
+
         #endregion
     }
 }

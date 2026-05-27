@@ -1,6 +1,6 @@
 ﻿namespace NBA.Api.DTOs
 {
-    public class LeaguDto
+    public class LeagueDto
     {
         public long Leagueid { get; set; }
 
