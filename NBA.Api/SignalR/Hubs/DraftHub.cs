@@ -62,7 +62,7 @@ namespace NBA.Api.SignalR.Hubs
             if (!string.IsNullOrEmpty(jobId))
                 _backgroundJobClient.Delete(jobId);
 
-            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.DraftCycle(leagueId,true), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
 
             return state;
@@ -86,7 +86,7 @@ namespace NBA.Api.SignalR.Hubs
             if (!string.IsNullOrEmpty(jobId))
                 _backgroundJobClient.Delete(jobId);
 
-            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.StartDraft(leagueId), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
+            jobId = _backgroundJobClient.Schedule<DraftJobs>(job => job.DraftCycle(leagueId, true), TimeSpan.FromSeconds(_draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftTimerJobId(leagueId, jobId);
         }
 
