@@ -16,6 +16,7 @@ BEGIN
         ) 
         VALUES 
             ('Bulls', 1, 1,0,0,false,1),
+            ('Clevland', 1, 1,0,0,false,1),
             ('Warriors', 2, 1,0,0,false,2),
             ('Boston', 3, 1,0,0,false,3),
             ('Knicks', 4, 1,0,0,false,4),
