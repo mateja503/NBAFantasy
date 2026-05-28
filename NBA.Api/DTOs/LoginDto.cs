@@ -4,6 +4,7 @@ namespace NBA.Api.DTOs
 {
     public class LoginDto
     {
+        public long? Userid { get; set; } = null;
         public string Username { get; set; }
         public List<TeamDto>? Teams { get; set; } = null;
         public List<LeagueDto>? Leagues { get; set; } = null;

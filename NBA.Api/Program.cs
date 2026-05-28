@@ -161,7 +161,6 @@ var v1 = app.MapGroup("/v1");
 
 v1.TestEndpoints();
 v1.MapLeaguEndpoints();
-v1.MapLeagueTeamEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
 v1.MapAuthenticationEndpoints();

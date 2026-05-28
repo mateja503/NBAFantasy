@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NBA.Api.DTOs;
 using NBA.Api.Requests.Authentication;
@@ -82,6 +83,7 @@ namespace NBA.Api.Endpoints
 
                 var res = new LoginDto
                 {
+                    Userid = user.Userid, 
                     Username = user.Username!,
                     Teams = teams,
                     Leagues = leagues
