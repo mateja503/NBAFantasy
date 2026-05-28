@@ -23,5 +23,7 @@
         public int? Draftstyle { get; set; }
 
         public long? Statsvalueid { get; set; }
+
+        public TeamDto? CommissionersTeam { get; set; } = null;
     }
 }

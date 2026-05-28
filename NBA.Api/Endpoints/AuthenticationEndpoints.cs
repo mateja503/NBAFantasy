@@ -22,7 +22,8 @@ namespace NBA.Api.Endpoints
                     throw new NBAException($"Failed To login", ErrorCodes.LoginFailed);
 
                 //TODO get leagues and teams in a different way
-                var leagues = await context.GetAllLeagues().Where(l => l.Commissioner == user.Userid)
+                var leagues = await context.GetAllLeagues().Where(l => l.Commissioner == user.Userid
+                && l.Leagueteams.Any(lt => lt.Team.Userid == user.Userid))
                .Select(u => new LeagueDto
                {
                    Leagueid = u.Leagueid,
@@ -36,10 +37,23 @@ namespace NBA.Api.Endpoints
                    Typeleague = u.Typeleague,
                    Draftstyle = u.Draftstyle,
                    Statsvalueid = u.Statsvalueid,
-               }).ToListAsync();
+                   CommissionersTeam = u.Leagueteams.Where(lt => lt.Team.Userid == user.Userid).Select(t => new TeamDto
+                   {
+                       Teamid = t.Teamid,
+                       Name = t.Team.Name,
+                       Seed = t.Team.Seed,
+                       Waiverpriority = t.Team.Waiverpriority,
+                       Lastweekpoints = t.Team.Lastweekpoints,
+                       Categoryleaguepoints = t.Team.Categoryleaguepoints,
+                       Islock = t.Team.Islock
+                   }).FirstOrDefault()
+               })
+               .ToListAsync();
+               
 
+                var commissinersTeams = leagues.Select(u => u.CommissionersTeam!.Teamid).ToList();
 
-                var teams = await context.GetAllTeams().Where(t => t.Userid == user.Userid)
+                var teams = await context.GetAllTeams().Where(t => t.Userid == user.Userid && !commissinersTeams.Contains(t.Teamid))
                 .Select(t => new TeamDto
                 {
                     Teamid = t.Teamid,
