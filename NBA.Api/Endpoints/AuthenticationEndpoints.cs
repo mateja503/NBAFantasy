@@ -62,7 +62,21 @@ namespace NBA.Api.Endpoints
                     Waiverpriority = t.Waiverpriority,
                     Lastweekpoints = t.Lastweekpoints,
                     Categoryleaguepoints = t.Categoryleaguepoints,
-                    Islock = t.Islock
+                    Islock = t.Islock,
+                    Competesinleague = new LeagueDto 
+                    {
+                        Leagueid = t.League!.Leagueid,
+                        Name = t.League!.Name,
+                        Commissioner = t.League.Commissioner,
+                        Seasonyear = t.League.Seasonyear,
+                        Weeksforseason = t.League.Weeksforseason,
+                        Transactionlimit = t.League.Transactionlimit,
+                        Autostart = t.League.Autostart,
+                        Typetransactionlimits = t.League.Typetransactionlimits,
+                        Typeleague = t.League.Typeleague,
+                        Draftstyle = t.League.Draftstyle,
+                        Statsvalueid = t.League.Statsvalueid,
+                    }
                 })
                 .ToListAsync();
 

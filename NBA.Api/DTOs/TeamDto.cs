@@ -9,5 +9,6 @@
         public double? Lastweekpoints { get; set; } = null;
         public double? Categoryleaguepoints { get; set; } = null;
         public bool? Islock { get; set; } = null;
+        public LeagueDto? Competesinleague { get; set; } = null;
     }
 }
