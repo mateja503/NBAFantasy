@@ -18,9 +18,10 @@ BEGIN
             (5, 1, true),
             (6, 1, true),
             (7, 2, true),
-            (8, 3, true);
+            (8, 3, true),
+            (9, 2, true);
             
-        RAISE NOTICE '8 rows successfully inserted into nba.leagueteam.';
+        RAISE NOTICE '9 rows successfully inserted into nba.leagueteam.';
     ELSE
         RAISE NOTICE 'Table nba.leagueteam does not exist. No action taken.';
     END IF;
