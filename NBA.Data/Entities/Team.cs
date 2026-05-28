@@ -17,11 +17,15 @@ public partial class Team
 
     public double? Categoryleaguepoints { get; set; }
 
+    public bool Approved { get; set; }
+
     public bool? Islock { get; set; }
 
     public long? Userid { get; set; }
 
-    public virtual ICollection<Leagueteam> Leagueteams { get; set; } = new List<Leagueteam>();
+    public long? Leagueid { get; set; }
+
+    public virtual League? League { get; set; }
 
     public virtual ICollection<Teamplayer> Teamplayers { get; set; } = new List<Teamplayer>();
 

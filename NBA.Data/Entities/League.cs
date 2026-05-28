@@ -31,11 +31,11 @@ public partial class League
 
     public virtual ICollection<Leagueplayer> Leagueplayers { get; set; } = new List<Leagueplayer>();
 
-    public virtual ICollection<Leagueteam> Leagueteams { get; set; } = new List<Leagueteam>();
-
     public virtual ICollection<Playoff> Playoffs { get; set; } = new List<Playoff>();
 
     public virtual Statsvalue? Statsvalue { get; set; }
+
+    public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
 
     public virtual ICollection<Transactionleague> Transactionleagues { get; set; } = new List<Transactionleague>();
 

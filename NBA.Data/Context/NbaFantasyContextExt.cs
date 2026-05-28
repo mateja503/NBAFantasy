@@ -70,26 +70,7 @@ namespace NBA.Data.Context
         }
         #endregion
 
-        #region LeagueTeam
-        public IQueryable<Leagueteam> GetAllLeagueTeam() 
-        {
-            return Leagueteams.AsQueryable();
-        }
-        public async Task<Leagueteam> AddLeagueTeam(Leagueteam leagueTeam) 
-        {
-            var e = await Leagueteams.AddAsync(leagueTeam);
-            _ = await SaveChangesAsync();
-            return e.Entity;
-        }
-
-        public async Task<List<Leagueteam>> AddLeagueTeamRange(List<Leagueteam> leagueteams) 
-        {
-            await Leagueteams.AddRangeAsync(leagueteams);
-            _ = await SaveChangesAsync();
-            return leagueteams;
-        }
-        #endregion
-
+      
         #region Team         
         public IQueryable<Team> GetAllTeams() 
         {

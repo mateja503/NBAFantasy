@@ -18,8 +18,6 @@ public partial class NbaFantasyContext : DbContext
 
     public virtual DbSet<Leagueplayer> Leagueplayers { get; set; }
 
-    public virtual DbSet<Leagueteam> Leagueteams { get; set; }
-
     public virtual DbSet<Player> Players { get; set; }
 
     public virtual DbSet<Playermemento> Playermementos { get; set; }
@@ -128,30 +126,6 @@ public partial class NbaFantasyContext : DbContext
                 .HasForeignKey(d => d.Playerid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_leagueplayer_player");
-        });
-
-        modelBuilder.Entity<Leagueteam>(entity =>
-        {
-            entity.HasKey(e => e.Leagueteamid).HasName("leagueteam_pkey");
-
-            entity.ToTable("leagueteam", "nba");
-
-            entity.Property(e => e.Leagueteamid)
-                .UseIdentityAlwaysColumn()
-                .HasColumnName("leagueteamid");
-            entity.Property(e => e.Approved).HasColumnName("approved");
-            entity.Property(e => e.Leagueid).HasColumnName("leagueid");
-            entity.Property(e => e.Teamid).HasColumnName("teamid");
-
-            entity.HasOne(d => d.League).WithMany(p => p.Leagueteams)
-                .HasForeignKey(d => d.Leagueid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_leagueteam_league");
-
-            entity.HasOne(d => d.Team).WithMany(p => p.Leagueteams)
-                .HasForeignKey(d => d.Teamid)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("fk_leagueteam_team");
         });
 
         modelBuilder.Entity<Player>(entity =>
@@ -331,6 +305,7 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Teamid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("teamid");
+            entity.Property(e => e.Approved).HasColumnName("approved");
             entity.Property(e => e.Categoryleaguepoints)
                 .HasDefaultValue(0.0)
                 .HasColumnName("categoryleaguepoints");
@@ -340,12 +315,17 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Lastweekpoints)
                 .HasDefaultValue(0.0)
                 .HasColumnName("lastweekpoints");
+            entity.Property(e => e.Leagueid).HasColumnName("leagueid");
             entity.Property(e => e.Name)
                 .HasMaxLength(255)
                 .HasColumnName("name");
             entity.Property(e => e.Seed).HasColumnName("seed");
             entity.Property(e => e.Userid).HasColumnName("userid");
             entity.Property(e => e.Waiverpriority).HasColumnName("waiverpriority");
+
+            entity.HasOne(d => d.League).WithMany(p => p.Teams)
+                .HasForeignKey(d => d.Leagueid)
+                .HasConstraintName("fk_team_league");
 
             entity.HasOne(d => d.User).WithMany(p => p.Teams)
                 .HasForeignKey(d => d.Userid)

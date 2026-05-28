@@ -1,4 +1,5 @@
 ﻿using ApplicationDefaults.Exceptions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBA.Api.DTOs;
 using NBA.Api.Requests.LeagueTeam;
@@ -13,48 +14,51 @@ namespace NBA.Api.Endpoints
         {
             var leagueTeam = builder.MapGroup("/league-team").WithTags("league-team");
 
-            leagueTeam.MapPost("/join", async (List<LeagueTeamInsertRequest> request, NbaFantasyContext context) =>
+            leagueTeam.MapPost("/join", async ([FromBody] LeagueTeamInsertRequest request, NbaFantasyContext context) =>
             {
-                if (!request.Any())
-                    throw new NBAException($"{nameof(request)} object is missing", ErrorCodes.MissingValue);
+                if (!request.LeagueId.HasValue)
+                    throw new NBAException($"LeagueId is required", ErrorCodes.MissingValue);
 
-                var getAllLeagues = request.Select(u => u.LeagueId).ToList();
-                var getAllTeamNames = request.DistinctBy(u => u.TeamName).Select(u => u.TeamName?.ToLower()).ToList();
+                if (string.IsNullOrEmpty(request.TeamName))
+                    throw new NBAException($"TeamName is required", ErrorCodes.MissingValue);
 
-                var teamsInLeague = await context.GetAllLeagueTeam().Where(u => getAllLeagues.Contains(u.Leagueid) 
-                && getAllTeamNames.Contains(u.Team.Name.ToLower()))
-                .ToListAsync();
+                if(!request.UserId.HasValue)
+                    throw new NBAException($"UserId is required", ErrorCodes.MissingValue);
 
-                if (teamsInLeague is not null)
+                var league = await context.GetAllLeagues().Where(u => u.Leagueid == request.LeagueId.Value)
+                    .Include(u => u.Teams)
+                    .SingleOrDefaultAsync();
+
+                if (league == null)
+                    throw new NBAException($"League with id {request.LeagueId.Value} not found", ErrorCodes.DataBaseRecordNotFound);
+
+                if (league.Teams.Count != 0) 
                 {
-                    var newTeams = request.DistinctBy(u => u.TeamName).Select(u => new Team { Name = u.TeamName ?? "FantasyTeam1" }).ToList();
-                    newTeams = await context.AddTeamRange(newTeams);
-
-                    var leagueTeams = request.Select(u => 
-                    new Leagueteam { 
-                        Leagueid = u.LeagueId ?? 0,
-                        Teamid = newTeams.Select(u=>u.Teamid).FirstOrDefault()//this is becuse there will be only one teamName
-                    }).ToList();
-
-                    leagueTeams = await context.AddLeagueTeamRange(leagueTeams);
-
-
-                    var dtos = leagueTeams.Select(u => new LeagueTeamDto 
+                    if (league.Teams.Any(u => u.Name.Equals(request.TeamName)))
                     {
-                        Leagueteamid = u.Leagueteamid,
-                        Teamid = u.Teamid,
-                        Leagueid =  u.Leagueid,
-                        Approved = u.Approved,
-                    }).ToList();
-                 
-
-                    return Results.Ok(dtos);
+                        throw new NBAException($"Team with name {request.TeamName} already exists in league {league.Name}", ErrorCodes.TeamNameAlreadyInLeague);
+                    }
                 }
-                var existingNames = string.Join(", ", teamsInLeague.Select(t => $"{t.League.Name} - {t.Team.Name}"));
-                throw new NBAException($"Team with names for leagues already exist {existingNames}", ErrorCodes.TeamNameAlreadyInLeague);
-             
+
+                var team = await context.AddTeam(new Team
+                {
+                    Name = request.TeamName,
+                    Leagueid = league.Leagueid,
+                    Userid = request.UserId,
+                });
+
+                league.Teams.Add(team);
+
+                var dtos = league.Teams.Select(u => new LeagueTeamDto
+                {
+                    Teamid = u.Teamid,
+                    Leagueid = league.Leagueid,
+                    Approved = u.Approved,
+                }).ToList();
+
+                return Results.Ok(dtos);
             });
-           
+
             return leagueTeam;
         }
     }

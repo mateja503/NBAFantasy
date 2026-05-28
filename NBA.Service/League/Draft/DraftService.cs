@@ -37,15 +37,20 @@ namespace NBA.Service.League.Draft
                 return draftTeams;
 
 
-            var leagueTeams = await _context.GetAllLeagueTeam().Where(u => u.Leagueid == leagueId)
-                .Include(u => u.Team)
-                .Include(u => u.League)
-                .OrderBy(u => Guid.NewGuid())
-                .Select(u => new { u.League.Draftstyle, u.Team })
-                .ToListAsync();
+            var league = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId)
+                .Include(u => u.Teams)
+                .SingleOrDefaultAsync();
 
-            var teams = leagueTeams.Select(u => new TeamDraftBoard { TeamId = u.Team.Teamid, TeamName = u.Team.Name }).ToList();
-            var draftType = leagueTeams.Select(u => u.Draftstyle).FirstOrDefault() ?? (long)DraftType.Snake;
+            if (league is null)
+            {
+                throw new NBAException($"Location record for id: {leagueId} not found", ErrorCodes.DataBaseRecordNotFound);
+            }
+
+
+            var teams = league.Teams.OrderBy(t => Guid.NewGuid())
+              .Select(u => new TeamDraftBoard { TeamId = u.Teamid, TeamName = u.Name })
+              .ToList();
+            var draftType = league.Draftstyle ?? (long)DraftType.Snake;
 
             Dictionary<long, Queue<TeamDraftBoard>> draft = new Dictionary<long, Queue<TeamDraftBoard>>();
             int pick = 1;

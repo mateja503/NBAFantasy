@@ -23,7 +23,7 @@ namespace NBA.Api.Endpoints
 
                 //TODO get leagues and teams in a different way
                 var leagues = await context.GetAllLeagues().Where(l => l.Commissioner == user.Userid
-                && l.Leagueteams.Any(lt => lt.Team.Userid == user.Userid))
+                && l.Teams.Any(lt => lt.Userid == user.Userid))
                .Select(u => new LeagueDto
                {
                    Leagueid = u.Leagueid,
@@ -37,15 +37,15 @@ namespace NBA.Api.Endpoints
                    Typeleague = u.Typeleague,
                    Draftstyle = u.Draftstyle,
                    Statsvalueid = u.Statsvalueid,
-                   CommissionersTeam = u.Leagueteams.Where(lt => lt.Team.Userid == user.Userid).Select(t => new TeamDto
+                   CommissionersTeam = u.Teams.Where(lt => lt.Userid == user.Userid).Select(t => new TeamDto
                    {
                        Teamid = t.Teamid,
-                       Name = t.Team.Name,
-                       Seed = t.Team.Seed,
-                       Waiverpriority = t.Team.Waiverpriority,
-                       Lastweekpoints = t.Team.Lastweekpoints,
-                       Categoryleaguepoints = t.Team.Categoryleaguepoints,
-                       Islock = t.Team.Islock
+                       Name = t.Name,
+                       Seed = t.Seed,
+                       Waiverpriority = t.Waiverpriority,
+                       Lastweekpoints = t.Lastweekpoints,
+                       Categoryleaguepoints = t.Categoryleaguepoints,
+                       Islock = t.Islock
                    }).FirstOrDefault()
                })
                .ToListAsync();

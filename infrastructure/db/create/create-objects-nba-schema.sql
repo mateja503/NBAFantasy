@@ -133,9 +133,12 @@ CREATE TABLE nba.team (
     waiverpriority INTEGER,
     lastweekpoints DOUBLE PRECISION DEFAULT 0,
     categoryleaguepoints DOUBLE PRECISION DEFAULT 0,
+	approved BOOLEAN NOT NULL DEFAULT FALSE,
     islock BOOLEAN DEFAULT FALSE,
 	userid BIGINT, -- Links the team to a single user
-    CONSTRAINT fk_team_user FOREIGN KEY (userid) REFERENCES nba.applicationuser(userid) ON DELETE CASCADE
+	leagueid BIGINT, -- Added for the 1-to-Many relationship
+    CONSTRAINT fk_team_user FOREIGN KEY (userid) REFERENCES nba.applicationuser(userid) ON DELETE CASCADE,
+	CONSTRAINT fk_team_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
 );
 
 
@@ -145,15 +148,6 @@ CREATE TABLE nba.teamplayer (
     teamid BIGINT NOT NULL,
     CONSTRAINT fk_teamplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
     CONSTRAINT fk_teamplayer_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid)
-);
-
-CREATE TABLE nba.leagueteam (
-    leagueteamid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    teamid BIGINT NOT NULL,
-    leagueid BIGINT NOT NULL,
-	approved BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_leagueteam_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
-    CONSTRAINT fk_leagueteam_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
 );
 
 
