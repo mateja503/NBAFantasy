@@ -19,7 +19,7 @@ BEGIN
         ) 
         VALUES 
             ('National Basketball Association', 1, '2026/2027', 24, 10, TRUE, 1, 1, 3, 1),
-            ('Fantasy League 01', 2, '2026/2027', 24, 10, TRUE, 1, 1, 1, 2),
+            ('Fantasy League 01', 2, '2026/2027', 24, 10, TRUE, 1, 1, 3, 2),
             ('Fantasy League 02', 1, '2026/2027', 24, 10, TRUE, 1, 1, 1, 3),
             ('Fantasy League 03', 1, '2026/2027', 24, 10, TRUE, 1, 1, 1, 4),
             ('Fantasy League 04', 1, '2026/2027', 24, 10, TRUE, 1, 1, 1, 5),
