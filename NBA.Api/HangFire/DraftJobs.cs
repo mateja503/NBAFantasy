@@ -10,6 +10,7 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
+using NBA.Data.Redis.Enumerations;
 using NBA.Service.League.Draft;
 using StreamJsonRpc;
 using System.Text.Json;
@@ -29,10 +30,19 @@ namespace NBA.Api.HangFire
         private readonly NbaFantasyRedis _redis = redis;
         public async Task StartDraft(long leagueId)
         {
-            await draftService.CheckDraftCompleted(leagueId);
+            var isDraftCompleted = await draftService.CheckDraftCompleted(leagueId);
 
             var state = await _draftManager.GetDraftState(leagueId);
-            state!.IsDraftStarted = true;
+
+            if (isDraftCompleted) 
+            {
+                state!.DraftStatus = (int)DraftStatus.DraftCompleted;
+                await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state!);
+                return;
+            }
+
+
+            state!.DraftStatus = (int)DraftStatus.DraftStarted;
             state = await _draftManager.UpdaterDraftState(leagueId, state);
 
             await DraftCycle(leagueId, false, state);

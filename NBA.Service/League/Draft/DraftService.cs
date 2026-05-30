@@ -154,14 +154,14 @@ namespace NBA.Service.League.Draft
         }
 
 
-        public async Task CheckDraftCompleted(long leagueId) 
+        public async Task<bool> CheckDraftCompleted(long leagueId) 
         {
             var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid);
 
             if (league is null)
                 throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
-            if (league.Draftcompleted == true) throw new NBAException($"Draft was allready completed for league {leagueId}", ErrorCodes.DraftCompleted);
+            return league.Draftcompleted ?? false;
         }
 
     }

@@ -1,4 +1,6 @@
-﻿namespace NBA.Data.Redis.Entities
+﻿using NBA.Data.Redis.Enumerations;
+
+namespace NBA.Data.Redis.Entities
 {
     public class DraftState
     {
@@ -7,9 +9,11 @@
         //public string? TeamName { get; set; } = string.Empty;
         //public long? TeamId { get; set; } = null;
         //public long? Round { get; set; } = null;    
-        public bool IsPaused { get; set; }
-        public bool IsDraftStarted { get; set; } = false;
-        public bool? IsDraftEnded { get; set; } = false;
+        public int DraftStatus { get; set; }
+        //public bool IsPaused { get; set; }
+        //public bool IsDraftStarted { get; set; } = false;
+        //public bool? IsDraftEnded { get; set; } = false;
+        //public bool? IsDraftCompleted { get; set; } = false;
         public DraftBoardTeams? DraftBoardTeams { get; set; }
         public List<PlayerShort>? DraftPlayers { get; set; }
         public Dictionary<long, List<PlayerShort>> DraftedPlayersPerTeam { get; set; } = new Dictionary<long, List<PlayerShort>>();

@@ -12,6 +12,7 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
+using NBA.Data.Redis.Enumerations;
 using NBA.Service.League.Draft;
 using StackExchange.Redis;
 using StreamJsonRpc;
@@ -51,7 +52,7 @@ namespace NBA.Api.Endpoints
 
                 await draftManager.EndDraft(request.LeagueId.Value);
 
-                var state = new DraftState { IsDraftEnded = true };
+                var state = new DraftState { DraftStatus = (int)DraftStatus.DraftEnded};
 
                 await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
 

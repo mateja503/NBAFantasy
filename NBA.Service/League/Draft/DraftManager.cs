@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
+using NBA.Data.Redis.Enumerations;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
@@ -36,10 +37,9 @@ namespace NBA.Service.League.Draft
             currentState = new DraftState
             {
                 LeagueName = leagueName ?? "NO LEAGUE",
-                IsPaused = false,
                 PickEndTime = DateTime.UtcNow,
-                IsDraftStarted = false,
-                DraftBoardTeams = new DraftBoardTeams { CurrentRound = 1},
+                DraftStatus = (int)DraftStatus.Initial,
+                DraftBoardTeams = new DraftBoardTeams { CurrentRound = 1 },
             };
             await _redis.Draft.SetDraftState(leagueId, currentState);
 
@@ -60,7 +60,7 @@ namespace NBA.Service.League.Draft
             var state = await _redis.Draft.GetCurrentDraftState(leagueId);
             seconds = _draftOptions.DraftPickTime;
             state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
-            state?.IsPaused = false;
+            state!.DraftStatus = (int)DraftStatus.Paused;
             await _redis.Draft.SetDraftState(leagueId, state!);
             return state!;
         }
@@ -105,7 +105,7 @@ namespace NBA.Service.League.Draft
                 else
                 {
                     await EndDraft(leagueId);
-                    state.IsDraftEnded = true;
+                    state.DraftStatus = (int)DraftStatus.DraftEnded;
                     break;
                     //state.IsDraftStarted = true;
                 }
