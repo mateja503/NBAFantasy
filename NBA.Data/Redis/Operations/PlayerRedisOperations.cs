@@ -20,9 +20,9 @@ namespace NBA.Data.Redis.Operations
             _redisDb = redis;
             _jsonOptions = jsonOptions;
         }
-        public async Task<PlayerShort?> GetPlayer(long playerid)
+        public async Task<PlayerShort?> GetPlayer(long playerId)
         {
-            var redisKey = RedisKeys.GetPlayerKey(playerid);
+            var redisKey = RedisKeys.GetPlayerKey(playerId);
             var data = await _redisDb.StringGetAsync(redisKey);
             var player = data.HasValue ? JsonSerializer.Deserialize<PlayerShort>(data.ToString(), _jsonOptions) : null;
             return player;
@@ -110,20 +110,20 @@ namespace NBA.Data.Redis.Operations
 
        
 
-        public async Task<HashSet<PlayerShort>> AddLeaguesAvailableDraftPlayers(long leagueid, List<PlayerShort> playerids)
+        public async Task<HashSet<PlayerShort>> AddLeaguesAvailableDraftPlayers(long leagueId, List<PlayerShort> playerIds)
         {
-            var redisKey = RedisKeys.GetLeaguesAvailablePlayersKey(leagueid);
+            var redisKey = RedisKeys.GetLeaguesAvailablePlayersKey(leagueId);
 
-            RedisValue[] redisValues = Array.ConvertAll(playerids.ToArray(), player => (RedisValue)JsonSerializer.Serialize(player, _jsonOptions));
+            RedisValue[] redisValues = Array.ConvertAll(playerIds.ToArray(), player => (RedisValue)JsonSerializer.Serialize(player, _jsonOptions));
 
             await _redisDb.SetAddAsync(redisKey, redisValues);
             await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
-            return playerids.ToHashSet();
+            return playerIds.ToHashSet();
         }
 
-        public async Task<HashSet<PlayerShort>?> GetLeaguesAvailableDraftPlayers(long leagueid)
+        public async Task<HashSet<PlayerShort>?> GetLeaguesAvailableDraftPlayers(long leagueId)
         {
-            var redisKey = RedisKeys.GetLeaguesAvailablePlayersKey(leagueid);
+            var redisKey = RedisKeys.GetLeaguesAvailablePlayersKey(leagueId);
             var redisValues = await _redisDb.SetMembersAsync(redisKey);
 
             if (redisValues.Length == 0) return null;
@@ -135,30 +135,43 @@ namespace NBA.Data.Redis.Operations
                 .ToHashSet();
         }
 
-        public async Task AddTeamsDrafterPlayer(long teamid, long playerid)
+        public async Task<List<PlayerShort>?> GetTeamsDraftedPlayers(long teamId) 
         {
-            var redisKey = RedisKeys.GetTeamsDrafterPlayersKey(teamid);
-            await _redisDb.SetAddAsync(redisKey, playerid);
+            var redisKey = RedisKeys.GetTeamsDraftedPlayersKey(teamId);
+            var redisValues = await _redisDb.SetMembersAsync(redisKey);
+
+            if (redisKey.Length == 0) return null;
+
+            var playerIds = redisValues.Select(u => (long)u).ToHashSet();
+
+            var players = await GetAllPlayers();
+
+            return players.Where(u => u.PlayerId != null && playerIds.Contains(u.PlayerId ?? 0)).ToList();
+        }
+        public async Task AddTeamsDrafterPlayer(long teamId, long playerId)
+        {
+            var redisKey = RedisKeys.GetTeamsDraftedPlayersKey(teamId);
+            await _redisDb.SetAddAsync(redisKey, playerId);
             await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
         }
 
-        public async Task AddLeaguesDraftedPlayer(long leagueid, long playerid, int pick)
+        public async Task AddLeaguesDraftedPlayer(long leagueId, long playerId, int pick)
         {
-            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
-            await _redisDb.SortedSetAddAsync(redisKey, playerid, pick);
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueId);
+            await _redisDb.SortedSetAddAsync(redisKey, playerId, pick);
             await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
         }
-        public async Task<HashSet<long>?> GetLeaguesDrafterPlayers(long leagueid)
+        public async Task<HashSet<long>?> GetLeaguesDrafterPlayers(long leagueId)
         {
-            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueId);
             var redisValues = await _redisDb.SortedSetRangeByRankAsync(redisKey, 0, -1, Order.Ascending);
             return redisValues.Select(v => (long)v).ToHashSet();
         }
 
-        public async Task<bool> IsPlayerDrafted(long leagueid, long playerid)
+        public async Task<bool> IsPlayerDrafted(long leagueId, long playerId)
         {
-            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueid);
-            var score = await _redisDb.SortedSetScoreAsync(redisKey, playerid);
+            var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueId);
+            var score = await _redisDb.SortedSetScoreAsync(redisKey, playerId);
             return score.HasValue;
         }
     }

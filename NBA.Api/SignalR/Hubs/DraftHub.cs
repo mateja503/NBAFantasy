@@ -75,6 +75,8 @@ namespace NBA.Api.SignalR.Hubs
 
             var state = await _draftManager.ResetTimer(leagueId);
 
+            state = await _playerManager.AddTeamsDrafterPlayersToDraftState(state);
+
             await _draftManager.NextPick(state, leagueId);
 
             state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);

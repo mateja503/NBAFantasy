@@ -1,6 +1,7 @@
 ﻿using ApplicationDefaults.Options;
 using ExternalClients.Response;
 using Hangfire;
+using Hangfire.States;
 using k8s.ClientSets;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
@@ -35,15 +36,26 @@ namespace NBA.Service.Player
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 
-        public async Task AddDraftedPlayers(long leagueid, long playerid, int pick) 
+        public async Task AddDraftedPlayers(long leagueId, long playerId, int pick) 
         {
-            await _redis.Player.AddLeaguesDraftedPlayer(leagueid, playerid, pick);
+            await _redis.Player.AddLeaguesDraftedPlayer(leagueId, playerId, pick);
 
-            var draftState = await _redis.Draft.GetCurrentDraftState(leagueid);
+            var draftState = await _redis.Draft.GetCurrentDraftState(leagueId);
 
-            await _redis.Player.AddTeamsDrafterPlayer(draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId, playerid);
+            var teamId = draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId;
+
+            await _redis.Player.AddTeamsDrafterPlayer(teamId, playerId);
         }
+        public async Task<DraftState> AddTeamsDrafterPlayersToDraftState(DraftState state) 
+        {
+            var teamId = state.DraftBoardTeams!.onTheClockTeam!.TeamId;
+            var teamsDraftedPlayers = await _redis.Player.GetTeamsDraftedPlayers(teamId);
 
+            if (teamsDraftedPlayers is not null)
+                state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers;
+
+            return state;
+        }
         public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
         {
             
