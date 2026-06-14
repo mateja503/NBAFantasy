@@ -1,11 +1,8 @@
-﻿using ApplicationDefaults.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using NBA.Api.DTOs;
+using NBA.Api.Mappings;
 using NBA.Api.Requests.Authentication;
-using NBA.Data.Context;
-using System.Net.Security;
+using NBA.Service.Authentication;
 
 namespace NBA.Api.Endpoints
 {
@@ -15,76 +12,28 @@ namespace NBA.Api.Endpoints
         {
             var auth = builder.MapGroup("auth");
 
-            auth.MapPost("login", async ([FromBody] LoginRequestNBA request, [FromServices]NbaFantasyContext context) => 
+            auth.MapPost("login", async ([FromBody] LoginRequestNBA request, [FromServices] AuthService authService) =>
             {
-                var user = await context.GetApplicationuser(request.Username, request.Password);
+                var result = await authService.LoginAsync(request.Username, request.Password);
 
-                if(user is null)
-                    throw new NBAException($"Failed To login", ErrorCodes.LoginFailed);
-
-                //TODO get leagues and teams in a different way
-                var leagues = await context.GetAllLeagues().Where(l => l.Commissioner == user.Userid
-                && l.Teams.Any(lt => lt.Userid == user.Userid))
-               .Select(u => new LeagueDto
-               {
-                   Leagueid = u.Leagueid,
-                   Name = u.Name,
-                   Commissioner = u.Commissioner,
-                   Seasonyear = u.Seasonyear,
-                   Weeksforseason = u.Weeksforseason,
-                   Transactionlimit = u.Transactionlimit,
-                   Autostart = u.Autostart,
-                   Typetransactionlimits = u.Typetransactionlimits,
-                   Typeleague = u.Typeleague,
-                   Draftstyle = u.Draftstyle,
-                   Statsvalueid = u.Statsvalueid,
-                   CommissionersTeam = u.Teams.Where(lt => lt.Userid == user.Userid).Select(t => new TeamDto
-                   {
-                       Teamid = t.Teamid,
-                       Name = t.Name,
-                       Seed = t.Seed,
-                       Waiverpriority = t.Waiverpriority,
-                       Lastweekpoints = t.Lastweekpoints,
-                       Categoryleaguepoints = t.Categoryleaguepoints,
-                       Islock = t.Islock
-                   }).FirstOrDefault()
-               })
-               .ToListAsync();
-               
-
-                var commissinersTeams = leagues.Select(u => u.CommissionersTeam!.Teamid).ToList();
-
-                var teams = await context.GetAllTeams().Where(t => t.Userid == user.Userid && !commissinersTeams.Contains(t.Teamid))
-                .Select(t => new TeamDto
+                var leagues = result.CommissionerLeagues.Select(l =>
                 {
-                    Teamid = t.Teamid,
-                    Name = t.Name,
-                    Seed = t.Seed,
-                    Waiverpriority = t.Waiverpriority,
-                    Lastweekpoints = t.Lastweekpoints,
-                    Categoryleaguepoints = t.Categoryleaguepoints,
-                    Islock = t.Islock,
-                    Competesinleague = new LeagueDto 
-                    {
-                        Leagueid = t.League!.Leagueid,
-                        Name = t.League!.Name,
-                        Commissioner = t.League.Commissioner,
-                        Seasonyear = t.League.Seasonyear,
-                        Weeksforseason = t.League.Weeksforseason,
-                        Transactionlimit = t.League.Transactionlimit,
-                        Autostart = t.League.Autostart,
-                        Typetransactionlimits = t.League.Typetransactionlimits,
-                        Typeleague = t.League.Typeleague,
-                        Draftstyle = t.League.Draftstyle,
-                        Statsvalueid = t.League.Statsvalueid,
-                    }
-                })
-                .ToListAsync();
+                    var dto = l.ToLeagueDto();
+                    dto.CommissionersTeam = l.Teams.FirstOrDefault()?.ToTeamDto();
+                    return dto;
+                }).ToList();
+
+                var teams = result.OtherTeams.Select(t =>
+                {
+                    var dto = t.ToTeamDto();
+                    dto.Competesinleague = t.League?.ToLeagueDto();
+                    return dto;
+                }).ToList();
 
                 var res = new LoginDto
                 {
-                    Userid = user.Userid, 
-                    Username = user.Username!,
+                    Userid = result.User.Userid,
+                    Username = result.User.Username!,
                     Teams = teams,
                     Leagues = leagues
                 };
@@ -92,15 +41,7 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(res);
             });
 
-
-            //auth.MapPost("sign-up", async ([FromBody] SignUpRequest request) => 
-            //{
-            //    var user = await context.GetApplicationuser(request.Username, request.Password);
-
-            //});
-
             return auth;
-        
         }
     }
 }

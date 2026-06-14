@@ -10,6 +10,9 @@ pipeline {
 		DOTNET_ENVIRONMENT = 'Development'
 		IMAGE_NAME = "matejanikolikj/nba-fantasy-app"
 		IMAGE_TAG = "latest"
+		// Immutable, traceable tag: every build is addressable by its commit SHA so a
+		// specific build can be redeployed or rolled back. "latest" is a moving pointer only.
+		IMAGE_TAG_SHA = "${env.GIT_COMMIT}"
 		DOCKER_HUB_CREDENTIALS = 'docker-hub-credentials'
 		GITHUB_CONTEXT = "Jenkins CI Build"
 		GITHUB_CRED_ID = 'cb1a22d0-0e56-4363-95f5-5376109acb94'
@@ -30,12 +33,24 @@ pipeline {
 					context: env.GITHUB_CONTEXT,
 					description: "Building Pipeline...."
 				)	
-				sh 'dotnet publish NBA.Api/NBA.Api.csproj -c Release -o ./publish'
-                sh 'echo "Tests passed"'
-				
-				
+				sh 'dotnet restore NBAFantasy.slnx'
+				sh 'dotnet build NBAFantasy.slnx -c Release --no-restore'
             }
         }
+
+		stage('Test') {
+			steps {
+				// Real test run. --no-build reuses the Release output from the build stage.
+				// The pipeline now actually fails when a test fails, instead of echoing success.
+				sh 'dotnet test NBAFantasy.slnx -c Release --no-build --logger "trx;LogFileName=test-results.trx"'
+			}
+			post {
+				always {
+					// Surface results in Jenkins even on failure (requires the MSTest/xUnit plugin).
+					xunit testTimeMargin: '3000', tools: [MSTest(pattern: '**/test-results.trx')]
+				}
+			}
+		}
 
 		stage('Aspire Manifest For Production') {
             steps {
@@ -54,18 +69,23 @@ pipeline {
 							-p:ContainerImageTag=${env.IMAGE_TAG} \
 							-p:ContainerRuntimeIdentifier=linux-x64 \
 							-c Release
+
+							# Also tag the freshly built image with the commit SHA.
+							docker tag ${env.IMAGE_NAME}:${env.IMAGE_TAG} ${env.IMAGE_NAME}:${env.IMAGE_TAG_SHA}
 						"""
 				}
         }
-		
+
 		stage('Push Image'){
 			steps {
 					script { // This wrapper is mandatory
 						docker.withRegistry('https://registry.hub.docker.com',"${env.DOCKER_HUB_CREDENTIALS}"){
 							def image = docker.image("${env.IMAGE_NAME}")
+							// Push the immutable SHA tag first, then move "latest".
+							image.push("${env.IMAGE_TAG_SHA}")
 							image.push("${env.IMAGE_TAG}")
-						}		
-					}		
+						}
+					}
 				}
 		}
     }
@@ -73,7 +93,8 @@ pipeline {
 	post{
 		always{
 			sh "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG} || true"
-			
+			sh "docker rmi ${env.IMAGE_NAME}:${env.IMAGE_TAG_SHA} || true"
+
 			sh "docker image prune -f"
 		}
         success {

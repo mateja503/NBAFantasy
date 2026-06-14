@@ -82,6 +82,25 @@ namespace NBA.Data.Redis.Operations
             return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(value.ToString(), _jsonOptions) : null;
         }
 
+        // Acquires a short-lived per-league lock so that only one actor can advance the draft
+        // at a time (e.g. the pick timer firing at the same instant a user makes a manual pick,
+        // or two Hangfire servers racing). Returns a token to release, or null if the lock is held.
+        public async Task<string?> TryAcquireDraftCycleLock(long leagueId, TimeSpan expiry)
+        {
+            var redisKey = RedisKeys.GetDraftCycleLockKey(leagueId);
+            var token = Guid.NewGuid().ToString();
+            var acquired = await _redisDb.LockTakeAsync(redisKey, token, expiry);
+            return acquired ? token : null;
+        }
+
+        public async Task ReleaseDraftCycleLock(long leagueId, string token)
+        {
+            var redisKey = RedisKeys.GetDraftCycleLockKey(leagueId);
+            // LockRelease only deletes the key if the token matches, so we never release
+            // a lock that another actor has since acquired.
+            await _redisDb.LockReleaseAsync(redisKey, token);
+        }
+
         //public async Task SetStartPickJobId(long leagueId, string jobId)
         //{
         //    var redisKey = RedisKeys.GetStartPickJobIdKey(leagueId);

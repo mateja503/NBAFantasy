@@ -10,6 +10,7 @@
     <ProjectReference Include="..\ExternalClients\ExternalClients.csproj" />
     <ProjectReference Include="..\NBA.Data\NBA.Data.csproj" />
     <ProjectReference Include="..\NBA.Service\NBA.Service.csproj" />
+    <ProjectReference Include="..\NBA.ServiceDefaults\NBA.ServiceDefaults.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,8 +15,10 @@ using NBA.Api.HangFire;
 using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
+using NBA.Service.Authentication;
 using NBA.Service.CalculateBoxScore;
 using NBA.Service.Game;
+using NBA.Service.League;
 using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;
 using NBA.Service.League.Trade;
@@ -28,6 +30,10 @@ using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Health checks, OpenTelemetry (traces/metrics/logs), service discovery and
+// default HTTP resilience. Must run before other registrations.
+builder.AddServiceDefaults();
 
 
 #region Options
@@ -79,12 +85,16 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddOpenApi();
 
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        //this is not the solution
-        policy.WithOrigins("http://localhost:4200")
+        // Origins come from configuration per environment. AllowCredentials requires
+        // explicit origins (no wildcard), which is why we bind a concrete list.
+        policy.WithOrigins(allowedOrigins)
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials();
@@ -100,6 +110,9 @@ builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<DraftManager>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
+builder.Services.AddScoped<LeagueService>();
+builder.Services.AddScoped<TeamService>();
+builder.Services.AddScoped<AuthService>();
 
 #endregion
 
@@ -122,8 +135,10 @@ builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
 
 var app = builder.Build();
 
+// Maps /health and /alive (development only by default — see ServiceDefaults).
+app.MapDefaultEndpoints();
 
-//app.UseExceptionHandler();
+app.UseExceptionHandler();
 
 
 

@@ -11,6 +11,7 @@ namespace NBA.Data.Redis.Keys
         public static string GetDraftStateKey(long leagueId) => $"draft:state:{leagueId}";
         public static string GetDraftTeamsKey(long leagueId) => $"draft:teams:{leagueId}";
         public static string GetStartPickJobIdKey(long leagueId) => $"start:pick_job:{leagueId}";
+        public static string GetDraftCycleLockKey(long leagueId) => $"draft:lock:{leagueId}";
 
         #endregion
 

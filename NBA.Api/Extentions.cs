@@ -18,28 +18,34 @@ namespace NBA.Api
             string connectionString = configuration.GetConnectionString("nbafantasydb")
                         ?? throw new InvalidOperationException("Connection string 'nbafantasydb' not found.");
 
-            services.AddHangfire(configuration =>
+            services.AddHangfire(hangfireConfig =>
             {
-                configuration.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                hangfireConfig.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
                      .UseSimpleAssemblyNameTypeSerializer()
                      .UseRecommendedSerializerSettings()
                      .UsePostgreSqlStorage(boostrapperOptions =>
                          {
                              boostrapperOptions.UseNpgsqlConnection(connectionString);
                          },
-                         new PostgreSqlStorageOptions 
+                         new PostgreSqlStorageOptions
                          {
-                             QueuePollInterval = TimeSpan.FromSeconds(3),
+                             // Immediate ("enqueued") jobs tolerate a few seconds of latency;
+                             // a longer interval reduces constant polling load on Postgres.
+                             QueuePollInterval = TimeSpan.FromSeconds(5),
                              PrepareSchemaIfNecessary = true,
                              SchemaName = "hangfire"
                          }
-                     )
-                     .WithJobExpirationTimeout(TimeSpan.FromHours(1000));
-
-                configuration.UseFilter(new ShortenJobExpirationFilter());
+                     );
+                // Job retention is owned solely by ShortenJobExpirationFilter (1 day). The previous
+                // 1000-hour global default contradicted the filter and is intentionally removed.
+                hangfireConfig.UseFilter(new ShortenJobExpirationFilter());
 
             }).AddHangfireServer(options =>
             {
+                // The draft pick timer relies on scheduled (delayed) jobs, so this interval bounds
+                // timer precision. 1s keeps picks responsive but means each server polls Postgres
+                // every second — the main reason to migrate the timer to a Redis delayed queue
+                // (see REFACTOR_NOTES.md) as concurrent drafts grow.
                 options.SchedulePollingInterval = TimeSpan.FromSeconds(1);
                 options.ServerName = "NBA-FANTASY";
             });
