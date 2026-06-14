@@ -1,21 +1,16 @@
 ﻿using ApplicationDefaults.Exceptions;
-using ExternalClients.Response;
-using Hangfire;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
-using NBA.Api.DTOs;
-using NBA.Api.HangFire;
+using NBA.Api.Draft;
 using NBA.Api.Requests.Draft;
 using NBA.Api.SignalR.Clients;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
-using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
 using NBA.Service.League.Draft;
 using StackExchange.Redis;
-using StreamJsonRpc;
 using System.Text.Json;
 namespace NBA.Api.Endpoints
 {
@@ -26,23 +21,16 @@ namespace NBA.Api.Endpoints
             var draft = builder.MapGroup("draft").WithTags("draft").RequireAuthorization();
 
             draft.MapPost("start-draft", async ([FromBody] DraftRequest request,
-                IBackgroundJobClient backgroundJobs, IHubContext<DraftHub,IDraftHubClient> draftHub,
-                DraftJobs draftJob, NbaFantasyRedis redis, DraftService draftService) =>
+                NbaFantasyRedis redis, DraftTimerProcessor timerProcessor) =>
             {
-
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
-                var jobId = await redis.Draft.GetStartDraftTimerJobId(request.LeagueId.Value);
-
-                if (string.IsNullOrEmpty(jobId))
-                {
-                    backgroundJobs.Enqueue<DraftJobs>(job => job.StartDraft(request.LeagueId.Value));
-                }
-                else
-                {
+                // A scheduled timer means the draft is already running.
+                if (await redis.Draft.IsDraftTimerScheduled(request.LeagueId.Value))
                     throw new NBAException($"Draft has already started with leagueId = {request.LeagueId.Value}", ErrorCodes.DraftAlreadyStarted);
-                }
+
+                await timerProcessor.StartDraftAsync(request.LeagueId.Value);
             });
 
             draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, DraftService draftService, IHubContext<DraftHub,IDraftHubClient> draftHub) => 

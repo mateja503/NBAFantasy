@@ -115,13 +115,34 @@ Next hardening step (not done): move from the symmetric HS256 key to asymmetric 
 services need to validate tokens independently, and add a refresh-token-per-device index so a user
 can revoke all sessions at once.
 
+## Draft-timer migration — DONE
+
+The pick timer no longer uses Hangfire. It now runs on a Redis sorted set + a polling background
+service:
+
+- **Schedule:** a single ZSET `draft:timers` holds `member = leagueId`, `score = unix-ms deadline`.
+  Arming/re-arming a pick is one `ZADD` that overwrites the league's score — so "reset timer" and
+  "manual pick" need no delete-then-reschedule dance (`DraftRedisOperations.ScheduleDraftTimer`).
+- **Claim:** `ClaimDueDraftTimer` runs a Lua `ZRANGEBYSCORE + ZREM` so a due timer is handed to
+  exactly one app instance even with multiple replicas.
+- **Process:** `DraftTimerHostedService` polls once per second, draining all due timers, and runs
+  `DraftTimerProcessor.AdvanceAsync` (reset clock → next pick → broadcast → arm next deadline) under
+  the existing per-league Redis lock. `start-draft` calls `StartDraftAsync`; `DraftManager.EndDraft`
+  cancels the timer.
+- **Why:** one O(log n) Redis scan per second covers every concurrent draft, versus Hangfire
+  polling Postgres for one delayed job per pick. Hangfire stays only for the recurring daily-games
+  job.
+- `NBA.Api/HangFire/DraftJobs.cs` is now an empty placeholder (automatic deletion was declined) —
+  delete it from the project when convenient.
+
+Verification note: the timer path needs a real Redis, so cover it with an integration test
+(Testcontainers Redis) rather than a unit test — the existing unit suite can't exercise the Lua
+claim script.
+
 ## Scoped follow-up (remaining)
 
-1. **Draft-timer migration.** Replace per-pick Hangfire scheduling with a Redis sorted-set delayed
-   queue driven by a hosted service. Removes the 1s Postgres polling and scales to many concurrent
-   drafts.
-2. **Draft state durability.** Persist draft checkpoints to Postgres so a Redis eviction/restart
+1. **Draft state durability.** Persist draft checkpoints to Postgres so a Redis eviction/restart
    mid-draft can be recovered (today the 3-day TTL key is the only copy).
-3. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
+2. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
    startup into a one-shot job or guard it with a Redis distributed lock.
-4. **Pagination + indexes** on the league/player list queries before real data volume.
+3. **Pagination + indexes** on the league/player list queries before real data volume.

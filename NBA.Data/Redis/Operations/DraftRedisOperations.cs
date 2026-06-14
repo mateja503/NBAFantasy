@@ -42,24 +42,46 @@ namespace NBA.Data.Redis.Operations
             return state;
         }
 
-        public async Task<string?> GetStartDraftTimerJobId(long leagueId)
+        // Atomically returns and removes one league whose pick deadline is due (<= now), or null.
+        // ZRANGEBYSCORE + ZREM in a single Lua script so two app instances can't claim the same
+        // timer. This is the scalable replacement for Hangfire polling Postgres every second.
+        private const string ClaimDueTimerScript = @"
+local due = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, 1)
+if due[1] then
+  redis.call('ZREM', KEYS[1], due[1])
+  return due[1]
+end
+return false";
+
+        // Schedules (or reschedules) the pick deadline for a league. ZADD updates the score if the
+        // league is already present, so 'reset timer' needs no separate delete.
+        public async Task ScheduleDraftTimer(long leagueId, DateTimeOffset dueAt)
         {
-            var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
-            var jobId = await _redisDb.StringGetAsync(redisKey);
-            return jobId.HasValue ? jobId.ToString() : null;
+            await _redisDb.SortedSetAddAsync(RedisKeys.GetDraftTimersKey(), leagueId, dueAt.ToUnixTimeMilliseconds());
         }
 
-        public async Task<string?> GetDeleteDraftTimerJobId(long leagueId)
+        public async Task CancelDraftTimer(long leagueId)
         {
-            var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
-            var jobId = await _redisDb.StringGetDeleteAsync(redisKey);
-            return jobId.HasValue ? jobId.ToString() : null;
+            await _redisDb.SortedSetRemoveAsync(RedisKeys.GetDraftTimersKey(), leagueId);
         }
 
-        public async Task SetDraftTimerJobId(long leagueId, string jobId)
+        public async Task<bool> IsDraftTimerScheduled(long leagueId)
         {
-            var redisKey = RedisKeys.GetStartDraftTimerJobIdKey(leagueId);
-            await _redisDb.StringSetAsync(redisKey, jobId, expiry: TimeSpan.FromDays(3));
+            var score = await _redisDb.SortedSetScoreAsync(RedisKeys.GetDraftTimersKey(), leagueId);
+            return score.HasValue;
+        }
+
+        public async Task<long?> ClaimDueDraftTimer(DateTimeOffset now)
+        {
+            var result = await _redisDb.ScriptEvaluateAsync(
+                ClaimDueTimerScript,
+                new RedisKey[] { RedisKeys.GetDraftTimersKey() },
+                new RedisValue[] { now.ToUnixTimeMilliseconds() });
+
+            if (result.IsNull)
+                return null;
+
+            return long.TryParse(result.ToString(), out var leagueId) ? leagueId : null;
         }
 
         public async Task SetDraftTeams(Dictionary<long, Queue<TeamDraftBoard>> draft, long leagueId)

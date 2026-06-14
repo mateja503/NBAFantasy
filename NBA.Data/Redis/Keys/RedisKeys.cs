@@ -7,11 +7,13 @@ namespace NBA.Data.Redis.Keys
     public static class RedisKeys
     {
         #region Draft
-        public static string GetStartDraftTimerJobIdKey(long leagueId) => $"draft:timer:{leagueId}";
         public static string GetDraftStateKey(long leagueId) => $"draft:state:{leagueId}";
         public static string GetDraftTeamsKey(long leagueId) => $"draft:teams:{leagueId}";
-        public static string GetStartPickJobIdKey(long leagueId) => $"start:pick_job:{leagueId}";
         public static string GetDraftCycleLockKey(long leagueId) => $"draft:lock:{leagueId}";
+
+        // Single sorted set holding every league's pending pick deadline: member = leagueId,
+        // score = unix-ms when the current pick expires. Replaces per-pick Hangfire jobs.
+        public static string GetDraftTimersKey() => "draft:timers";
 
         #endregion
 

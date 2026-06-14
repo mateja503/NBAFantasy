@@ -1,25 +1,15 @@
 ﻿using ApplicationDefaults.Options;
-using Hangfire;
-using Hangfire.States;
 using Microsoft.AspNetCore.Http.Json;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
-using NBA.Data.Entities;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
-using StackExchange.Redis;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Text.Json;
 
 namespace NBA.Service.League.Draft
 {
-    public class DraftManager(NbaFantasyContext context, IBackgroundJobClient backgroundJobClient,
+    public class DraftManager(NbaFantasyContext context,
         IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions,
         NbaFantasyRedis redis, DraftService draftService)
     {
@@ -28,7 +18,6 @@ namespace NBA.Service.League.Draft
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftService _draftService = draftService;
-        private readonly IBackgroundJobClient _backgroundJobClient = backgroundJobClient;
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
@@ -65,15 +54,10 @@ namespace NBA.Service.League.Draft
             return state!;
         }
 
-        public async Task EndDraft(long leagueId) 
+        public async Task EndDraft(long leagueId)
         {
-            var jobid = await _redis.Draft.GetDeleteDraftTimerJobId(leagueId);
-            if (!string.IsNullOrEmpty(jobid))
-                _backgroundJobClient.Delete(jobid);
-
-            //jobid = await _redis.Draft.GetDeleteStartPickJobId(leagueId);
-            //if (!string.IsNullOrEmpty(jobid))
-            //    _backgroundJobClient.Delete(jobid);
+            // Remove any pending pick deadline from the timer sorted set.
+            await _redis.Draft.CancelDraftTimer(leagueId);
 
             await _draftService.EndDraft(leagueId);
 

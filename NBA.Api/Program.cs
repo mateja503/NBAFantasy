@@ -16,8 +16,8 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using NBA.Api;
 using NBA.Api.Authentication;
+using NBA.Api.Draft;
 using NBA.Api.Endpoints;
-using NBA.Api.HangFire;
 using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
@@ -166,11 +166,8 @@ builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<DraftTimerProcessor>();
 
-#endregion
-
-#region HangFire
-builder.Services.AddTransient<DraftJobs>();
 #endregion
 
 
@@ -182,6 +179,8 @@ builder.Services.AddProblemDetails();
 #region HostedServices
 builder.Services.AddHostedService<ApplicationHostedService>();
 builder.Services.AddHostedService<HangFireJobSchedulerHostedService>();
+// Polls Redis for due draft pick deadlines (replaces the per-pick Hangfire timer jobs).
+builder.Services.AddHostedService<DraftTimerHostedService>();
 #endregion
 
 
