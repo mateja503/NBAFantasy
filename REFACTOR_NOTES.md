@@ -209,8 +209,25 @@ From the code review, the three correctness issues are fixed:
    cheap `KeyExists`) and restores whichever is missing, so a partial Redis eviction can't fall
    through and regenerate (reshuffle) the draft order.
 
-Remaining review items (JSON-options unification, snapshot write-amplification on connect, lock-
-expiry tuning, dead code, integration tests) are non-blocking and tracked in the review.
+### Medium-priority review items — DONE
+
+- **JSON options unified.** New `NBA.Data.Redis.RedisSerializer.Options` (IgnoreCycles, compact) is
+  the single serializer for all Redis ops and the draft snapshot. Removed the dead `IOptions<JsonOptions>`
+  injections from `NbaFantasyRedis`, `DraftSnapshotService`, and `DraftManager` (the latter also lost
+  the unused `currentState` property). This removes the silent-corruption risk of the same object
+  round-tripping through three different serializer configs.
+- **League creation is transactional.** `LeagueService.CreateAsync` wraps the statsvalue + league
+  inserts in a DB transaction, so a failed league insert no longer orphans a statsvalue row.
+- **AuthService verify hardened.** The verify catch is broadened from `FormatException` to any
+  exception, so a malformed/legacy stored value always falls through to the migrate-on-login path
+  regardless of the `IPasswordHasher` implementation.
+- **Pick-deadline clamp.** `DraftPickTime` is clamped to ≥ 1s wherever the timer is armed
+  (processor, hub, and the displayed `PickEndTime`), preventing a busy poll loop if it's misconfigured to ≤ 0.
+
+Still open (lower priority): snapshot write-amplification on hub connect (left as-is to avoid
+reintroducing a pre-start reshuffle window — needs the order persisted at generation first), the
+remaining stale `using`s / dead `_jsonOptions` fields in `DraftService`/`PlayerManager`, moving
+seeding off the startup-blocking path, and integration tests for the Redis-backed paths.
 
 ## All REFACTOR_NOTES follow-ups complete
 

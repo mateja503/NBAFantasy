@@ -1,8 +1,8 @@
 using ApplicationDefaults.Options;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Redis;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
 using System.Text.Json;
@@ -13,12 +13,13 @@ namespace NBA.Service.League.Draft
     // this mirrors it into Postgres so a Redis eviction/restart mid-draft can be recovered.
     // Write-through on structural changes, read-through recovery on a Redis miss.
     public class DraftSnapshotService(NbaFantasyContext context, NbaFantasyRedis redis,
-        IOptions<DraftOptions> draftOptions, IOptions<JsonOptions> jsonOptions)
+        IOptions<DraftOptions> draftOptions)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
-        private readonly JsonSerializerOptions _json = jsonOptions.Value.SerializerOptions;
+        // Same canonical serializer the Redis layer uses, so snapshot JSON round-trips identically.
+        private static readonly JsonSerializerOptions _json = RedisSerializer.Options;
 
         // Mirrors the current Redis state + remaining order into Postgres. Called after the draft
         // structurally changes (created, advanced). Cheap enough at draft cadence (one pick / ~10s).

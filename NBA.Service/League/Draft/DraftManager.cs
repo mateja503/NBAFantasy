@@ -1,41 +1,38 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
-using System.Text.Json;
 
 namespace NBA.Service.League.Draft
 {
     public class DraftManager(NbaFantasyContext context,
-        IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions,
+        IOptions<DraftOptions> draftOptions,
         NbaFantasyRedis redis, DraftService draftService, DraftSnapshotService snapshot)
     {
         private readonly NbaFantasyContext _context = context;
-        private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftService _draftService = draftService;
         private readonly DraftSnapshotService _snapshot = snapshot;
-        public DraftState currentState { get; private set; }
-        public async Task<DraftState> CreateDraftState(long leagueId) 
+
+        public async Task<DraftState> CreateDraftState(long leagueId)
         {
             var leagueName = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId).Select(u => u.Name).SingleOrDefaultAsync();
 
-            currentState = new DraftState
+            var state = new DraftState
             {
                 LeagueName = leagueName ?? "NO LEAGUE",
                 PickEndTime = DateTime.UtcNow,
                 DraftStatus = (int)DraftStatus.Initial,
                 DraftBoardTeams = new DraftBoardTeams { CurrentRound = 1 },
             };
-            await _redis.Draft.SetDraftState(leagueId, currentState);
+            await _redis.Draft.SetDraftState(leagueId, state);
             await _snapshot.PersistAsync(leagueId);
 
-            return currentState;
+            return state;
         }
 
         public async Task<DraftState> UpdaterDraftState(long leagueId, DraftState state)
@@ -60,7 +57,8 @@ namespace NBA.Service.League.Draft
             var state = await _redis.Draft.GetCurrentDraftState(leagueId)
                 ?? throw new NBAException($"No active draft state for league {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
-            state.PickEndTime = DateTime.UtcNow.AddSeconds(_draftOptions.DraftPickTime);
+            // Keep the displayed deadline aligned with the (clamped) timer deadline.
+            state.PickEndTime = DateTime.UtcNow.AddSeconds(Math.Max(1, _draftOptions.DraftPickTime));
             await _redis.Draft.SetDraftState(leagueId, state);
             return state;
         }
@@ -119,6 +117,12 @@ namespace NBA.Service.League.Draft
             // Checkpoint the advanced state + remaining order.
             await _snapshot.PersistAsync(leagueId);
             return saved;
+        }
+
+        public Task ArmNextDeadlineAsync(long leagueId)
+        {
+            var seconds = Math.Max(1, _draftOptions.DraftPickTime);
+            return _redis.Draft.ScheduleDraftTimer(leagueId, DateTimeOffset.UtcNow.AddSeconds(seconds));
         }
     }
 }

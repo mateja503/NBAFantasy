@@ -80,9 +80,11 @@ namespace NBA.Service.Authentication
             {
                 result = _passwordHasher.VerifyHashedPassword(user, stored, password);
             }
-            catch (FormatException)
+            catch (Exception)
             {
-                // Stored value isn't a valid hash (legacy plaintext) — fall through to migration.
+                // Any failure parsing/verifying the stored value (legacy plaintext, malformed hash,
+                // or a different IPasswordHasher implementation) is treated as a failed verification
+                // so the migrate-on-login fallback below can take over.
                 result = PasswordVerificationResult.Failed;
             }
 

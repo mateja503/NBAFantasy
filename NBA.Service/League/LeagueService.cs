@@ -88,26 +88,40 @@ namespace NBA.Service.League
                 Turnoversvalue = sv?.Turnovers ?? (double)BoxScoreEvaluation.Turnovers,
             };
 
-            newStatsValue = await _context.AddStatsValue(newStatsValue);
-
             var year = DateTime.UtcNow.Year;
             var seasonYear = $"{year}/{year + 1}";
 
-            var newLeague = new NBA.Data.Entities.League
+            // The statsvalue and league are two separate SaveChanges calls; wrap them so a failed
+            // league insert can't leave an orphaned statsvalue row behind.
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                Name = input.LeagueName,
-                Commissioner = input.CommissionerUserId,
-                Seasonyear = seasonYear,
-                Weeksforseason = input.WeeksForSeason,
-                Transactionlimit = input.TransactionLimit,
-                Autostart = input.Autostart,
-                Typetransactionlimits = input.TypeTransactionLimits,
-                Typeleague = input.LeagueType,
-                Draftstyle = input.DraftStyle,
-                Statsvalueid = newStatsValue.Statsvalueid
-            };
+                newStatsValue = await _context.AddStatsValue(newStatsValue);
 
-            return await _context.AddLeague(newLeague);
+                var newLeague = new NBA.Data.Entities.League
+                {
+                    Name = input.LeagueName,
+                    Commissioner = input.CommissionerUserId,
+                    Seasonyear = seasonYear,
+                    Weeksforseason = input.WeeksForSeason,
+                    Transactionlimit = input.TransactionLimit,
+                    Autostart = input.Autostart,
+                    Typetransactionlimits = input.TypeTransactionLimits,
+                    Typeleague = input.LeagueType,
+                    Draftstyle = input.DraftStyle,
+                    Statsvalueid = newStatsValue.Statsvalueid
+                };
+
+                var created = await _context.AddLeague(newLeague);
+
+                await transaction.CommitAsync();
+                return created;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
 
         public async Task<JoinLeagueResult> JoinAsync(JoinLeagueInput input)

@@ -1,14 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using NBA.Data.Entities;
-using NBA.Data.Redis.Entities;
+using NBA.Data.Redis;
 using NBA.Data.Redis.Operations;
 using StackExchange.Redis;
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Text.Json;
 
 namespace NBA.Data.Context
 {
@@ -17,18 +10,17 @@ namespace NBA.Data.Context
     public class NbaFantasyRedis
     {
         private readonly IDatabase _redisDb;
-        private readonly JsonSerializerOptions _jsonOptions;
         private readonly Lazy<DraftRedisOperations> _draft;
         private readonly Lazy<PlayerRedisOperations> _player;
         private readonly Lazy<AuthRedisOperations> _auth;
         private readonly Lazy<LockRedisOperations> _lock;
 
-        public NbaFantasyRedis(IConnectionMultiplexer redis, IOptions<JsonOptions> jsonOptions)
+        public NbaFantasyRedis(IConnectionMultiplexer redis)
         {
             _redisDb = redis.GetDatabase();
-            _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
-            _draft = new Lazy<DraftRedisOperations>(() => new DraftRedisOperations(_redisDb,_jsonOptions));
-            _player = new Lazy<PlayerRedisOperations>(() => new PlayerRedisOperations(_redisDb, _jsonOptions));
+            // One canonical serializer for every Redis operation (see RedisSerializer).
+            _draft = new Lazy<DraftRedisOperations>(() => new DraftRedisOperations(_redisDb, RedisSerializer.Options));
+            _player = new Lazy<PlayerRedisOperations>(() => new PlayerRedisOperations(_redisDb, RedisSerializer.Options));
             _auth = new Lazy<AuthRedisOperations>(() => new AuthRedisOperations(_redisDb));
             _lock = new Lazy<LockRedisOperations>(() => new LockRedisOperations(_redisDb));
         }
