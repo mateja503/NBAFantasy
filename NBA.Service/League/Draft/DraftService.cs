@@ -18,19 +18,24 @@ using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.League.Draft
 {
-    public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions, 
+    public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions,IOptions<JsonOptions> jsonOptions,
-        NbaFantasyRedis redis)
+        NbaFantasyRedis redis, DraftSnapshotService snapshot)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
         private readonly NbaFantasyRedis _redis = redis;
+        private readonly DraftSnapshotService _snapshot = snapshot;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
-        public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId) 
+        public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId)
         {
+            // Recover the existing order from the durable snapshot before deciding to regenerate it.
+            // Without this, a Redis flush mid-draft would fall through and reshuffle the draft order.
+            await _snapshot.EnsureRehydratedAsync(leagueId);
+
             var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
 
             if (draftTeams is not null)

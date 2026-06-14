@@ -161,6 +161,7 @@ builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<DraftManager>();
+builder.Services.AddScoped<DraftSnapshotService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();

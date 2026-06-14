@@ -11,13 +11,14 @@ namespace NBA.Service.League.Draft
 {
     public class DraftManager(NbaFantasyContext context,
         IOptions<JsonOptions> jsonOptions, IOptions<DraftOptions> draftOptions,
-        NbaFantasyRedis redis, DraftService draftService)
+        NbaFantasyRedis redis, DraftService draftService, DraftSnapshotService snapshot)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftService _draftService = draftService;
+        private readonly DraftSnapshotService _snapshot = snapshot;
         public DraftState currentState { get; private set; }
         public async Task<DraftState> CreateDraftState(long leagueId) 
         {
@@ -31,17 +32,22 @@ namespace NBA.Service.League.Draft
                 DraftBoardTeams = new DraftBoardTeams { CurrentRound = 1 },
             };
             await _redis.Draft.SetDraftState(leagueId, currentState);
+            await _snapshot.PersistAsync(leagueId);
 
             return currentState;
         }
 
-        public async Task<DraftState> UpdaterDraftState(long leagueId, DraftState state) 
+        public async Task<DraftState> UpdaterDraftState(long leagueId, DraftState state)
         {
-            return await _redis.Draft.SetDraftState(leagueId, state);
+            var saved = await _redis.Draft.SetDraftState(leagueId, state);
+            await _snapshot.PersistAsync(leagueId);
+            return saved;
         }
 
-        public async Task<DraftState?> GetDraftState(long leagueId) 
+        public async Task<DraftState?> GetDraftState(long leagueId)
         {
+            // Restore from the Postgres snapshot first if Redis lost the draft.
+            await _snapshot.EnsureRehydratedAsync(leagueId);
             return await _redis.Draft.GetCurrentDraftState(leagueId);
         }
         public async Task<DraftState> ResetTimer(long leagueId, int seconds = 60) 
@@ -63,10 +69,15 @@ namespace NBA.Service.League.Draft
 
             _ = await _redis.Draft.DeleteStringDraftState(leagueId);
             await _redis.Draft.DeleteDraftTeams(leagueId);
+            await _snapshot.DeleteAsync(leagueId);
         }
 
         public async Task<DraftState?> NextPick(DraftState state, long leagueId)
         {
+            // Make sure Redis holds the order before we read/mutate it (recover from snapshot on miss),
+            // otherwise a Redis flush could drop the draft order mid-advance.
+            await _snapshot.EnsureRehydratedAsync(leagueId);
+
             var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
 
             TeamDraftBoard? teamToPick = null;
@@ -98,7 +109,11 @@ namespace NBA.Service.League.Draft
             await _redis.Draft.SetDraftTeams(draftTeams, leagueId);
 
             state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
-            return await _redis.Draft.SetDraftState(leagueId, state);
+            var saved = await _redis.Draft.SetDraftState(leagueId, state);
+
+            // Checkpoint the advanced state + remaining order.
+            await _snapshot.PersistAsync(leagueId);
+            return saved;
         }
     }
 }

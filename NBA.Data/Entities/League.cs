@@ -29,6 +29,8 @@ public partial class League
 
     public long? Statsvalueid { get; set; }
 
+    public virtual Draftsnapshot? Draftsnapshot { get; set; }
+
     public virtual ICollection<Leagueplayer> Leagueplayers { get; set; } = new List<Leagueplayer>();
 
     public virtual ICollection<Playoff> Playoffs { get; set; } = new List<Playoff>();

@@ -10,6 +10,56 @@ namespace NBA.Data.Context
 {
     public partial class NbaFantasyContext{
 
+        //public virtual DbSet<Draftsnapshot> Draftsnapshots { get; set; }
+
+        // Configured here (in the partial) rather than the scaffolded file so a future re-scaffold
+        // of the database-first model doesn't clobber it.
+        //partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Entity<Draftsnapshot>(entity =>
+        //    {
+        //        entity.HasKey(e => e.Leagueid).HasName("draftsnapshot_pkey");
+        //        entity.ToTable("draftsnapshot", "nba");
+        //        entity.Property(e => e.Leagueid).ValueGeneratedNever().HasColumnName("leagueid");
+        //        entity.Property(e => e.Draftstate).HasColumnName("draftstate");
+        //        entity.Property(e => e.Draftteams).HasColumnName("draftteams");
+        //        entity.Property(e => e.Tsupdated).HasColumnName("tsupdated");
+        //    });
+        //}
+
+        #region DraftSnapshot
+        public async Task<Draftsnapshot?> GetDraftSnapshot(long leagueId)
+        {
+            return await Draftsnapshots.AsNoTracking().SingleOrDefaultAsync(s => s.Leagueid == leagueId);
+        }
+
+        public async Task UpsertDraftSnapshot(Draftsnapshot snapshot)
+        {
+            var existing = await Draftsnapshots.SingleOrDefaultAsync(s => s.Leagueid == snapshot.Leagueid);
+            if (existing is null)
+            {
+                await Draftsnapshots.AddAsync(snapshot);
+            }
+            else
+            {
+                existing.Draftstate = snapshot.Draftstate;
+                existing.Draftteams = snapshot.Draftteams;
+                existing.Tsupdated = snapshot.Tsupdated;
+            }
+            _ = await SaveChangesAsync();
+        }
+
+        public async Task DeleteDraftSnapshot(long leagueId)
+        {
+            var existing = await Draftsnapshots.SingleOrDefaultAsync(s => s.Leagueid == leagueId);
+            if (existing is not null)
+            {
+                Draftsnapshots.Remove(existing);
+                _ = await SaveChangesAsync();
+            }
+        }
+        #endregion
+
          #region Players
         public IQueryable<Player> GetAllPlayers()
         {

@@ -172,3 +172,13 @@ CREATE TABLE nba.usertrophie (
     CONSTRAINT fk_usertrophie_user FOREIGN KEY (userid) REFERENCES nba.applicationuser(userid),
     CONSTRAINT fk_usertrophie_trophie FOREIGN KEY (trophieid) REFERENCES nba.trophie(trophieid)
 );
+
+-- Durable checkpoint for an in-progress draft (one row per league). Redis is the live store;
+-- this is the recovery copy used if Redis evicts/restarts mid-draft.
+CREATE TABLE nba.draftsnapshot (
+    leagueid BIGINT PRIMARY KEY,
+    draftstate TEXT,
+    draftteams TEXT,
+    tsupdated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_draftsnapshot_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid) ON DELETE CASCADE
+);

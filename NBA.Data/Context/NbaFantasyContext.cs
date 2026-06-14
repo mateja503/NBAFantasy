@@ -14,6 +14,8 @@ public partial class NbaFantasyContext : DbContext
 
     public virtual DbSet<Applicationuser> Applicationusers { get; set; }
 
+    public virtual DbSet<Draftsnapshot> Draftsnapshots { get; set; }
+
     public virtual DbSet<League> Leagues { get; set; }
 
     public virtual DbSet<Leagueplayer> Leagueplayers { get; set; }
@@ -66,6 +68,26 @@ public partial class NbaFantasyContext : DbContext
             entity.Property(e => e.Xp)
                 .HasDefaultValue(0L)
                 .HasColumnName("xp");
+        });
+
+        modelBuilder.Entity<Draftsnapshot>(entity =>
+        {
+            entity.HasKey(e => e.Leagueid).HasName("draftsnapshot_pkey");
+
+            entity.ToTable("draftsnapshot", "nba");
+
+            entity.Property(e => e.Leagueid)
+                .ValueGeneratedNever()
+                .HasColumnName("leagueid");
+            entity.Property(e => e.Draftstate).HasColumnName("draftstate");
+            entity.Property(e => e.Draftteams).HasColumnName("draftteams");
+            entity.Property(e => e.Tsupdated)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("tsupdated");
+
+            entity.HasOne(d => d.League).WithOne(p => p.Draftsnapshot)
+                .HasForeignKey<Draftsnapshot>(d => d.Leagueid)
+                .HasConstraintName("fk_draftsnapshot_league");
         });
 
         modelBuilder.Entity<League>(entity =>

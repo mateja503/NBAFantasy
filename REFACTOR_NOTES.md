@@ -139,10 +139,31 @@ Verification note: the timer path needs a real Redis, so cover it with an integr
 (Testcontainers Redis) rather than a unit test — the existing unit suite can't exercise the Lua
 claim script.
 
+## Draft-state durability — DONE
+
+Redis is still the live store for speed, but the draft is now checkpointed to Postgres so a Redis
+eviction/restart mid-draft can be recovered.
+
+- **Table:** `nba.draftsnapshot` (one row per league: `draftstate` + `draftteams` JSON, `tsupdated`),
+  added to `infrastructure/db/create/create-objects-nba-schema.sql`, the `Draftsnapshot` entity, and
+  configured in `NbaFantasyContext.OnModelCreatingPartial`.
+- **Write-through:** `DraftSnapshotService.PersistAsync` mirrors the current Redis state + order into
+  Postgres after each structural change (`CreateDraftState`, `UpdaterDraftState`, `NextPick`).
+- **Read-through recovery:** `EnsureRehydratedAsync` is a no-op when Redis is healthy (one GET); on a
+  miss it restores state + order from the snapshot and re-arms the pick timer if the draft was
+  running. It is called before every order/state read — including at the top of
+  `DraftService.DraftOrder`, which is the important one: without it a Redis flush would fall through
+  and **re-randomize the draft order**. `EndDraft` deletes the snapshot.
+
+Apply-to-existing-DBs note: the table is created by the init script on a fresh database. If you have
+an existing Postgres volume, run the `CREATE TABLE nba.draftsnapshot (...)` statement once by hand.
+
+Verification: like the timer, the recovery path needs a real Redis + Postgres, so cover it with an
+integration test (flush Redis mid-draft, assert the order and pick are preserved) rather than a unit
+test.
+
 ## Scoped follow-up (remaining)
 
-1. **Draft state durability.** Persist draft checkpoints to Postgres so a Redis eviction/restart
-   mid-draft can be recovered (today the 3-day TTL key is the only copy).
-2. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
+1. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
    startup into a one-shot job or guard it with a Redis distributed lock.
-3. **Pagination + indexes** on the league/player list queries before real data volume.
+2. **Pagination + indexes** on the league/player list queries before real data volume.
