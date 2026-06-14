@@ -42,6 +42,14 @@ namespace NBA.Data.Redis.Operations
             return state;
         }
 
+        // Cheap existence checks (KeyExists, no deserialization) used by recovery to detect a
+        // partial Redis eviction where one of the two draft keys is gone but the other survives.
+        public Task<bool> DraftStateExists(long leagueId) =>
+            _redisDb.KeyExistsAsync(RedisKeys.GetDraftStateKey(leagueId));
+
+        public Task<bool> DraftTeamsExist(long leagueId) =>
+            _redisDb.KeyExistsAsync(RedisKeys.GetDraftTeamsKey(leagueId));
+
         // Atomically returns and removes one league whose pick deadline is due (<= now), or null.
         // ZRANGEBYSCORE + ZREM in a single Lua script so two app instances can't claim the same
         // timer. This is the scalable replacement for Hangfire polling Postgres every second.

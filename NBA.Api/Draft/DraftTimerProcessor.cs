@@ -29,16 +29,25 @@ namespace NBA.Api.Draft
         public async Task StartDraftAsync(long leagueId)
         {
             var isDraftCompleted = await _draftService.CheckDraftCompleted(leagueId);
-            var state = await _draftManager.GetDraftState(leagueId);
+
+            // Draft state is normally created when the first client connects to the hub, but
+            // start-draft can be called before that — so create it here if it doesn't exist yet
+            // instead of dereferencing a null state.
+            var state = await _draftManager.GetDraftState(leagueId)
+                ?? await _draftManager.CreateDraftState(leagueId);
 
             if (isDraftCompleted)
             {
-                state!.DraftStatus = (int)DraftStatus.DraftCompleted;
-                await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state!);
+                state.DraftStatus = (int)DraftStatus.DraftCompleted;
+                await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
                 return;
             }
 
-            state!.DraftStatus = (int)DraftStatus.DraftStarted;
+            // Ensure the draft order (and the derived board) exist before the first auto-advance,
+            // which reads them — otherwise NextPick would hit a null teams collection.
+            var draft = await _draftService.DraftOrder(leagueId);
+            state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+            state.DraftStatus = (int)DraftStatus.DraftStarted;
             await _draftManager.UpdaterDraftState(leagueId, state);
 
             await AdvanceAsync(leagueId, nextPick: false);

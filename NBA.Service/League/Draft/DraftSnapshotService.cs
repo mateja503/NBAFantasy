@@ -45,14 +45,19 @@ namespace NBA.Service.League.Draft
         // flush never causes the draft order to be regenerated (which would reshuffle picks).
         public async Task<bool> EnsureRehydratedAsync(long leagueId)
         {
-            if (await _redis.Draft.GetCurrentDraftState(leagueId) is not null)
+            // Check BOTH keys: Redis can evict them independently under a maxmemory policy, and
+            // recovering only on missing state would let an evicted teams key slip through and cause
+            // DraftService.DraftOrder to regenerate (reshuffle) the order.
+            var stateExists = await _redis.Draft.DraftStateExists(leagueId);
+            var teamsExist = await _redis.Draft.DraftTeamsExist(leagueId);
+            if (stateExists && teamsExist)
                 return false;
 
             var snapshot = await _context.GetDraftSnapshot(leagueId);
             if (snapshot is null)
                 return false;
 
-            if (!string.IsNullOrEmpty(snapshot.Draftstate))
+            if (!stateExists && !string.IsNullOrEmpty(snapshot.Draftstate))
             {
                 var state = JsonSerializer.Deserialize<DraftState>(snapshot.Draftstate, _json);
                 if (state is not null)
@@ -65,7 +70,7 @@ namespace NBA.Service.League.Draft
                 }
             }
 
-            if (!string.IsNullOrEmpty(snapshot.Draftteams))
+            if (!teamsExist && !string.IsNullOrEmpty(snapshot.Draftteams))
             {
                 var teams = JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(snapshot.Draftteams, _json);
                 if (teams is not null)

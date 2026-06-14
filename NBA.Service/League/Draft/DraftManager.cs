@@ -1,4 +1,5 @@
-﻿using ApplicationDefaults.Options;
+﻿using ApplicationDefaults.Exceptions;
+using ApplicationDefaults.Options;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -50,14 +51,18 @@ namespace NBA.Service.League.Draft
             await _snapshot.EnsureRehydratedAsync(leagueId);
             return await _redis.Draft.GetCurrentDraftState(leagueId);
         }
-        public async Task<DraftState> ResetTimer(long leagueId, int seconds = 60) 
+        public async Task<DraftState> ResetTimer(long leagueId)
         {
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId);
-            seconds = _draftOptions.DraftPickTime;
-            state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
-            //state!.DraftStatus = (int)DraftStatus.Paused;
-            await _redis.Draft.SetDraftState(leagueId, state!);
-            return state!;
+            // Recover from the durable snapshot if Redis lost the state, then fail loudly rather than
+            // serializing a null state back into Redis (which previously stored the literal "null").
+            await _snapshot.EnsureRehydratedAsync(leagueId);
+
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId)
+                ?? throw new NBAException($"No active draft state for league {leagueId}", ErrorCodes.DataBaseRecordNotFound);
+
+            state.PickEndTime = DateTime.UtcNow.AddSeconds(_draftOptions.DraftPickTime);
+            await _redis.Draft.SetDraftState(leagueId, state);
+            return state;
         }
 
         public async Task EndDraft(long leagueId)

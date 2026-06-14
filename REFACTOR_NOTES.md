@@ -196,6 +196,22 @@ step run before the API scales out).
 Apply-to-existing-DBs note: like the draftsnapshot table, these run on a fresh database. On an
 existing volume, run the `CREATE INDEX IF NOT EXISTS ...` statements by hand (they're safe to re-run).
 
+## Post-review critical fixes — DONE
+
+From the code review, the three correctness issues are fixed:
+
+1. `DraftTimerProcessor.StartDraftAsync` now creates draft state if it doesn't exist yet (state was
+   previously only created on hub connect) and ensures the draft order + board exist before the
+   first auto-advance — so `start-draft` before any client connects no longer NREs/NPEs.
+2. `DraftManager.ResetTimer` recovers from the snapshot and throws a clear `NBAException` if state is
+   still absent, instead of serializing `null` into Redis. The dead `seconds` parameter was removed.
+3. `DraftSnapshotService.EnsureRehydratedAsync` now checks BOTH the state and teams Redis keys (via
+   cheap `KeyExists`) and restores whichever is missing, so a partial Redis eviction can't fall
+   through and regenerate (reshuffle) the draft order.
+
+Remaining review items (JSON-options unification, snapshot write-amplification on connect, lock-
+expiry tuning, dead code, integration tests) are non-blocking and tracked in the review.
+
 ## All REFACTOR_NOTES follow-ups complete
 
 Every item from the original architecture review and its follow-ups is now done. Remaining
