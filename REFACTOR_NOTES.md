@@ -162,8 +162,23 @@ Verification: like the timer, the recovery path needs a real Redis + Postgres, s
 integration test (flush Redis mid-draft, assert the order and pick are preserved) rather than a unit
 test.
 
+## Startup seeding — DONE
+
+`ApplicationHostedService` ran the player back-fill on every replica's boot, so multiple instances
+would race to seed Postgres and re-populate Redis. It is now guarded by a reusable Redis distributed
+lock (`NbaFantasyRedis.Lock` → `LockRedisOperations`, key `startup:player-seed:lock`, 10-min expiry):
+
+- Exactly one replica acquires the lock and runs the seed/load; the others log and skip, since
+  Postgres and Redis are shared. A single instance always wins, so behaviour there is unchanged.
+- The lock token is random and released by its owner only (Redis `SET NX` semantics), so an expired
+  lock can't be released out from under a new holder. The existing `AnyAsync` DB check is still the
+  backstop against duplicate rows.
+
+Known trade-off: skipping replicas finish startup immediately, so they may briefly serve before the
+lock-holder has finished populating shared Redis. Acceptable at this stage; the fully-correct version
+makes non-holders wait on a "players ready" flag (or moves seeding to a one-shot init job / migration
+step run before the API scales out).
+
 ## Scoped follow-up (remaining)
 
-1. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
-   startup into a one-shot job or guard it with a Redis distributed lock.
-2. **Pagination + indexes** on the league/player list queries before real data volume.
+1. **Pagination + indexes** on the league/player list queries before real data volume.

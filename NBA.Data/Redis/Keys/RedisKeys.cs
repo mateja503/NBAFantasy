@@ -23,6 +23,12 @@ namespace NBA.Data.Redis.Keys
 
         #endregion
 
+        #region Startup
+        // Ensures only one replica performs the player back-fill / Redis load on boot.
+        public static string GetStartupSeedLockKey() => "startup:player-seed:lock";
+
+        #endregion
+
 
         #region Players
 
