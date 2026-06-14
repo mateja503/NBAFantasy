@@ -60,7 +60,7 @@ namespace NBA.Service.League.Draft
             var state = await _redis.Draft.GetCurrentDraftState(leagueId);
             seconds = _draftOptions.DraftPickTime;
             state?.PickEndTime = DateTime.UtcNow.AddSeconds(seconds);
-            state!.DraftStatus = (int)DraftStatus.Paused;
+            //state!.DraftStatus = (int)DraftStatus.Paused;
             await _redis.Draft.SetDraftState(leagueId, state!);
             return state!;
         }
