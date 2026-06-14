@@ -6,5 +6,6 @@
   <Project Path="NBA.Data/NBA.Data.csproj" />
   <Project Path="NBA.Service/NBA.Service.csproj" Id="6dfd9bc2-3d53-4858-a892-eca9d2af4c40" />
   <Project Path="NBA.ServiceDefaults/NBA.ServiceDefaults.csproj" />
+  <Project Path="NBA.Tests/NBA.Tests.csproj" />
   <Project Path="NBAFantasy/NBAFantasy.csproj" />
 </Solution>

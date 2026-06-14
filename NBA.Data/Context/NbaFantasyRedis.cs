@@ -20,6 +20,7 @@ namespace NBA.Data.Context
         private readonly JsonSerializerOptions _jsonOptions;
         private readonly Lazy<DraftRedisOperations> _draft;
         private readonly Lazy<PlayerRedisOperations> _player;
+        private readonly Lazy<AuthRedisOperations> _auth;
 
         public NbaFantasyRedis(IConnectionMultiplexer redis, IOptions<JsonOptions> jsonOptions)
         {
@@ -27,10 +28,12 @@ namespace NBA.Data.Context
             _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
             _draft = new Lazy<DraftRedisOperations>(() => new DraftRedisOperations(_redisDb,_jsonOptions));
             _player = new Lazy<PlayerRedisOperations>(() => new PlayerRedisOperations(_redisDb, _jsonOptions));
+            _auth = new Lazy<AuthRedisOperations>(() => new AuthRedisOperations(_redisDb));
         }
 
         public DraftRedisOperations Draft => _draft.Value;
         public PlayerRedisOperations Player => _player.Value;
+        public AuthRedisOperations Auth => _auth.Value;
 
     }
 }

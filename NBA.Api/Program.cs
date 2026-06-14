@@ -1,20 +1,27 @@
+using System.Text;
 using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
 using ExternalClients;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.StackExchangeRedis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 using NBA.Api;
+using NBA.Api.Authentication;
 using NBA.Api.Endpoints;
 using NBA.Api.HangFire;
 using NBA.Api.HostedService;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
+using NBA.Data.Entities;
 using NBA.Service.Authentication;
 using NBA.Service.CalculateBoxScore;
 using NBA.Service.Game;
@@ -40,6 +47,8 @@ builder.AddServiceDefaults();
 builder.Services.Configure<BallDontLieClientOptions>(builder.Configuration.GetSection("ExternalClients:BallDontLie"));
 builder.Services.Configure<DraftOptions>(builder.Configuration.GetSection("ApplicationSettings:Draft"));
 builder.Services.Configure<ApplicationOptions>(builder.Configuration.GetSection("ApplicationSettings"));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
+builder.Services.Configure<Argon2Options>(builder.Configuration.GetSection("Argon2"));
 
 builder.Services.Configure<JsonOptions>(options =>
 {
@@ -79,6 +88,50 @@ builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) =>
     client.DefaultRequestHeaders.Add("Accept", "application/json");
     client.DefaultRequestHeaders.Add("Authorization", _options.ApiKey);
 });
+#endregion
+
+#region Authentication
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+
+// Argon2id (memory-hard) password hashing and JWT issuance.
+builder.Services.AddSingleton<IPasswordHasher<Applicationuser>, Argon2idPasswordHasher>();
+builder.Services.AddSingleton<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<AuthTokenIssuer>();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        // Keep claim names as-issued ("sub", "unique_name") instead of remapping to legacy URIs.
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidAudience = jwtOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
+            ClockSkew = TimeSpan.FromSeconds(30),
+        };
+
+        // Browsers can't set the Authorization header on a WebSocket, so SignalR clients pass the
+        // token as ?access_token=... — lift it into the auth pipeline for the hub paths.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/draftHub") || path.StartsWithSegments("/chatHub")))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
+    });
 #endregion
 
 builder.Services.AddAuthorization();
@@ -159,6 +212,7 @@ app.UseRouting();
 
 
 app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

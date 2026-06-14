@@ -15,6 +15,12 @@ namespace NBA.Data.Redis.Keys
 
         #endregion
 
+        #region Authentication
+        // Refresh tokens are stored by their SHA-256 hash, never in clear text.
+        public static string GetRefreshTokenKey(string tokenHash) => $"auth:refresh:{tokenHash}";
+
+        #endregion
+
 
         #region Players
 

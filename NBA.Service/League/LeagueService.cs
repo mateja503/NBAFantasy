@@ -8,6 +8,7 @@ namespace NBA.Service.League
     // Input contracts are owned by the service layer so it never depends on the API's
     // request types (dependencies point inward: Api -> Service -> Data).
     public record CreateLeagueInput(
+        long CommissionerUserId,
         string? LeagueName,
         int? LeagueType,
         int? DraftStyle,
@@ -80,7 +81,7 @@ namespace NBA.Service.League
             var newLeague = new NBA.Data.Entities.League
             {
                 Name = input.LeagueName,
-                Commissioner = 1, // TODO: replace with the authenticated user id once auth lands.
+                Commissioner = input.CommissionerUserId,
                 Seasonyear = seasonYear,
                 Weeksforseason = input.WeeksForSeason,
                 Transactionlimit = input.TransactionLimit,

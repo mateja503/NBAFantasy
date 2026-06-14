@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Options;
 using Hangfire;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using NBA.Api.HangFire;
@@ -15,6 +16,7 @@ using StreamJsonRpc;
 
 namespace NBA.Api.SignalR.Hubs
 {
+    [Authorize]
     public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis,
         IBackgroundJobClient backgroundJobClient, PlayerManager playerManager,
         DraftService draftService, IOptions<DraftOptions> draftOptions) : Hub<IDraftHubClient>

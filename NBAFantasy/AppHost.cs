@@ -10,6 +10,7 @@ var redis = builder.AddRedis("redis-cache")
 //                             dotnet user-secrets set "Parameters:balldontlie-apikey" "<value>"
 var password = builder.AddParameter("postgress-password", secret: true);
 var ballDontLieApiKey = builder.AddParameter("balldontlie-apikey", secret: true);
+var jwtSigningKey = builder.AddParameter("jwt-signing-key", secret: true);
 
 var postgres = builder.AddPostgres("nbafantasy-server", password: password)
     .WithHostPort(6382)
@@ -22,8 +23,9 @@ var db = postgres.AddDatabase("nbafantasydb");
 var backend = builder.AddProject<Projects.NBA_Api>("nba-api")
     .WithReference(db)
     .WithReference(redis)
-    // Injected as a configuration value; binds to ExternalClients:BallDontLie:ApiKey in the API.
+    // Injected as configuration values; bind to ExternalClients:BallDontLie:ApiKey and Jwt:SigningKey.
     .WithEnvironment("ExternalClients__BallDontLie__ApiKey", ballDontLieApiKey)
+    .WithEnvironment("Jwt__SigningKey", jwtSigningKey)
     .WaitFor(db)
     .WaitFor(redis)
     .WithUrlForEndpoint("https", url =>

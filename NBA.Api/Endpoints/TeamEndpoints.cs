@@ -8,7 +8,7 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder MapTeamEndpoints(this IEndpointRouteBuilder builder)
         {
-            var team = builder.MapGroup("/team").WithTags("team");
+            var team = builder.MapGroup("/team").WithTags("team").RequireAuthorization();
 
             team.MapPost("/add", async (TeamRequest request, TeamService teamService) =>
             {

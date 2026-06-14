@@ -54,8 +54,9 @@ a reviewed follow-up and are scoped at the bottom of this file.
 
 ```bash
 # 1. Set the secrets (run once, from the repo root)
-dotnet user-secrets --project NBAFantasy set "Parameters:password" "<your-postgres-password>"
+dotnet user-secrets --project NBAFantasy set "Parameters:postgress-password" "<your-postgres-password>"
 dotnet user-secrets --project NBAFantasy set "Parameters:balldontlie-apikey" "<your-rotated-key>"
+dotnet user-secrets --project NBAFantasy set "Parameters:jwt-signing-key" "<random 32+ character string>"
 
 # 2. Restore / build / test the whole solution
 dotnet restore NBAFantasy.slnx
@@ -68,22 +69,59 @@ dotnet run --project NBAFantasy/NBAFantasy.csproj
 ```
 
 ### Things to double-check
-- **Package versions** in `NBA.ServiceDefaults.csproj` and `NBA.Tests.csproj` were chosen to match
-  Aspire 13.1 / .NET 10. If `restore` complains, align them with the versions your other projects
-  resolve.
-- The login flow still compares passwords in **plaintext** (unchanged on purpose, to match seed
-  data). Do not expose this publicly until the auth follow-up lands.
+- **Package versions** in the new `.csproj` files (`NBA.ServiceDefaults`, `NBA.Tests`, the
+  `Microsoft.AspNetCore.Authentication.JwtBearer` and `Microsoft.Extensions.Identity.Core`
+  references) were chosen to match Aspire 13.1 / .NET 10. If `restore` complains, align them with
+  the versions your other projects resolve.
 
-## Scoped follow-up (not in this batch)
+## Authentication (JWT + hashing) — DONE
 
-1. **Authentication (JWT + hashing).** Hash passwords with `PasswordHasher<T>`, issue JWTs on login,
-   add `[Authorize]` to mutating endpoints and the SignalR hubs, and read the user id from claims
-   (removes the hardcoded `Commissioner = 1`). Requires a seed-data migration for existing users.
-2. **Draft-timer migration.** Replace per-pick Hangfire scheduling with a Redis sorted-set delayed
+- Passwords are hashed with **Argon2id** (memory-hard; resists GPU/ASIC cracking) via an
+  `Argon2idPasswordHasher : IPasswordHasher<Applicationuser>` backed by `Isopoh.Cryptography.Argon2`.
+  Work factors come from the `Argon2` config section (OWASP minimums: 19 MiB, t=2, p=1) and are
+  embedded in each PHC-encoded hash, so they can be raised later without breaking old hashes.
+  Existing seed users with plaintext passwords are **migrated on first successful login** — the
+  plaintext is matched once, then replaced with an Argon2id hash. No manual data migration needed.
+- `POST /v1/auth/register` creates a user (hashed) and returns a token; `POST /v1/auth/login`
+  verifies and returns a token. Both are anonymous; everything else now requires a bearer token.
+- `LeagueService` uses the authenticated user id from the token (`sub` claim) — the hardcoded
+  `Commissioner = 1` is gone, and `/league/join` ignores any user id in the request body.
+- SignalR `DraftHub`/`ChatHub` are `[Authorize]`d; clients pass the token as
+  `?access_token=...` (handled in `JwtBearerEvents.OnMessageReceived`).
+- **Refresh tokens with rotation (DONE).** `login`/`register` also return a `refreshToken`.
+  Refresh tokens are opaque 256-bit random strings, stored in Redis **by SHA-256 hash** (never in
+  clear text) with a TTL of `Jwt:RefreshTokenDays`. `POST /v1/auth/refresh` exchanges one for a new
+  pair and the old one is consumed atomically (GETDEL) — single-use, so a replayed/stolen token is
+  rejected. `POST /v1/auth/logout` revokes the refresh token. Access tokens stay stateless and
+  short-lived (`Jwt:AccessTokenMinutes`).
+
+How to use it:
+
+```bash
+# Register (or log in) to get an access + refresh token
+curl -k -X POST https://localhost:<port>/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"coachK","email":"c@k.com","password":"s3cret!"}'
+
+# Call a protected endpoint
+curl -k https://localhost:<port>/v1/league -H "Authorization: Bearer <accessToken>"
+
+# When the access token expires, swap the refresh token for a fresh pair
+curl -k -X POST https://localhost:<port>/v1/auth/refresh \
+  -H "Content-Type: application/json" -d '{"refreshToken":"<refreshToken>"}'
+```
+
+Next hardening step (not done): move from the symmetric HS256 key to asymmetric RS256 if other
+services need to validate tokens independently, and add a refresh-token-per-device index so a user
+can revoke all sessions at once.
+
+## Scoped follow-up (remaining)
+
+1. **Draft-timer migration.** Replace per-pick Hangfire scheduling with a Redis sorted-set delayed
    queue driven by a hosted service. Removes the 1s Postgres polling and scales to many concurrent
    drafts.
-3. **Draft state durability.** Persist draft checkpoints to Postgres so a Redis eviction/restart
+2. **Draft state durability.** Persist draft checkpoints to Postgres so a Redis eviction/restart
    mid-draft can be recovered (today the 3-day TTL key is the only copy).
-4. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
+3. **Startup seeding.** Move player back-fill in `ApplicationHostedService` out of per-replica
    startup into a one-shot job or guard it with a Redis distributed lock.
-5. **Pagination + indexes** on the league/player list queries before real data volume.
+4. **Pagination + indexes** on the league/player list queries before real data volume.

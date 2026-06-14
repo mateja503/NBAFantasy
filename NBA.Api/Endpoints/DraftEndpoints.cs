@@ -23,7 +23,7 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder MapDraftEndpoints(this IEndpointRouteBuilder builder)
         {
-            var draft = builder.MapGroup("draft").WithTags("draft");
+            var draft = builder.MapGroup("draft").WithTags("draft").RequireAuthorization();
 
             draft.MapPost("start-draft", async ([FromBody] DraftRequest request,
                 IBackgroundJobClient backgroundJobs, IHubContext<DraftHub,IDraftHubClient> draftHub,

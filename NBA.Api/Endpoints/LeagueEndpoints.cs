@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using NBA.Api.Authentication;
 using NBA.Api.Mappings;
 using NBA.Api.Requests.League;
 using NBA.Api.Requests.LeagueTeam;
@@ -10,7 +12,7 @@ namespace NBA.Api.Endpoints
     {
         public static IEndpointRouteBuilder MapLeaguEndpoints(this IEndpointRouteBuilder builder)
         {
-            var league = builder.MapGroup("/league").WithTags("league");
+            var league = builder.MapGroup("/league").WithTags("league").RequireAuthorization();
 
             league.MapGet("", async (LeagueService leagueService) =>
             {
@@ -18,9 +20,10 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(leagues.Select(l => l.ToLeagueDto()).ToList());
             });
 
-            league.MapPost("/add", async (LeagueRequest? request, LeagueService leagueService) =>
+            league.MapPost("/add", async (LeagueRequest? request, ClaimsPrincipal user, LeagueService leagueService) =>
             {
                 var input = new CreateLeagueInput(
+                    user.GetUserId(),
                     request?.LeagueName,
                     request?.LeagueType,
                     request?.DraftStyle,
@@ -45,10 +48,11 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(created.ToLeagueDto());
             });
 
-            league.MapPost("/join", async ([FromBody] LeagueTeamInsertRequest request, LeagueService leagueService) =>
+            league.MapPost("/join", async ([FromBody] LeagueTeamInsertRequest request, ClaimsPrincipal user, LeagueService leagueService) =>
             {
+                // User id comes from the token, not the request body.
                 var result = await leagueService.JoinAsync(
-                    new JoinLeagueInput(request.LeagueId, request.TeamName, request.UserId));
+                    new JoinLeagueInput(request.LeagueId, request.TeamName, user.GetUserId()));
 
                 var dto = result.Team.ToTeamDto();
                 dto.Competesinleague = result.League.ToLeagueDto();

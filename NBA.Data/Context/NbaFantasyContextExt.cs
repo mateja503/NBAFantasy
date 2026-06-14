@@ -127,9 +127,35 @@ namespace NBA.Data.Context
         #endregion
 
         #region Authentication
-        public async Task<Applicationuser?> GetApplicationuser(string username, string password) 
+        public async Task<Applicationuser?> GetApplicationuser(string username, string password)
         {
             return await Applicationusers.SingleOrDefaultAsync(u => u.Username == username && u.Password == password);
+        }
+
+        // Credentials are now verified against a hashed password in the service layer,
+        // so lookups are by username only.
+        public async Task<Applicationuser?> GetApplicationuserByUsername(string username)
+        {
+            return await Applicationusers.SingleOrDefaultAsync(u => u.Username == username);
+        }
+
+        public async Task<Applicationuser?> GetApplicationuserById(long userId)
+        {
+            return await Applicationusers.SingleOrDefaultAsync(u => u.Userid == userId);
+        }
+
+        public async Task<Applicationuser> AddApplicationuser(Applicationuser user)
+        {
+            var e = await Applicationusers.AddAsync(user);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
+
+        public async Task<Applicationuser> UpdateApplicationuser(Applicationuser user)
+        {
+            var e = Applicationusers.Update(user);
+            _ = await SaveChangesAsync();
+            return e.Entity;
         }
 
         #endregion
