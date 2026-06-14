@@ -42,12 +42,12 @@ pipeline {
 			steps {
 				// Real test run. --no-build reuses the Release output from the build stage.
 				// The pipeline now actually fails when a test fails, instead of echoing success.
-				sh 'dotnet test NBAFantasy.slnx -c Release --no-build --logger "trx;LogFileName=test-results.trx"'
+				sh "dotnet test NBAFantasy.slnx -c Release --no-build --logger junit;LogFileName=test-results.xml"
 			}
 			post {
 				always {
 					// Surface results in Jenkins even on failure (requires the MSTest/xUnit plugin).
-					xunit testTimeMargin: '3000', tools: [MSTest(pattern: '**/test-results.trx')]
+					junit testResults: '**/test-results.xml', allowEmptyResults: true
 				}
 			}
 		}
