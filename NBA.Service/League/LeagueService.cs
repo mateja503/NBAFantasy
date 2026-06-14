@@ -32,9 +32,24 @@ namespace NBA.Service.League
     {
         private readonly NbaFantasyContext _context = context;
 
-        public async Task<List<NBA.Data.Entities.League>> GetAllAsync()
+        private const int MaxPageSize = 100;
+
+        // Paged so the list endpoint never loads the whole table. Ordering by the primary key gives
+        // a stable sort, which is required for correct skip/take paging.
+        public async Task<PagedResult<NBA.Data.Entities.League>> GetPagedAsync(int page, int pageSize)
         {
-            return await _context.GetAllLeagues().AsNoTracking().ToListAsync();
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize < 1 ? 20 : (pageSize > MaxPageSize ? MaxPageSize : pageSize);
+
+            var query = _context.GetAllLeagues().AsNoTracking().OrderBy(l => l.Leagueid);
+
+            var totalCount = await query.CountAsync();
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<NBA.Data.Entities.League>(items, page, pageSize, totalCount);
         }
 
         public async Task<NBA.Data.Entities.League> CreateAsync(CreateLeagueInput input)

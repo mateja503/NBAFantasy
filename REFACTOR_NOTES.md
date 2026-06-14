@@ -179,6 +179,25 @@ lock-holder has finished populating shared Redis. Acceptable at this stage; the 
 makes non-holders wait on a "players ready" flag (or moves seeding to a one-shot init job / migration
 step run before the API scales out).
 
-## Scoped follow-up (remaining)
+## Pagination + indexes — DONE
 
-1. **Pagination + indexes** on the league/player list queries before real data volume.
+- **Pagination:** `GET /v1/league` now takes `?page=&pageSize=` and returns a `PagedResult<LeagueDto>`
+  (`Items`, `Page`, `PageSize`, `TotalCount`, `TotalPages`). `LeagueService.GetPagedAsync` clamps the
+  inputs (page ≥ 1, pageSize 1–100, default 20), orders by the primary key (stable sort required for
+  correct skip/take), and returns `CountAsync` + `Skip/Take`. `PagedResult<T>` is a reusable generic
+  in `NBA.Service`, so the same shape can wrap any future list endpoint. The player list is served
+  from Redis (no SQL list endpoint), so it doesn't need SQL paging.
+- **Indexes:** added to `create-objects-nba-schema.sql` on the FK/filter columns the hot queries use
+  — `team(userid)`, `team(leagueid)`, `teamplayer(teamid)`, `teamplayer(playerid)`,
+  `leagueplayer(leagueid)`, `leagueplayer(playerid)`, `applicationuser(username)`. Postgres does not
+  auto-index foreign keys, so these prevent full scans on the login, draft, trade, and free-agency
+  paths as data grows.
+
+Apply-to-existing-DBs note: like the draftsnapshot table, these run on a fresh database. On an
+existing volume, run the `CREATE INDEX IF NOT EXISTS ...` statements by hand (they're safe to re-run).
+
+## All REFACTOR_NOTES follow-ups complete
+
+Every item from the original architecture review and its follow-ups is now done. Remaining
+"next hardening" ideas noted inline (RS256, multi-session revoke, integration tests for the
+Redis-backed timer/recovery paths) are optional and can be picked up as needed.

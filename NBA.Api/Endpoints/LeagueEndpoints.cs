@@ -1,9 +1,11 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using NBA.Api.Authentication;
+using NBA.Api.DTOs;
 using NBA.Api.Mappings;
 using NBA.Api.Requests.League;
 using NBA.Api.Requests.LeagueTeam;
+using NBA.Service;
 using NBA.Service.League;
 
 namespace NBA.Api.Endpoints
@@ -14,10 +16,17 @@ namespace NBA.Api.Endpoints
         {
             var league = builder.MapGroup("/league").WithTags("league").RequireAuthorization();
 
-            league.MapGet("", async (LeagueService leagueService) =>
+            league.MapGet("", async (int? page, int? pageSize, LeagueService leagueService) =>
             {
-                var leagues = await leagueService.GetAllAsync();
-                return Results.Ok(leagues.Select(l => l.ToLeagueDto()).ToList());
+                var paged = await leagueService.GetPagedAsync(page ?? 1, pageSize ?? 20);
+
+                var result = new PagedResult<LeagueDto>(
+                    paged.Items.Select(l => l.ToLeagueDto()).ToList(),
+                    paged.Page,
+                    paged.PageSize,
+                    paged.TotalCount);
+
+                return Results.Ok(result);
             });
 
             league.MapPost("/add", async (LeagueRequest? request, ClaimsPrincipal user, LeagueService leagueService) =>

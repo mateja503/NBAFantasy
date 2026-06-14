@@ -182,3 +182,18 @@ CREATE TABLE nba.draftsnapshot (
     tsupdated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_draftsnapshot_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid) ON DELETE CASCADE
 );
+
+-- Indexes on the foreign-key / filter columns used by the hot queries. Postgres does NOT
+-- auto-index foreign keys (only primary keys and unique constraints), so these are the difference
+-- between an index seek and a full table scan once the tables grow.
+-- login (auth): filters team.userid, looks up applicationuser.username
+CREATE INDEX IF NOT EXISTS idx_team_userid ON nba.team(userid);
+CREATE INDEX IF NOT EXISTS idx_applicationuser_username ON nba.applicationuser(username);
+-- joins / league rosters: team.leagueid
+CREATE INDEX IF NOT EXISTS idx_team_leagueid ON nba.team(leagueid);
+-- draft / trade: teamplayer by team and by player
+CREATE INDEX IF NOT EXISTS idx_teamplayer_teamid ON nba.teamplayer(teamid);
+CREATE INDEX IF NOT EXISTS idx_teamplayer_playerid ON nba.teamplayer(playerid);
+-- free agency / league rosters: leagueplayer by league and by player
+CREATE INDEX IF NOT EXISTS idx_leagueplayer_leagueid ON nba.leagueplayer(leagueid);
+CREATE INDEX IF NOT EXISTS idx_leagueplayer_playerid ON nba.leagueplayer(playerid);
