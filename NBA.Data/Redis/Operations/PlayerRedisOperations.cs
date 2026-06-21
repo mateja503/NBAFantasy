@@ -108,8 +108,6 @@ namespace NBA.Data.Redis.Operations
             return processedPlayers;
         }
 
-       
-
         public async Task<HashSet<PlayerShort>> AddLeaguesAvailableDraftPlayers(long leagueId, List<PlayerShort> playerIds)
         {
             var redisKey = RedisKeys.GetLeaguesAvailablePlayersKey(leagueId);

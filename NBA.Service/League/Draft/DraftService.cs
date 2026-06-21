@@ -19,7 +19,7 @@ using PlayerData = NBA.Data.Entities.Player;
 namespace NBA.Service.League.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
-        IOptions<ApplicationOptions> appOptions,IOptions<JsonOptions> jsonOptions,
+        IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,
         NbaFantasyRedis redis, DraftSnapshotService snapshot)
     {
         private readonly NbaFantasyContext _context = context;
@@ -63,7 +63,7 @@ namespace NBA.Service.League.Draft
             {
                 case (long)DraftType.Snake:
 
-                    for (var i = 1; i <= _draftOptions.Rounds; i++) 
+                    for (var i = 1; i <= _draftOptions.Rounds; i++)
                     {
                         if (i % 2 == 0) draft.Add(i, new Queue<TeamDraftBoard>(teams.AsEnumerable()
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
@@ -104,12 +104,12 @@ namespace NBA.Service.League.Draft
             }
         }
 
-        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<TeamDraftBoard>> teams) 
+        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<TeamDraftBoard>> teams)
         {
             var currentRound = teams.Keys.FirstOrDefault();
             if (currentRound == 0) return null;
 
-            var onTheClockTeam = teams[currentRound].Select(t=> new TeamDraftBoard { TeamId = t.TeamId , TeamName = t.TeamName!, Pick = t.Pick }).FirstOrDefault();
+            var onTheClockTeam = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).FirstOrDefault();
             var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).Skip(1).Take(_draftOptions.ShowTeamDraftBoardCount).ToList();
 
             return new DraftBoardTeams
@@ -120,46 +120,71 @@ namespace NBA.Service.League.Draft
             };
         }
 
-        public async Task<PlayerData> DraftPlayer(long teamId, long playerId) 
+        public async Task<PlayerData> DraftPlayer(long teamId, long playerId)
         {
             var team = await _context.GetAllTeamPlayer()
                 .Where(u => u.Teamid == teamId)
-                .Include(u=>u.Player)
+                .Include(u => u.Player)
                 .ToListAsync();
 
-            if(team.Count + 1 > _appOptions.MaxPlayersPerTeam) 
+            if (team.Count + 1 > _appOptions.MaxPlayersPerTeam)
                 throw new NBAException("Team has reached maximum number of players", ErrorCodes.TeamMaxPlayersReached);
 
             var player = await _context.GetAllPlayers().FirstOrDefaultAsync(u => u.Playerid == playerId);
 
-            if (player is { Playerposition: (int)PlayerPositionEnum.C }) 
+            if (player is { Playerposition: (int)PlayerPositionEnum.C })
             {
-                var countPlayerCenters = team.Count(u=>u.Player.Playerposition == (int)PlayerPositionEnum.C);
+                var countPlayerCenters = team.Count(u => u.Player.Playerposition == (int)PlayerPositionEnum.C);
 
-                if(countPlayerCenters + 1 > _appOptions.CenterLimit) 
+                if (countPlayerCenters + 1 > _appOptions.CenterLimit)
                     throw new NBAException("Team has reached maximum number of centers", ErrorCodes.MaxCenterLimitReached);
 
-            }else throw new NBAException($"Player with id {playerId} does not exist",ErrorCodes.DataBaseRecordNotFound);
+            }
+            else throw new NBAException($"Player with id {playerId} does not exist", ErrorCodes.DataBaseRecordNotFound);
 
             _ = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
             return player;
         }
 
 
-        public async Task EndDraft(long leagueId) 
+        public async Task EndDraft(long leagueId)
         {
-            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid);
+            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid)
+                    ?? throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
-            if (league is null)
-                throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
+            if (league.Draftcompleted == true) return;
 
-            league.Draftcompleted = true;
+            var draftedPerTeam = await _redis.Draft.GetAllTeamsDraftedPlayersForLeague(leagueId);
+            var teamPlayers = draftedPerTeam
+                .SelectMany(kvp => kvp.Value.Select(p => new Teamplayer { Teamid = kvp.Key, Playerid = p.PlayerId ?? 0 }))
+                .ToList();
 
-            await _context.UpdateLeague(league);
+
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
+            {
+                await using var tx = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    if (teamPlayers.Count > 0)
+                        await _context.AddTeamPlayerRange(teamPlayers);
+
+                    league.Draftcompleted = true;
+                    await _context.UpdateLeague(league);
+
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
+            });
         }
 
 
-        public async Task<bool> CheckDraftCompleted(long leagueId) 
+        public async Task<bool> CheckDraftCompleted(long leagueId)
         {
             var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid);
 

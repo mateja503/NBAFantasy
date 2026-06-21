@@ -56,6 +56,8 @@ namespace NBA.Service.Player
 
             return state;
         }
+
+     
         public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
         {
             

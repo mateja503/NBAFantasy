@@ -112,6 +112,12 @@ namespace NBA.Data.Redis.Operations
             return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(value.ToString(), _jsonOptions) : null;
         }
 
+        public async Task<Dictionary<long, List<PlayerShort>>> GetAllTeamsDraftedPlayersForLeague(long leagueId)
+        {
+            var state = await GetCurrentDraftState(leagueId);
+            return state?.DraftedPlayersPerTeam ?? new Dictionary<long, List<PlayerShort>>();
+        }
+
         // Acquires a short-lived per-league lock so that only one actor can advance the draft
         // at a time (e.g. the pick timer firing at the same instant a user makes a manual pick,
         // or two Hangfire servers racing). Returns a token to release, or null if the lock is held.

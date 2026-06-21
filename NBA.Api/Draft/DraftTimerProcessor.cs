@@ -72,7 +72,7 @@ namespace NBA.Api.Draft
 
                     if (state!.DraftBoardTeams == null)
                     {
-                        await _draftService.EndDraft(leagueId);
+                        await _draftManager.EndDraft(leagueId);
                         await _redis.Draft.CancelDraftTimer(leagueId);
                         return;
                     }

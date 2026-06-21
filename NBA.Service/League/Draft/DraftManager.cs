@@ -1,5 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
