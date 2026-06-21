@@ -46,16 +46,7 @@ namespace NBA.Service.Player
 
             await _redis.Player.AddTeamsDrafterPlayer(teamId, playerId);
         }
-        public async Task<DraftState> AddTeamsDrafterPlayersToDraftState(DraftState state) 
-        {
-            var teamId = state.DraftBoardTeams!.onTheClockTeam!.TeamId;
-            var teamsDraftedPlayers = await _redis.Player.GetTeamsDraftedPlayers(teamId);
-
-            if (teamsDraftedPlayers is not null)
-                state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers;
-
-            return state;
-        }
+    
 
      
         public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 

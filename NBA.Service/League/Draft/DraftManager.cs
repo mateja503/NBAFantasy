@@ -120,6 +120,17 @@ namespace NBA.Service.League.Draft
             return saved;
         }
 
+        public async Task<DraftState> AddTeamsDrafterPlayersToDraftState(DraftState state)
+        {
+            var teamId = state.DraftBoardTeams!.onTheClockTeam!.TeamId;
+            var teamsDraftedPlayers = await _redis.Player.GetTeamsDraftedPlayers(teamId);
+
+            if (teamsDraftedPlayers is not null)
+                state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers;
+
+            return state;
+        }
+
         // Arms (or re-arms) the pick deadline. Shared by the processor and the hub so the timer is
         // scheduled the same way no matter who advanced the draft. Clamp to >= 1s so a misconfigured
         // DraftPickTime (<= 0) can't make the deadline immediately due and spin the timer poller.
