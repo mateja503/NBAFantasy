@@ -36,7 +36,14 @@ namespace NBA.Data.Redis.Keys
         public static string GetMasterPlayerKey() => $"nba:master:players";
         public static string GetLeaguesDraftedPlayersKey(long leagueid) => $"nba:drafted:players:league:{leagueid}";
         public static string GetLeaguesAvailablePlayersKey(long leagueid) => $"nba:available:players:league:{leagueid}";
-        public static string GetTeamsDraftedPlayersKey(long teamId) => $"nba:players:league:team:{teamId}"; 
+        public static string GetTeamsDraftedPlayersKey(long teamId) => $"nba:players:league:team:{teamId}";
+
+        #endregion
+
+        #region Trade
+
+        public static string GetProposedDraftTradesKey(long leagueId) => $"draft:trade:proposed:{leagueId}";
+        public static string GetAcceptedDraftTradeKey(long leagueId) => $"draft:trade:accepted:{leagueId}";
 
         #endregion
     }

@@ -25,4 +25,8 @@
     <Folder Include="Entities\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ApplicationDefaults\ApplicationDefaults.csproj" />
+  </ItemGroup>
+
 </Project>

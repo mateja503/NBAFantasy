@@ -13,6 +13,7 @@ namespace NBA.Data.Context
         private readonly Lazy<DraftRedisOperations> _draft;
         private readonly Lazy<PlayerRedisOperations> _player;
         private readonly Lazy<AuthRedisOperations> _auth;
+        private readonly Lazy<TradeRedisOperations> _trade;
         private readonly Lazy<LockRedisOperations> _lock;
 
         public NbaFantasyRedis(IConnectionMultiplexer redis)
@@ -23,12 +24,15 @@ namespace NBA.Data.Context
             _player = new Lazy<PlayerRedisOperations>(() => new PlayerRedisOperations(_redisDb, RedisSerializer.Options));
             _auth = new Lazy<AuthRedisOperations>(() => new AuthRedisOperations(_redisDb));
             _lock = new Lazy<LockRedisOperations>(() => new LockRedisOperations(_redisDb));
+            _trade = new Lazy<TradeRedisOperations>(() => new TradeRedisOperations(_redisDb, RedisSerializer.Options));
         }
 
         public DraftRedisOperations Draft => _draft.Value;
         public PlayerRedisOperations Player => _player.Value;
         public AuthRedisOperations Auth => _auth.Value;
         public LockRedisOperations Lock => _lock.Value;
+
+        public TradeRedisOperations Trade => _trade.Value;
 
     }
 }
