@@ -54,12 +54,12 @@ namespace NBA.Data.Redis.Operations
         // ZRANGEBYSCORE + ZREM in a single Lua script so two app instances can't claim the same
         // timer. This is the scalable replacement for Hangfire polling Postgres every second.
         private const string ClaimDueTimerScript = @"
-local due = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, 1)
-if due[1] then
-  redis.call('ZREM', KEYS[1], due[1])
-  return due[1]
-end
-return false";
+                    local due = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, 1)
+                    if due[1] then
+                      redis.call('ZREM', KEYS[1], due[1])
+                      return due[1]
+                    end
+                    return false";
 
         // Schedules (or reschedules) the pick deadline for a league. ZADD updates the score if the
         // league is already present, so 'reset timer' needs no separate delete.

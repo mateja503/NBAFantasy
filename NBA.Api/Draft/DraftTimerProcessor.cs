@@ -87,14 +87,5 @@ namespace NBA.Api.Draft
                 await _redis.Draft.ReleaseDraftCycleLock(leagueId, lockToken);
             }
         }
-
-        // Arms (or re-arms) the pick deadline. Shared by the processor and the hub so the timer is
-        // scheduled the same way no matter who advanced the draft. Clamp to >= 1s so a misconfigured
-        // DraftPickTime (<= 0) can't make the deadline immediately due and spin the timer poller.
-        //public Task ArmNextDeadlineAsync(long leagueId)
-        //{
-        //    var seconds = Math.Max(1, _draftOptions.DraftPickTime);
-        //    return _redis.Draft.ScheduleDraftTimer(leagueId, DateTimeOffset.UtcNow.AddSeconds(seconds));
-        //}
     }
 }

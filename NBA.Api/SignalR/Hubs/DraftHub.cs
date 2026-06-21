@@ -21,12 +21,6 @@ namespace NBA.Api.SignalR.Hubs
         private readonly PlayerManager _playerManager = playerManager;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
 
-        //private Task ArmPickDeadline(long leagueId)
-        //{
-        //    // Clamp to >= 1s so a misconfigured DraftPickTime can't schedule an already-due deadline.
-        //    var seconds = Math.Max(1, _draftOptions.DraftPickTime);
-        //    return _redis.Draft.ScheduleDraftTimer(leagueId, DateTimeOffset.UtcNow.AddSeconds(seconds));
-        //}
         // 1. Send state to a user the moment they connect/refresh
         public override async Task OnConnectedAsync()
         {
