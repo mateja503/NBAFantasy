@@ -1,4 +1,6 @@
+using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
@@ -46,6 +48,12 @@ namespace NBA.Service.League.Draft
         // flush never causes the draft order to be regenerated (which would reshuffle picks).
         public async Task<bool> EnsureRehydratedAsync(long leagueId)
         {
+            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(u => u.Leagueid == leagueId)
+                ?? throw new NBAException("Missing league", ErrorCodes.DataBaseRecordNotFound);
+
+            if (league.Draftcompleted ?? false) return false;
+
+
             // Check BOTH keys: Redis can evict them independently under a maxmemory policy, and
             // recovering only on missing state would let an evicted teams key slip through and cause
             // DraftService.DraftOrder to regenerate (reshuffle) the order.

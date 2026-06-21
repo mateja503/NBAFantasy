@@ -44,8 +44,7 @@ namespace NBA.Api.Endpoints
 
                 await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
 
-
-                return Results.Ok();
+                return Results.Ok(state);
             });
 
 
