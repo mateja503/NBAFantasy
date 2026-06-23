@@ -19,6 +19,9 @@
     <PackageReference Include="Npgsql" Version="10.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
     <PackageReference Include="StackExchange.Redis.Extensions.Core" Version="12.1.0" />
+    <!-- Pin transitive packages to patched versions to address known vulnerabilities -->
+    <PackageReference Include="MessagePack" Version="2.5.302" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.9" />
   </ItemGroup>
 
   <ItemGroup>

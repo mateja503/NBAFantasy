@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Redis.Entities;
 using PlayerData = NBA.Data.Entities.Player;
 namespace NBA.Service.League.Trade
 {
