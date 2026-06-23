@@ -2,6 +2,7 @@
 
 namespace NBA.Service
 {
+    //TODO eather use BoxScoreEvaluation of use each leagues own custom configuration about the box score avaluation.
     public static class BoxScoreEvaluation
     {
         public const decimal Points = 1.0m;

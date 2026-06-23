@@ -26,13 +26,13 @@ namespace NBA.Service.Player
 
         public async Task AddPlayersToRedis(List<PlayerInfoResponse> players)
         {
-            var playersToRedis = Addapter.ToPlayerRedis(players);
+            var playersToRedis = Adapter.ToPlayerRedis(players);
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 
         public async Task AddPlayerToRedisFromDB(List<PlayerData> players)
         {
-            var playersToRedis = Addapter.ToPlayerRedisFromDB(players);
+            var playersToRedis = Adapter.ToPlayerRedisFromDB(players);
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 

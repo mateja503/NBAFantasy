@@ -8,7 +8,7 @@ using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service
 {
-    public static class Addapter
+    public static class Adapter
     {
         public static List<PlayerData> ToPlayerDb(List<PlayerInfoResponse> playersInfo)
         {

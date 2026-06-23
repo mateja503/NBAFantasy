@@ -5,9 +5,9 @@ using Xunit;
 
 namespace NBA.Tests
 {
-    // Pure mapping logic in NBA.Service.Addapter is the cheapest high-value thing to lock down:
+    // Pure mapping logic in NBA.Service.Adapter is the cheapest high-value thing to lock down:
     // the position string -> enum -> string round trip is easy to break and has no DB dependency.
-    public class AddapterTests
+    public class AdapterTests
     {
         [Theory]
         [InlineData("G", (int)PlayerPositionEnum.G)]
@@ -26,7 +26,7 @@ namespace NBA.Tests
                 new() { id = 1, first_name = "Test", last_name = "Player", position = position }
             };
 
-            var result = Addapter.ToPlayerDb(input);
+            var result = Adapter.ToPlayerDb(input);
 
             Assert.Single(result);
             Assert.Equal(expected, result[0].Playerposition);
@@ -56,7 +56,7 @@ namespace NBA.Tests
                 }
             };
 
-            var player = Assert.Single(Addapter.ToPlayerDb(input));
+            var player = Assert.Single(Adapter.ToPlayerDb(input));
 
             Assert.Equal(237, player.Playerid);
             Assert.Equal("LeBron", player.Name);
@@ -73,7 +73,7 @@ namespace NBA.Tests
                 new() { id = 5, first_name = "No", last_name = "Team", position = "C", team = null }
             };
 
-            var player = Assert.Single(Addapter.ToPlayerDb(input));
+            var player = Assert.Single(Adapter.ToPlayerDb(input));
 
             Assert.Null(player.Irlteamname);
             Assert.Null(player.Irlteamid);
@@ -82,12 +82,12 @@ namespace NBA.Tests
         [Fact]
         public void ToPlayerRedisFromDB_round_trips_position_back_to_string()
         {
-            var dbPlayers = Addapter.ToPlayerDb(new List<PlayerInfoResponse>
+            var dbPlayers = Adapter.ToPlayerDb(new List<PlayerInfoResponse>
             {
                 new() { id = 9, first_name = "Jrue", last_name = "Holiday", position = "G-F" }
             });
 
-            var redis = Addapter.ToPlayerRedisFromDB(dbPlayers);
+            var redis = Adapter.ToPlayerRedisFromDB(dbPlayers);
 
             var entry = Assert.Single(redis);
             Assert.Equal(9, entry.PlayerId);
@@ -98,7 +98,7 @@ namespace NBA.Tests
         [Fact]
         public void ToPlayerRedis_builds_full_name_from_response()
         {
-            var redis = Addapter.ToPlayerRedis(new List<PlayerInfoResponse>
+            var redis = Adapter.ToPlayerRedis(new List<PlayerInfoResponse>
             {
                 new() { id = 3, first_name = "Stephen", last_name = "Curry", position = "G" }
             });

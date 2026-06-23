@@ -24,7 +24,7 @@ namespace NBA.Service.Player
         {
             var externalPlayers = await _ballDontLieClient.GetAllPlayers(metadata, cancellationToken);
             var filteredPlayers = PlayerFilter.FilterNonActivePlayers(externalPlayers.data);
-            var players = Addapter.ToPlayerDb(filteredPlayers);
+            var players = Adapter.ToPlayerDb(filteredPlayers);
             await _nbaContext.AddPlayers(players, cancellationToken);
             return externalPlayers;
         }
