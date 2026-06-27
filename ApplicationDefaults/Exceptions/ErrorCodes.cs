@@ -16,12 +16,14 @@ namespace ApplicationDefaults.Exceptions
 
         #region Specific
         public const string TradeCantBeExecuted = "5656-TRADECANTBEEXECUTED";
+        public const string TradeIsNotValid = "5656-TRADEISNOTVALID";
         public const string MaxCenterLimitReached = "5656-MAXCENTERLIMITREACHED";
         public const string TeamMaxPlayersReached = "5656-TEAMMAXPLAYERSREACHED";
         public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
         public const string LoginFailed = "5656-LOGINFAILED";
         public const string UsernameAlreadyExists = "5656-USERNAMEALREADYEXISTS";
         public const string DraftAlreadyStarted = "5656-DRAFTALREADYSTARTED";
+        public const string DraftNotStarted = "5656-DRAFTNOTSTARTED";
         public const string DraftCompleted = "5656-DRAFTCOMPLETED";  
 
 

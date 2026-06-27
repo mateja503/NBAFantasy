@@ -124,7 +124,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/draftHub") || path.StartsWithSegments("/chatHub")))
+                    (path.StartsWithSegments("/draftHub") || path.StartsWithSegments("/chatHub")
+                        || path.StartsWithSegments("/tradeHub")))
                 {
                     context.Token = accessToken;
                 }
@@ -163,6 +164,7 @@ builder.Services.AddScoped<DraftService>();
 builder.Services.AddScoped<DraftManager>();
 builder.Services.AddScoped<DraftSnapshotService>();
 builder.Services.AddScoped<TradeService>();
+builder.Services.AddScoped<TradeManager>();
 builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<TeamService>();
@@ -222,6 +224,7 @@ app.UseHangfireDashboard();
 #region HUBS
 app.MapHub<ChatHub>("/chatHub");
 app.MapHub<DraftHub>("/draftHub");
+app.MapHub<TradeHub>("/tradeHub");
 
 #endregion
 
