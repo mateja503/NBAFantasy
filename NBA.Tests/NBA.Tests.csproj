@@ -8,11 +8,22 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
+  <!-- Needed to build an in-test WebApplication/TestServer that hosts the SignalR TradeHub. -->
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <!-- Integration tests for the trade hub (Docker-dependent; the pure-unit tests above stay Docker-free). -->
+    <PackageReference Include="Testcontainers.Redis" Version="4.12.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
+    <!-- Stands in for Postgres so the accept-trade draft/snapshot chain runs without a DB container. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>

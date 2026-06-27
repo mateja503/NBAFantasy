@@ -57,26 +57,42 @@ namespace NBA.Data.Redis.Operations
                 .ToList();
         }
 
+        // Reads a proposed trade by id without removing it, so callers can validate before consuming.
+        public async Task<TradeBetweenTeams?> GetProposedTrade(long leagueId, Guid tradeId)
+        {
+            var redisKey = RedisKeys.GetProposedDraftTradesKey(leagueId);
+
+            var allTrades = await _redisDb.SortedSetRangeByRankAsync(redisKey, 0, -1);
+
+            foreach (var entry in allTrades.Where(t => !t.IsNull))
+            {
+                var trade = JsonSerializer.Deserialize<TradeBetweenTeams>(entry.ToString(), _jsonOptions);
+                if (trade?.TradeId == tradeId) return trade;
+            }
+
+            return null;
+        }
+
         public async Task<TradeBetweenTeams?> RemoveProposedTrade(long leagueId, Guid tradeId)
         {
             var redisKey = RedisKeys.GetProposedDraftTradesKey(leagueId);
 
-            var transaction = _redisDb.CreateTransaction();
+            // The sorted-set member is the full trade JSON (see SetProposedTrade), not the trade id, so
+            // we have to find the member whose deserialized TradeId matches and remove that exact member.
+            var allTrades = await _redisDb.SortedSetRangeByRankAsync(redisKey, 0, -1);
 
-            var task = transaction.SortedSetRangeByRankAsync(redisKey, 0, -1);
-            var removeTask = transaction.SortedSetRemoveAsync(redisKey, tradeId.ToString());
-
-            if (await transaction.ExecuteAsync())
+            foreach (var entry in allTrades.Where(t => !t.IsNull))
             {
-                var trades = await task;
-                var tradeJson = trades
-                    .FirstOrDefault(t => t.ToString().Contains(tradeId.ToString())).ToString();
+                var trade = JsonSerializer.Deserialize<TradeBetweenTeams>(entry.ToString(), _jsonOptions);
 
-                return tradeJson == null ? null : JsonSerializer.Deserialize<TradeBetweenTeams>(tradeJson, _jsonOptions);
+                if (trade?.TradeId == tradeId)
+                {
+                    await _redisDb.SortedSetRemoveAsync(redisKey, entry);
+                    return trade;
+                }
             }
 
             return null;
-
         }
 
     }
