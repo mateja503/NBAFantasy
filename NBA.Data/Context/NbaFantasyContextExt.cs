@@ -121,8 +121,8 @@ namespace NBA.Data.Context
         #endregion
 
       
-        #region Team         
-        public IQueryable<Team> GetAllTeams() 
+        #region Team
+        public IQueryable<Team> GetAllTeams()
         {
             return Teams.AsQueryable();
         }

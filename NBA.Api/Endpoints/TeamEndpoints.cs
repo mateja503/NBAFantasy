@@ -16,6 +16,12 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(created.ToTeamDto());
             });
 
+            team.MapGet("/get-leagues-teams/{leagueId}", async (long leagueId, TeamService teamService) =>
+            {
+                var teams = await teamService.GetLeagueTeamsAsync(leagueId);
+                return Results.Ok(teams.Select(t => t.ToTeamDto()));
+            });
+
             return team;
         }
     }
