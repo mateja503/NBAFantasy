@@ -153,6 +153,17 @@ namespace NBA.Data.Redis.Operations
             await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
         }
 
+        // Overwrites a team's drafted-players set with exactly the given ids. Used after a trade, where a
+        // swap needs remove-and-add rather than the append-only AddTeamsDrafterPlayer.
+        public async Task ReplaceTeamsDraftedPlayers(long teamId, IEnumerable<long> playerIds)
+        {
+            var redisKey = RedisKeys.GetTeamsDraftedPlayersKey(teamId);
+            await _redisDb.KeyDeleteAsync(redisKey);
+            var ids = playerIds.Select(id => (RedisValue)id).ToArray();
+            if (ids.Length > 0) await _redisDb.SetAddAsync(redisKey, ids);
+            await _redisDb.KeyExpireAsync(redisKey, TimeSpan.FromDays(30));
+        }
+
         public async Task AddLeaguesDraftedPlayer(long leagueId, long playerId, int pick)
         {
             var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueId);

@@ -2,14 +2,20 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Redis.Entities;
+using NBA.Service.League.Draft;
 using NBA.Service.League.Trade;
+using NBA.Service.Player;
 
 namespace NBA.Api.SignalR.Hubs
 {
     [Authorize]
-    public class TradeHub(TradeManager tradeManager) : Hub<ITradeHubClient>
+    public class TradeHub(TradeManager tradeManager, DraftManager draftManager,
+        PlayerManager playerManager, IHubContext<DraftHub, IDraftHubClient> draftHub) : Hub<ITradeHubClient>
     {
         private readonly TradeManager _tradeManager = tradeManager;
+        private readonly DraftManager _draftManager = draftManager;
+        private readonly PlayerManager _playerManager = playerManager;
+        private readonly IHubContext<DraftHub, IDraftHubClient> _draftHub = draftHub;
 
         // The client opens the connection; here we subscribe it to the groups that trade
         // requests are routed to — the league group and the connecting team's group.
@@ -36,6 +42,7 @@ namespace NBA.Api.SignalR.Hubs
         {
             var trade = new TradeBetweenTeams
             {
+                TradeId = Guid.NewGuid(),
                 FromTeam = fromTeam,
                 ToTeam = toTeam,
                 PlayersIds = playersIds,
@@ -54,6 +61,14 @@ namespace NBA.Api.SignalR.Hubs
         public async Task AcceptTrade(long leagueId, Guid tradeId)
         {
             var trade = await _tradeManager.AcceptDraftTrade(leagueId, tradeId);
+
+            // Rebuild the same DraftState shape DraftHub broadcasts — repopulate the available board so we
+            // don't blank it out on clients — and push it to the draft group so both teams' rosters refresh
+            // live without a page refresh. This touches only draft:state, never the draft:timers set, so
+            // the pick clock is untouched.
+            var state = await _draftManager.GetDraftState(leagueId);
+            state!.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
+            await _draftHub.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
 
             await Clients.Group($"league:trade:{leagueId}").ReceiveTradeAccepted(trade!);
         }

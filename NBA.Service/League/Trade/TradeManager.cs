@@ -59,8 +59,13 @@ namespace NBA.Service.League.Trade
             draftState.DraftedPlayersPerTeam[trade.FromTeam] = newFromPlayers;
             draftState.DraftedPlayersPerTeam[trade.ToTeam] = newToPlayers;
 
-            //TODO need to add the new players acquire in the draft in redis for for drafted team playes.
             await _draftManager.UpdaterDraftState(leagueId, draftState);
+
+            // Keep the per-team roster sets in sync with the swap. Without this, a later pick by either
+            // team would rebuild its DraftedPlayersPerTeam entry from the stale set (see
+            // DraftManager.AddTeamsDrafterPlayersToDraftState) and silently revert the trade.
+            //await _redis.Player.ReplaceTeamsDraftedPlayers(trade.FromTeam, newFromPlayers.Select(p => p.PlayerId ?? 0));
+            //await _redis.Player.ReplaceTeamsDraftedPlayers(trade.ToTeam, newToPlayers.Select(p => p.PlayerId ?? 0));
 
             // Swap succeeded — now consume the proposal and record it as accepted.
             await _redis.Trade.RemoveProposedTrade(leagueId, tradeId);
