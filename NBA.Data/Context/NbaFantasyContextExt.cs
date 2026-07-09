@@ -35,6 +35,27 @@ namespace NBA.Data.Context
 
         public async Task UpsertDraftSnapshot(Draftsnapshot snapshot)
         {
+
+            //This fixed my problem fix in future
+
+            // Atomic upsert on the real (Postgres) database: concurrent DraftHub connections for the
+            // same league would otherwise race a non-atomic SELECT-then-INSERT and collide on the
+            // leagueid primary key (Postgres 23505 duplicate key). ON CONFLICT lets the loser
+            // harmlessly overwrite. Raw SQL is relational-only, so the integration tests' EF InMemory
+            // provider falls back to the tracked add/update path (no concurrency there to guard).
+            if (Database.IsRelational())
+            {
+                await Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO nba.draftsnapshot (leagueid, draftstate, draftteams, tsupdated)
+                    VALUES ({snapshot.Leagueid}, {snapshot.Draftstate}, {snapshot.Draftteams}, {snapshot.Tsupdated})
+                    ON CONFLICT (leagueid) DO UPDATE
+                    SET draftstate = EXCLUDED.draftstate,
+                        draftteams = EXCLUDED.draftteams,
+                        tsupdated  = EXCLUDED.tsupdated;");
+                return;
+            }
+
+
             var existing = await Draftsnapshots.SingleOrDefaultAsync(s => s.Leagueid == snapshot.Leagueid);
             if (existing is null)
             {
