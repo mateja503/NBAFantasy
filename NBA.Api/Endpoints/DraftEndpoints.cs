@@ -38,9 +38,11 @@ namespace NBA.Api.Endpoints
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
-                await draftManager.EndDraft(request.LeagueId.Value);
+                // Build the payload before EndDraft removes the Redis keys, so clients keep the league
+                // name and the drafted rosters instead of receiving an empty shell.
+                var state = await draftManager.BuildEndedState(request.LeagueId.Value);
 
-                var state = new DraftState { DraftStatus = (int)DraftStatus.DraftEnded};
+                await draftManager.EndDraft(request.LeagueId.Value);
 
                 await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
 

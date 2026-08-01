@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
+using NBA.Data.Redis.Enumerations;
 using NBA.Service.League.Draft;
 using NBA.Service.Player;
 
@@ -27,11 +28,24 @@ namespace NBA.Api.SignalR.Hubs
             var httpContext = Context.GetHttpContext();
             var leagueIdString = long.TryParse(httpContext?.Request.Query["leagueId"], out long leagueId);
 
-            await _draftService.CheckDraftCompleted(leagueId);
+            var isDraftCompleted = await _draftService.CheckDraftCompleted(leagueId);
 
             if (leagueIdString)
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, leagueId.ToString());
+            }
+
+            // Refreshing the page after the draft finished must show the ended state. Falling through
+            // would call DraftOrder, which — the order having been deleted by EndDraft — would generate a
+            // brand new randomized draft order for a finished league and re-persist a snapshot row.
+            if (isDraftCompleted)
+            {
+                var endedState = await _draftManager.BuildEndedState(leagueId);
+                //endedState.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
+
+                await Clients.Caller.UpdateDraftState(endedState);
+                await base.OnConnectedAsync();
+                return;
             }
 
             var state = await _draftManager.GetDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
@@ -68,7 +82,19 @@ namespace NBA.Api.SignalR.Hubs
 
             state = await _draftManager.AddTeamsDrafterPlayersToDraftState(state);
 
-            await _draftManager.NextPick(state, leagueId);
+            state = await _draftManager.NextPick(state, leagueId) ?? state;
+
+            // That was the last pick of the last round: finalise, push the cleared board out, and leave
+            // the timer disarmed. EndDraft flushes the drafted rosters into Postgres, so it has to run
+            // after AddDraftedPlayers/AddTeamsDrafterPlayersToDraftState have populated Redis. Note the
+            // available-players board is deliberately not refreshed here — NextPick already cleared it,
+            // and GetPlayersOnDraftBoard would rebuild the very Redis key EndDraft is about to delete.
+            if (state.DraftStatus == (int)DraftStatus.DraftEnded)
+            {
+                await _draftManager.EndDraft(leagueId);
+                await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
+                return;
+            }
 
             state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
 

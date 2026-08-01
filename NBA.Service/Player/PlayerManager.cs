@@ -42,9 +42,13 @@ namespace NBA.Service.Player
 
             var draftState = await _redis.Draft.GetCurrentDraftState(leagueId);
 
-            var teamId = draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId;
+            if (draftState?.DraftBoardTeams is not null) 
+            {
+                var teamId = draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId;
+                await _redis.Player.AddTeamsDrafterPlayer(teamId, playerId);
 
-            await _redis.Player.AddTeamsDrafterPlayer(teamId, playerId);
+            }
+
         }
     
 

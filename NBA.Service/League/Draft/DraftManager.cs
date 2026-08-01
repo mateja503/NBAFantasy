@@ -69,11 +69,58 @@ namespace NBA.Service.League.Draft
             // Remove any pending pick deadline from the timer sorted set.
             await _redis.Draft.CancelDraftTimer(leagueId);
 
+            // Writes the drafted rosters into Postgres — it reads DraftedPlayersPerTeam off draft:state,
+            // so it has to run before the Redis clean-up below.
             await _draftService.EndDraft(leagueId);
+
+            // The draft board, the available player pool and the per-team roster sets are draft-time
+            // scratch data; once the rosters are in Teamplayer there is nothing left to draft from.
+            var teamIds = await _context.GetAllTeams()
+                .Where(t => t.Leagueid == leagueId)
+                .Select(t => t.Teamid)
+                .ToListAsync();
+
+            await _redis.Player.DeleteLeagueDraftPlayers(leagueId, teamIds);
 
             _ = await _redis.Draft.DeleteStringDraftState(leagueId);
             await _redis.Draft.DeleteDraftTeams(leagueId);
             await _snapshot.DeleteAsync(leagueId);
+        }
+
+        // Strips a state down to the single shape clients get once a draft is over: status DraftEnded,
+        // no board (so no team is left sitting on the clock), no available players, no drafted rosters,
+        // and a deadline in the past so the displayed clock settles on 00:00.
+        //
+        // Called from NextPick when the draft order runs out — the last pick of the last round — and
+        // from BuildEndedState, which serves both the end-draft endpoint and a client reconnecting to
+        // an already-finished draft. Between them those cover every way a draft ends.
+        public static void MarkEnded(DraftState state)
+        {
+            state.DraftStatus = (int)DraftStatus.DraftEnded;
+            state.DraftBoardTeams = null;
+            state.DraftPlayers = null;
+            state.DraftedPlayersPerTeam = null;
+            state.PickEndTime = DateTime.UtcNow;
+
+        }
+
+        // Builds the payload announcing a finished draft, reusing the live state when there still is one
+        // so the league name and drafted rosters survive. Deliberately writes nothing back to Redis or
+        // the snapshot table — EndDraft removes those keys and a finished draft must not resurrect them.
+        public async Task<DraftState> BuildEndedState(long leagueId)
+        {
+            var state = await _redis.Draft.GetCurrentDraftState(leagueId);
+
+            if (state is null)
+            {
+                var leagueName = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId)
+                    .Select(u => u.Name).SingleOrDefaultAsync();
+
+                state = new DraftState { LeagueName = leagueName ?? "NO LEAGUE" };
+            }
+
+            MarkEnded(state);
+            return state;
         }
 
         public async Task<DraftState?> NextPick(DraftState state, long leagueId)
@@ -103,16 +150,23 @@ namespace NBA.Service.League.Draft
                 }
                 else
                 {
-                    await EndDraft(leagueId);
-                    state.DraftStatus = (int)DraftStatus.DraftEnded;
+                    // No round left to pull a team from — the order is exhausted.
                     break;
-                    //state.IsDraftStarted = true;
                 }
             }
 
             await _redis.Draft.SetDraftTeams(draftTeams, leagueId);
 
-            state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
+            // An emptied order means that was the last pick of the last round. Flag it here rather than a
+            // tick later, and let the caller run EndDraft once the advanced state has been persisted —
+            // ending it from inside this method deleted the Redis keys that the writes below recreate.
+            // Note this is the reliable signal: PrepareDraftBoard also returns null for an Offline draft
+            // (round key 0), which is not the same thing.
+            if (draftTeams.Count == 0)
+                MarkEnded(state);
+            else
+                state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
+
             var saved = await _redis.Draft.SetDraftState(leagueId, state);
 
             // Checkpoint the advanced state + remaining order.

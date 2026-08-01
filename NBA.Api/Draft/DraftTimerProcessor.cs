@@ -70,10 +70,13 @@ namespace NBA.Api.Draft
                 {
                     state = await _draftManager.NextPick(state, leagueId);
 
-                    if (state!.DraftBoardTeams == null)
+                    if (state!.DraftStatus == (int)DraftStatus.DraftEnded)
                     {
+                        // EndDraft also cancels the pending deadline. Tell the clients before returning —
+                        // this used to bail out silently, so the UI never learned the draft was over.
                         await _draftManager.EndDraft(leagueId);
-                        await _redis.Draft.CancelDraftTimer(leagueId);
+                        await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
+                        // Deliberately no ArmNextDeadlineAsync — there is nothing left to pick.
                         return;
                     }
                 }

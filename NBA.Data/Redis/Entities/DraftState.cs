@@ -16,6 +16,6 @@ namespace NBA.Data.Redis.Entities
         //public bool? IsDraftCompleted { get; set; } = false;
         public DraftBoardTeams? DraftBoardTeams { get; set; }
         public List<PlayerShort>? DraftPlayers { get; set; }
-        public Dictionary<long, List<PlayerShort>> DraftedPlayersPerTeam { get; set; } = new Dictionary<long, List<PlayerShort>>();
+        public Dictionary<long, List<PlayerShort>>? DraftedPlayersPerTeam { get; set; } = new Dictionary<long, List<PlayerShort>>();
     }
 }

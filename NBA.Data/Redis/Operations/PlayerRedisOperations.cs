@@ -177,6 +177,23 @@ namespace NBA.Data.Redis.Operations
             return redisValues.Select(v => (long)v).ToHashSet();
         }
 
+        // Clears every draft-time player key for a finished league in one round trip: the available
+        // pool that backs DraftState.DraftPlayers, the league's pick-ordered drafted set, and each
+        // team's roster set. By the time this runs the rosters have been written to Postgres
+        // (Teamplayer) by DraftService.EndDraft, so nothing here is the last copy.
+        public Task DeleteLeagueDraftPlayers(long leagueId, IEnumerable<long> teamIds)
+        {
+            var redisKeys = new List<RedisKey>
+            {
+                RedisKeys.GetLeaguesAvailablePlayersKey(leagueId),
+                RedisKeys.GetLeaguesDraftedPlayersKey(leagueId),
+            }; 
+
+            redisKeys.AddRange(teamIds.Select(teamId => (RedisKey)RedisKeys.GetTeamsDraftedPlayersKey(teamId)));
+
+            return _redisDb.KeyDeleteAsync(redisKeys.ToArray());
+        }
+
         public async Task<bool> IsPlayerDrafted(long leagueId, long playerId)
         {
             var redisKey = RedisKeys.GetLeaguesDraftedPlayersKey(leagueId);
