@@ -99,7 +99,8 @@ namespace NBA.Service.League.Draft
             state.DraftStatus = (int)DraftStatus.DraftEnded;
             state.DraftBoardTeams = null;
             state.DraftPlayers = null;
-            state.DraftedPlayersPerTeam = null;
+            //if this is set the player don't get written in postgres 
+            //state.DraftedPlayersPerTeam = null;
             state.PickEndTime = DateTime.UtcNow;
 
         }

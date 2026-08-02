@@ -21,6 +21,7 @@ namespace ApplicationDefaults.Exceptions
         public const string TeamMaxPlayersReached = "5656-TEAMMAXPLAYERSREACHED";
         public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
         public const string LoginFailed = "5656-LOGINFAILED";
+        public const string UserIdMismatch = "5656-USERIDMISMATCH";
         public const string UsernameAlreadyExists = "5656-USERNAMEALREADYEXISTS";
         public const string DraftAlreadyStarted = "5656-DRAFTALREADYSTARTED";
         public const string DraftNotStarted = "5656-DRAFTNOTSTARTED";

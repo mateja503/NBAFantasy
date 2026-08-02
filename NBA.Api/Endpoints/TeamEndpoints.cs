@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using ApplicationDefaults.Exceptions;
+using NBA.Api.Authentication;
 using NBA.Api.Mappings;
 using NBA.Api.Requests.Team;
 using NBA.Service.League;
@@ -20,6 +23,17 @@ namespace NBA.Api.Endpoints
             {
                 var teams = await teamService.GetLeagueTeamsAsync(leagueId);
                 return Results.Ok(teams.Select(t => t.ToTeamDto()));
+            });
+
+            team.MapGet("/get-user-teams/{userId}", async (long userId, ClaimsPrincipal user, TeamService teamService) =>
+            {
+                // The client sends the id it holds in local storage, which is trivially editable, so it
+                // is only honoured when it matches the id the token was issued for.
+                if (user.GetUserId() != userId)
+                    throw new NBAException("Requested userId does not match the authenticated user", ErrorCodes.UserIdMismatch);
+
+                var teams = await teamService.GetUserTeamsWithPlayersAsync(userId);
+                return Results.Ok(teams.Select(kvp => kvp.Key.ToUserTeamDto(kvp.Value)));
             });
 
             return team;

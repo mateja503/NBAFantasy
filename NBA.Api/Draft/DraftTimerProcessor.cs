@@ -75,6 +75,8 @@ namespace NBA.Api.Draft
                         // EndDraft also cancels the pending deadline. Tell the clients before returning —
                         // this used to bail out silently, so the UI never learned the draft was over.
                         await _draftManager.EndDraft(leagueId);
+                        //clear it here because the drafted players are saved to postgress in EndDraft.
+                        state.DraftedPlayersPerTeam = null;
                         await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);
                         // Deliberately no ArmNextDeadlineAsync — there is nothing left to pick.
                         return;

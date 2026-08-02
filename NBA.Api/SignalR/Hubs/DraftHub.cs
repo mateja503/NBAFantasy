@@ -92,6 +92,8 @@ namespace NBA.Api.SignalR.Hubs
             if (state.DraftStatus == (int)DraftStatus.DraftEnded)
             {
                 await _draftManager.EndDraft(leagueId);
+                //has to be cleared after the end draft because this drafted players per team has to be saved in postrgres
+                state.DraftedPlayersPerTeam = null;
                 await Clients.Group(leagueId.ToString()).UpdateDraftState(state);
                 return;
             }

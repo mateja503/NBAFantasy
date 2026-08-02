@@ -56,7 +56,13 @@ echo "Seeding teams..."
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
      -c "SET search_path TO nba, public;" \
      -f "/scripts/seed/seed-teams.sql"
-	 
+
+# Depends on both seed-players and seed-teams having run, so it goes last.
+echo "Seeding teamplayers..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
+     -c "SET search_path TO nba, public;" \
+     -f "/scripts/seed/seed-teamplayers.sql"
+
 
 
 
