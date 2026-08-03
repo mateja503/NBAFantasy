@@ -1,3 +1,4 @@
+using NBA.Api.DTOs;
 using NBA.Api.Mappings;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
@@ -89,6 +90,14 @@ namespace NBA.Tests
                 Turnovers = 3.1m,
                 Fieldgoal = 0.453m,
                 Freethrow = 0.915m,
+                Irlteamid = 9,
+                Allowdrop = true,
+                Islock = false,
+                Rosterrole = 2,
+                Gameready = 1,
+                Playermemontoid = 77,
+                Tsupdated = new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc),
+                Tscreated = new DateTime(2020, 6, 7, 8, 9, 10, DateTimeKind.Utc),
             };
 
             var dto = player.ToPlayerDto();
@@ -107,6 +116,17 @@ namespace NBA.Tests
             Assert.Equal(3.1m, dto.Turnovers);
             Assert.Equal(0.453m, dto.Fieldgoal);
             Assert.Equal(0.915m, dto.Freethrow);
+            Assert.Equal(9, dto.Irlteamid);
+            Assert.True(dto.Allowdrop);
+            Assert.False(dto.Islock);
+            Assert.Equal(2, dto.Rosterrole);
+            Assert.Equal(1, dto.Gameready);
+            Assert.Equal(77, dto.Playermemontoid);
+            Assert.Equal(new DateTime(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc), dto.Tsupdated);
+
+            // Tscreated is the one nba.player column the DTO deliberately does not carry, so there
+            // is nothing on PlayerDto that could leak it.
+            Assert.Null(typeof(PlayerDto).GetProperty("Tscreated"));
         }
 
         [Theory]

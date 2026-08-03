@@ -36,7 +36,7 @@ namespace NBA.Api.Mappings
             Islock = e.Islock,
         };
 
-        public static PlayerDto ToPlayerDto(this Player e) => new()
+        public static PlayerDto ToPlayerDto(this Player e, long? leagueId = null) => new()
         {
             Playerid = e.Playerid,
             Name = e.Name,
@@ -52,6 +52,18 @@ namespace NBA.Api.Mappings
             Turnovers = e.Turnovers,
             Fieldgoal = e.Fieldgoal,
             Freethrow = e.Freethrow,
+            Irlteamid = e.Irlteamid,
+            Allowdrop = e.Allowdrop,
+            Islock = e.Islock,
+            Rosterrole = e.Rosterrole,
+            Gameready = e.Gameready,
+            Playermemontoid = e.Playermemontoid,
+            Tsupdated = e.Tsupdated,
+            // Teamplayers is only populated when the caller asked for a league (see
+            // PlayerService.GetPagedAsync). Lazy loading is off, so an unloaded collection is
+            // simply empty here rather than triggering a query — callers that don't need the
+            // fantasy team, like the roster endpoint, get null and pay nothing.
+            Team = leagueId is not null ? e.Teamplayers.Where(tp=> tp.Team.Leagueid == leagueId).Select(tp => tp.Team.Name).FirstOrDefault() : null,
         };
 
         // The roster is passed in rather than read off e.Teamplayers so the caller decides how the

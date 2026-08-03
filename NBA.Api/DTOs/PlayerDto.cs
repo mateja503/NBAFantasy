@@ -18,5 +18,17 @@ namespace NBA.Api.DTOs
         public decimal? Turnovers { get; set; } = null;
         public decimal? Fieldgoal { get; set; } = null;
         public decimal? Freethrow { get; set; } = null;
+        public long? Irlteamid { get; set; } = null;
+        public bool? Allowdrop { get; set; } = null;
+        public bool? Islock { get; set; } = null;
+        public int? Rosterrole { get; set; } = null;
+        public int? Gameready { get; set; } = null;
+        public long? Playermemontoid { get; set; } = null;
+        public DateTime? Tsupdated { get; set; } = null;
+        // Name of the fantasy team rostering this player in the requested league. Null when no
+        // leagueId was supplied, or when nobody in that league has drafted them.
+        public string? Team { get; set; } = null;
+        // Tscreated is deliberately not exposed: it is an ingest bookkeeping timestamp with no
+        // meaning to a client. Every other nba.player column is here.
     }
 }

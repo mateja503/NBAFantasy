@@ -11,6 +11,7 @@ namespace ApplicationDefaults.Exceptions
         public const string MissingBody = "5656-MISSINGBODYINTHEREQUEST";
         public const string MissingParametar = "5656-MISSINGPARAMETARINTHEREQUEST";
         public const string MissingValue = "5656-MISSINGVALUEINTHEREQUEST";
+        public const string InvalidFilterValue = "5656-INVALIDFILTERVALUEINTHEREQUEST";
         #endregion
 
 

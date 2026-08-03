@@ -235,6 +235,7 @@ v1.TestEndpoints();
 v1.MapLeaguEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
+v1.MapPlayerEndpoints();
 v1.MapAuthenticationEndpoints();
 
 

@@ -24,7 +24,8 @@ These are mandatory conventions for this repository.
 3. **Authenticate everything.** Every HTTP endpoint and every SignalR connection must require
    authentication. Apply `.RequireAuthorization()` to each endpoint group (see `TeamEndpoints`) and
    `[Authorize]` to every hub (see `ChatHub`). The only allowed anonymous endpoints are `/health`,
-   `/alive`, `/redis-check`, and the login/signup endpoints.
+   `/alive`, `/redis-check`, the login/signup endpoints, and `GET /v1/players` — the web dashboard
+   lists the player pool to signed-out visitors, and nothing it returns is user-specific.
 4. **Service vs Manager.** Put logic in a `*Service` when it changes or manipulates data that lives in
    PostgreSQL; put logic in a `*Manager` when it works against Redis.
 5. **DTOs at the API boundary.** Never return EF entities from endpoints — always map to a response DTO
