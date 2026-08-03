@@ -12,6 +12,8 @@ namespace ApplicationDefaults.Exceptions
         public const string MissingParametar = "5656-MISSINGPARAMETARINTHEREQUEST";
         public const string MissingValue = "5656-MISSINGVALUEINTHEREQUEST";
         public const string InvalidFilterValue = "5656-INVALIDFILTERVALUEINTHEREQUEST";
+        public const string ExternalApiCallFailed = "5656-EXTERNALAPICALLFAILED";
+        public const string ExternalApiResponseInvalid = "5656-EXTERNALAPIRESPONSEINVALID";
         #endregion
 
 
