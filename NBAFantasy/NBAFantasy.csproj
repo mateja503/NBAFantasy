@@ -16,7 +16,6 @@
     <PackageReference Include="Aspire.Hosting.Redis" Version="13.1.2" />
     <PackageReference Include="Aspire.StackExchange.Redis" Version="13.1.2" />
     <PackageReference Include="CommunityToolkit.Aspire.Hosting.NodeJS.Extensions" Version="9.9.0" />
-    <PackageReference Include="Microsoft.NET.Build.Containers" Version="10.0.102" />
     <PackageReference Include="OpenTelemetry.Api" Version="1.16.0" />
   </ItemGroup>
 

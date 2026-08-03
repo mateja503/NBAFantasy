@@ -48,7 +48,7 @@ namespace NBA.Data.Redis.Operations
                     {
                         return JsonSerializer.Deserialize<TradeBetweenTeams>(x.ToString(), _jsonOptions);
                     }
-                    catch (JsonException ex)
+                    catch (JsonException)
                     {
                         return null;
                     }

@@ -123,7 +123,7 @@ namespace NBA.Tests.Integration
             // Draft state reflects the swap: fromTeam keeps C(1), gains F(4); toTeam keeps C(3), gains G(2).
             var state = await _fixture.Redis.Draft.GetCurrentDraftState(leagueId);
             Assert.NotNull(state);
-            Assert.Equal(new[] { 1L, 4L }, state!.DraftedPlayersPerTeam[fromTeam].Select(p => p.PlayerId!.Value).OrderBy(x => x));
+            Assert.Equal(new[] { 1L, 4L }, state!.DraftedPlayersPerTeam![fromTeam].Select(p => p.PlayerId!.Value).OrderBy(x => x));
             Assert.Equal(new[] { 2L, 3L }, state.DraftedPlayersPerTeam[toTeam].Select(p => p.PlayerId!.Value).OrderBy(x => x));
 
             // Proposed trade is removed (RemoveProposedTrade fix) and recorded as accepted.

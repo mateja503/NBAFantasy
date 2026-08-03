@@ -4,7 +4,7 @@ namespace NBA.Data.Redis.Entities
     public class TeamDraftBoard
     {
         public long TeamId { get; set; }
-        public string TeamName { get; set; }
+        public string TeamName { get; set; } = string.Empty;
         public int Pick { get; set; }
     }
 

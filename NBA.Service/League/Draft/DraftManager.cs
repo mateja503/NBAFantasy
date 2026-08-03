@@ -130,14 +130,17 @@ namespace NBA.Service.League.Draft
             // otherwise a Redis flush could drop the draft order mid-advance.
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
-            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
+            // Rehydration above is the last chance to get the order back; without it there is nothing to
+            // advance, so fail loudly rather than dereferencing null.
+            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId)
+                ?? throw new NBAException($"No draft order for league {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
             TeamDraftBoard? teamToPick = null;
-            var currentRound = draftTeams.Keys!.FirstOrDefault();
+            var currentRound = draftTeams.Keys.FirstOrDefault();
 
             while (teamToPick is null)
             {
-                if (draftTeams!.TryGetValue(currentRound, out var teams))
+                if (draftTeams.TryGetValue(currentRound, out var teams))
                 {
                     if (teams.Count != 0)
                     {
@@ -181,7 +184,10 @@ namespace NBA.Service.League.Draft
             var teamsDraftedPlayers = await _redis.Player.GetTeamsDraftedPlayers(teamId);
 
             if (teamsDraftedPlayers is not null)
+            {
+                state.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShort>>();
                 state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers;
+            }
 
             return state;
         }

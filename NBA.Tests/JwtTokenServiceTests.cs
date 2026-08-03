@@ -34,12 +34,12 @@ namespace NBA.Tests
             Assert.True(result.ExpiresAtUtc > DateTime.UtcNow);
 
             var handler = new JsonWebTokenHandler();
-            var validation = handler.ValidateTokenAsync(result.AccessToken, new TokenValidationParameters
+            var validation = await handler.ValidateTokenAsync(result.AccessToken, new TokenValidationParameters
             {
                 ValidIssuer = Options.Issuer,
                 ValidAudience = Options.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Options.SigningKey)),
-            }).GetAwaiter().GetResult();
+            });
 
             Assert.True(validation.IsValid);
         }

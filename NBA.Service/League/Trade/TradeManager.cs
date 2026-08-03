@@ -50,6 +50,10 @@ namespace NBA.Service.League.Trade
 
             if (draftState == null) throw new NBAException("Draft state not found. For league " + leagueId, ErrorCodes.DraftNotStarted);
 
+            // A state without rosters means nothing has been drafted yet — treat it as an empty board so
+            // ComputeSwappedRosters reports the missing team instead of dereferencing null.
+            draftState.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShort>>();
+
             var (newFromPlayers, newToPlayers) = ComputeSwappedRosters(draftState.DraftedPlayersPerTeam, trade, ErrorCodes.TradeCantBeExecuted);
 
             // Re-validate against the current rosters: state may have drifted since the proposal.

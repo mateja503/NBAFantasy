@@ -4,7 +4,7 @@ namespace NBA.Data.Redis.Entities
 {
     public class DraftState
     {
-        public string LeagueName { get; set; }
+        public string LeagueName { get; set; } = string.Empty;
         public DateTime PickEndTime { get; set; } = DateTime.UtcNow;
         //public string? TeamName { get; set; } = string.Empty;
         //public long? TeamId { get; set; } = null;
