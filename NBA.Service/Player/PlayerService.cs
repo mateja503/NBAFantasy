@@ -67,9 +67,9 @@ namespace NBA.Service.Player
     }
 
     //use hangfire so this service to be executaed at a spefici time
-    public class PlayerService(BallDontLieClient ballClient, NbaFantasyContext nbaContext, BoxScoreCalculationService boxScoreCalculationService)
+    public class PlayerService(IBallDontLieClient ballClient, NbaFantasyContext nbaContext, BoxScoreCalculationService boxScoreCalculationService)
     {
-        private readonly BallDontLieClient _ballDontLieClient = ballClient;
+        private readonly IBallDontLieClient _ballDontLieClient = ballClient;
         private readonly NbaFantasyContext _nbaContext = nbaContext;
         private readonly BoxScoreCalculationService _boxScoreCalculationService = boxScoreCalculationService;
 

@@ -12,7 +12,7 @@ using System.Text.Json;
 
 namespace ExternalClients
 {
-    public class BallDontLieClient(HttpClient httpClient, ResiliencePipelineProvider<string> pipelineProvider)
+    public class BallDontLieClient(HttpClient httpClient, ResiliencePipelineProvider<string> pipelineProvider) : IBallDontLieClient
     {
         private readonly HttpClient _httpClient = httpClient;
         private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("external-api-shield");

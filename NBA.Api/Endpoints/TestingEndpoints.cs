@@ -17,7 +17,7 @@ namespace NBA.Api.Endpoints
             //}).WithTags("misc");
 
 
-            builder.MapGet("/league/all", async (NbaFantasyContext context, BallDontLieClient client) =>
+            builder.MapGet("/league/all", async (NbaFantasyContext context, IBallDontLieClient client) =>
             {
                 return await context.GetAllLeagues().AsNoTracking()
                 .Select(u => u.Name)

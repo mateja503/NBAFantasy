@@ -79,7 +79,8 @@ Project layering (depend downward):
 - **NBA.Data** — persistence over two stores: EF Core `NbaFantasyContext` (scaffolded `partial`, no
   migrations — see rule 2) on PostgreSQL/Npgsql, and a Redis layer under `Redis/` accessed via the
   `NbaFantasyRedis` facade (rule 8).
-- **ExternalClients** — `BallDontLieClient`, a typed HttpClient for the balldontlie API.
+- **ExternalClients** — `BallDontLieClient`, a typed HttpClient for the balldontlie API, registered and
+  consumed through `IBallDontLieClient` so services can be unit tested without HTTP.
 - **BoxScoreFactory** (project `BoxScoreBuilder.csproj`, assembly `BoxScoreBuilder`) — `BoxScoreStatsBuilder`,
   a fluent builder that fabricates **randomized dummy** player game stats (`random.Next(...)`). It's a
   stand-in until the balldontlie player-stats subscription is paid for; the actual fantasy scoring that

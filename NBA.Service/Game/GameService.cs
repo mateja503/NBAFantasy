@@ -5,9 +5,9 @@ using NBA.Service.Player;
 
 namespace NBA.Service.Game
 {
-    public class GameService(BallDontLieClient ballDontLieClient, IBackgroundJobClient jobClient)
+    public class GameService(IBallDontLieClient ballDontLieClient, IBackgroundJobClient jobClient)
     {
-        private readonly BallDontLieClient _ballDontLieClient = ballDontLieClient;
+        private readonly IBallDontLieClient _ballDontLieClient = ballDontLieClient;
 
         public IBackgroundJobClient _jobClient = jobClient;
 

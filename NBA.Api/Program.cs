@@ -80,7 +80,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.CreateResiliencePipeline();
 
 #region HttpClients
-builder.Services.AddHttpClient<BallDontLieClient>((serviceProvider, client) =>
+builder.Services.AddHttpClient<IBallDontLieClient, BallDontLieClient>((serviceProvider, client) =>
 {
     var _options = serviceProvider.GetRequiredService<IOptions<BallDontLieClientOptions>>().Value;
 
