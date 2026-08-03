@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.League.Trade;
+using NBA.Service.Player;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 using Xunit;
@@ -95,6 +97,18 @@ namespace NBA.Tests.Integration
                                 sp.GetRequiredService<DraftSnapshotService>()));
 
                             services.AddScoped<TradeManager>();
+
+                            // TradeHub.AcceptTrade repopulates the draft board via
+                            // PlayerManager.GetPlayersOnDraftBoard, which only touches Redis — so, as with
+                            // DraftManager above, PlayerService is passed as null rather than wiring up its
+                            // BallDontLieClient/BoxScore graph. IHubContext<DraftHub, IDraftHubClient> (the
+                            // hub's other dependency) comes from AddSignalR; DraftHub itself is never mapped,
+                            // so that broadcast goes nowhere, which is fine — these tests assert on TradeHub.
+                            services.AddScoped(sp => new PlayerManager(
+                                sp.GetRequiredService<NbaFantasyContext>(),
+                                sp.GetRequiredService<IOptions<JsonOptions>>(),
+                                sp.GetRequiredService<NbaFantasyRedis>(),
+                                null!));
 
                             // [Authorize] on the hub needs an authenticated user; this scheme always succeeds.
                             services.AddAuthentication("Test")
