@@ -133,6 +133,9 @@ namespace NBA.Service.League
             if (!input.UserId.HasValue)
                 throw new NBAException("UserId is required", ErrorCodes.MissingValue);
 
+
+
+
             var league = await _context.GetAllLeagues()
                 .Where(u => u.Leagueid == input.LeagueId.Value)
                 .Include(u => u.Teams)
@@ -141,8 +144,11 @@ namespace NBA.Service.League
             if (league is null)
                 throw new NBAException($"League with id {input.LeagueId.Value} not found", ErrorCodes.DataBaseRecordNotFound);
 
-            if (league.Teams.Any(u => u.Name.Equals(input.TeamName)))
+            if (league.Teams.Any(u => u.Name.Equals(input.TeamName,StringComparison.OrdinalIgnoreCase)))
                 throw new NBAException($"Team with name {input.TeamName} already exists in league {league.Name}", ErrorCodes.TeamNameAlreadyInLeague);
+
+            if(league.Teams.Any(u => u.Userid!.Value == input.UserId))
+                throw new NBAException($"User with id {input.UserId} already has a team in league {league.Name}", ErrorCodes.UserAlreadyHasTeamInLeague);
 
             var team = await _context.AddTeam(new Team
             {

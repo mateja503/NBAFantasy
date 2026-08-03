@@ -21,6 +21,7 @@ namespace ApplicationDefaults.Exceptions
         public const string MaxCenterLimitReached = "5656-MAXCENTERLIMITREACHED";
         public const string TeamMaxPlayersReached = "5656-TEAMMAXPLAYERSREACHED";
         public const string TeamNameAlreadyInLeague = "5656-TEAMNAMEALREADYINLEAGUE";
+        public const string UserAlreadyHasTeamInLeague = "5656-USERALREADYHASTEAMINLEAGUE";
         public const string LoginFailed = "5656-LOGINFAILED";
         public const string UserIdMismatch = "5656-USERIDMISMATCH";
         public const string UsernameAlreadyExists = "5656-USERNAMEALREADYEXISTS";
