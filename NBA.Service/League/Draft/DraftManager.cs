@@ -30,7 +30,7 @@ namespace NBA.Service.League.Draft
                 DraftStatus = (int)DraftStatus.Initial,
                 DraftBoardTeams = new DraftBoardTeams { CurrentRound = 1 },
             };
-            await _redis.Draft.SetDraftState(leagueId, state);
+            await _redis.League(leagueId).Draft.SetState(state);
             await _snapshot.PersistAsync(leagueId);
 
             return state;
@@ -38,7 +38,7 @@ namespace NBA.Service.League.Draft
 
         public async Task<DraftState> UpdaterDraftState(long leagueId, DraftState state)
         {
-            var saved = await _redis.Draft.SetDraftState(leagueId, state);
+            var saved = await _redis.League(leagueId).Draft.SetState(state);
             await _snapshot.PersistAsync(leagueId);
             return saved;
         }
@@ -47,7 +47,7 @@ namespace NBA.Service.League.Draft
         {
             // Restore from the Postgres snapshot first if Redis lost the draft.
             await _snapshot.EnsureRehydratedAsync(leagueId);
-            return await _redis.Draft.GetCurrentDraftState(leagueId);
+            return await _redis.League(leagueId).Draft.GetState();
         }
         public async Task<DraftState> ResetTimer(long leagueId)
         {
@@ -55,19 +55,23 @@ namespace NBA.Service.League.Draft
             // serializing a null state back into Redis (which previously stored the literal "null").
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId)
+            var draft = _redis.League(leagueId).Draft;
+
+            var state = await draft.GetState()
                 ?? throw new NBAException($"No active draft state for league {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
             // Keep the displayed deadline aligned with the (clamped) timer deadline.
             state.PickEndTime = DateTime.UtcNow.AddSeconds(Math.Max(1, _draftOptions.DraftPickTime));
-            await _redis.Draft.SetDraftState(leagueId, state);
+            await draft.SetState(state);
             return state;
         }
 
         public async Task EndDraft(long leagueId)
         {
+            var league = _redis.League(leagueId);
+
             // Remove any pending pick deadline from the timer sorted set.
-            await _redis.Draft.CancelDraftTimer(leagueId);
+            await league.Draft.CancelTimer();
 
             // Writes the drafted rosters into Postgres — it reads DraftedPlayersPerTeam off draft:state,
             // so it has to run before the Redis clean-up below.
@@ -80,10 +84,10 @@ namespace NBA.Service.League.Draft
                 .Select(t => t.Teamid)
                 .ToListAsync();
 
-            await _redis.Player.DeleteLeagueDraftPlayers(leagueId, teamIds);
+            await league.Players.DeleteDraftPlayers(teamIds);
 
-            _ = await _redis.Draft.DeleteStringDraftState(leagueId);
-            await _redis.Draft.DeleteDraftTeams(leagueId);
+            _ = await league.Draft.DeleteState();
+            await league.Draft.DeleteTeams();
             await _snapshot.DeleteAsync(leagueId);
         }
 
@@ -110,7 +114,7 @@ namespace NBA.Service.League.Draft
         // the snapshot table — EndDraft removes those keys and a finished draft must not resurrect them.
         public async Task<DraftState> BuildEndedState(long leagueId)
         {
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId);
+            var state = await _redis.League(leagueId).Draft.GetState();
 
             if (state is null)
             {
@@ -130,9 +134,11 @@ namespace NBA.Service.League.Draft
             // otherwise a Redis flush could drop the draft order mid-advance.
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
+            var draft = _redis.League(leagueId).Draft;
+
             // Rehydration above is the last chance to get the order back; without it there is nothing to
             // advance, so fail loudly rather than dereferencing null.
-            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId)
+            var draftTeams = await draft.GetTeams()
                 ?? throw new NBAException($"No draft order for league {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
             TeamDraftBoard? teamToPick = null;
@@ -159,7 +165,7 @@ namespace NBA.Service.League.Draft
                 }
             }
 
-            await _redis.Draft.SetDraftTeams(draftTeams, leagueId);
+            await draft.SetTeams(draftTeams);
 
             // An emptied order means that was the last pick of the last round. Flag it here rather than a
             // tick later, and let the caller run EndDraft once the advanced state has been persisted —
@@ -171,7 +177,7 @@ namespace NBA.Service.League.Draft
             else
                 state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
 
-            var saved = await _redis.Draft.SetDraftState(leagueId, state);
+            var saved = await draft.SetState(state);
 
             // Checkpoint the advanced state + remaining order.
             await _snapshot.PersistAsync(leagueId);
@@ -198,7 +204,7 @@ namespace NBA.Service.League.Draft
         public Task ArmNextDeadlineAsync(long leagueId)
         {
             var seconds = Math.Max(1, _draftOptions.DraftPickTime);
-            return _redis.Draft.ScheduleDraftTimer(leagueId, DateTimeOffset.UtcNow.AddSeconds(seconds));
+            return _redis.League(leagueId).Draft.ScheduleTimer(DateTimeOffset.UtcNow.AddSeconds(seconds));
         }
     }
 }

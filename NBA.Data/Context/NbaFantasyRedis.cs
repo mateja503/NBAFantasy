@@ -1,5 +1,6 @@
 using NBA.Data.Redis;
 using NBA.Data.Redis.Operations;
+using NBA.Data.Redis.Scopes;
 using StackExchange.Redis;
 using System;
 
@@ -34,5 +35,9 @@ namespace NBA.Data.Context
 
         public TradeRedisOperations Trade => _trade.Value;
 
+        // Binds every league-scoped Redis operation to one league id, so a caller that works on a
+        // single league states it once instead of on every call. The *Operations properties above
+        // stay the entry point for global (ClaimDueDraftTimer, GetAllPlayers) and team-scoped work.
+        public LeagueScope League(long leagueId) => new(this, leagueId);
     }
 }

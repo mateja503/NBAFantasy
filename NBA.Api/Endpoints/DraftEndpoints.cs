@@ -27,7 +27,7 @@ namespace NBA.Api.Endpoints
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
 
                 // A scheduled timer means the draft is already running.
-                if (await redis.Draft.IsDraftTimerScheduled(request.LeagueId.Value))
+                if (await redis.League(request.LeagueId.Value).Draft.IsTimerScheduled())
                     throw new NBAException($"Draft has already started with leagueId = {request.LeagueId.Value}", ErrorCodes.DraftAlreadyStarted);
 
                 await timerProcessor.StartDraftAsync(request.LeagueId.Value);

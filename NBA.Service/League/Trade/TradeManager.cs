@@ -21,14 +21,14 @@ namespace NBA.Service.League.Trade
 
         public async Task ProposeDraftTrade(long leagueId, TradeBetweenTeams trade)
         {
-            await _redis.Trade.SetProposedTrade(leagueId, trade);
+            await _redis.League(leagueId).Trades.SetProposed(trade);
         }
         
         // Rejects a trade that would push either team over the league roster limits. Computes each
         // team's roster as it would look after the swap and checks it.
         public async Task<bool> IsTradeValid(long leagueId, TradeBetweenTeams trade)
         {
-            var teamPlayers = await _redis.Draft.GetAllTeamsDraftedPlayersForLeague(leagueId);
+            var teamPlayers = await _redis.League(leagueId).Draft.GetAllTeamsDraftedPlayers();
 
             var (newFromPlayers, newToPlayers) = ComputeSwappedRosters(teamPlayers, trade, ErrorCodes.TradeIsNotValid);
 
@@ -40,9 +40,11 @@ namespace NBA.Service.League.Trade
 
         public async Task<TradeBetweenTeams?> AcceptDraftTrade(long leagueId, Guid tradeId)
         {
+            var trades = _redis.League(leagueId).Trades;
+
             // Read the proposal first, but don't consume it yet — we only remove it once the swap has
             // been validated and applied, so a failed accept leaves the proposal intact.
-            var trade = await _redis.Trade.GetProposedTrade(leagueId, tradeId);
+            var trade = await trades.GetProposed(tradeId);
 
             if (trade == null) throw new NBAException("Trade not found.", ErrorCodes.TradeCantBeExecuted);
 
@@ -72,8 +74,8 @@ namespace NBA.Service.League.Trade
             //await _redis.Player.ReplaceTeamsDraftedPlayers(trade.ToTeam, newToPlayers.Select(p => p.PlayerId ?? 0));
 
             // Swap succeeded — now consume the proposal and record it as accepted.
-            await _redis.Trade.RemoveProposedTrade(leagueId, tradeId);
-            await _redis.Trade.SetAcceptedDraftTrade(leagueId, trade);
+            await trades.RemoveProposed(tradeId);
+            await trades.SetAccepted(trade);
 
             return trade;
         }

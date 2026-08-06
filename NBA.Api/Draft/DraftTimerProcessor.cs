@@ -58,7 +58,9 @@ namespace NBA.Api.Draft
         // firing at the same instant as a manual pick.
         public async Task AdvanceAsync(long leagueId, bool nextPick)
         {
-            var lockToken = await _redis.Draft.TryAcquireDraftCycleLock(leagueId, TimeSpan.FromSeconds(10));
+            var draft = _redis.League(leagueId).Draft;
+
+            var lockToken = await draft.TryAcquireCycleLock(TimeSpan.FromSeconds(10));
             if (lockToken is null)
                 return;
 
@@ -89,7 +91,7 @@ namespace NBA.Api.Draft
             }
             finally
             {
-                await _redis.Draft.ReleaseDraftCycleLock(leagueId, lockToken);
+                await draft.ReleaseCycleLock(lockToken);
             }
         }
     }

@@ -36,7 +36,10 @@ namespace NBA.Service.League.Draft
             // Without this, a Redis flush mid-draft would fall through and reshuffle the draft order.
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
-            var draftTeams = await _redis.Draft.GetDraftTeams(leagueId);
+            // Named draftRedis rather than draft — the generated order below already owns that name.
+            var draftRedis = _redis.League(leagueId).Draft;
+
+            var draftTeams = await draftRedis.GetTeams();
 
             if (draftTeams is not null)
                 return draftTeams;
@@ -69,20 +72,20 @@ namespace NBA.Service.League.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await _redis.Draft.SetDraftTeams(draft, leagueId);
+                    await draftRedis.SetTeams(draft);
                     return draft;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<TeamDraftBoard>(teams));
-                    await _redis.Draft.SetDraftTeams(draft, leagueId);
+                    await draftRedis.SetTeams(draft);
                     return draft;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
 
-                    await _redis.Draft.SetDraftTeams(draft, leagueId);
+                    await draftRedis.SetTeams(draft);
                     return draft;
 
                 case (long)DraftType.RRR:
@@ -92,12 +95,12 @@ namespace NBA.Service.League.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await _redis.Draft.SetDraftTeams(draft, leagueId);
+                    await draftRedis.SetTeams(draft);
                     return draft;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<TeamDraftBoard>(teams));
-                    await _redis.Draft.SetDraftTeams(draft, leagueId);
+                    await draftRedis.SetTeams(draft);
                     return draft;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);
@@ -154,7 +157,7 @@ namespace NBA.Service.League.Draft
 
             if (league.Draftcompleted == true) return;
 
-            var draftedPerTeam = await _redis.Draft.GetAllTeamsDraftedPlayersForLeague(leagueId);
+            var draftedPerTeam = await _redis.League(leagueId).Draft.GetAllTeamsDraftedPlayers();
             var teamPlayers = draftedPerTeam
                 .SelectMany(kvp => kvp.Value.Select(p => new Teamplayer { Teamid = kvp.Key, Playerid = p.PlayerId ?? 0 }))
                 .ToList();

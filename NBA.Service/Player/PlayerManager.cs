@@ -36,15 +36,18 @@ namespace NBA.Service.Player
             await _redis.Player.SetPlayersRange(playersToRedis);
         }
 
-        public async Task AddDraftedPlayers(long leagueId, long playerId, int pick) 
+        public async Task AddDraftedPlayers(long leagueId, long playerId, int pick)
         {
-            await _redis.Player.AddLeaguesDraftedPlayer(leagueId, playerId, pick);
+            var league = _redis.League(leagueId);
 
-            var draftState = await _redis.Draft.GetCurrentDraftState(leagueId);
+            await league.Players.AddDraftedPlayer(playerId, pick);
 
-            if (draftState?.DraftBoardTeams is not null) 
+            var draftState = await league.Draft.GetState();
+
+            if (draftState?.DraftBoardTeams is not null)
             {
                 var teamId = draftState!.DraftBoardTeams!.onTheClockTeam!.TeamId;
+                // Team-scoped, not league-scoped — stays on the unbound operations class.
                 await _redis.Player.AddTeamsDrafterPlayer(teamId, playerId);
 
             }
@@ -56,15 +59,18 @@ namespace NBA.Service.Player
         public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
         {
             
-            var leaguesAvailablePlayers = await _redis.Player.GetLeaguesAvailableDraftPlayers(leagueid);
+            var leaguePlayers = _redis.League(leagueid).Players;
 
-            if(leaguesAvailablePlayers is null) 
+            var leaguesAvailablePlayers = await leaguePlayers.GetAvailableDraftPlayers();
+
+            if(leaguesAvailablePlayers is null)
             {
+                // The master player pool is global, so it comes off the unbound operations class.
                 var players = await _redis.Player.GetAllPlayers();
-                leaguesAvailablePlayers = await _redis.Player.AddLeaguesAvailableDraftPlayers(leagueid,players);
+                leaguesAvailablePlayers = await leaguePlayers.AddAvailableDraftPlayers(players);
             }
 
-            var draftedPlayers = await _redis.Player.GetLeaguesDrafterPlayers(leagueid);
+            var draftedPlayers = await leaguePlayers.GetDraftedPlayers();
 
             if (draftedPlayers is null) 
             {

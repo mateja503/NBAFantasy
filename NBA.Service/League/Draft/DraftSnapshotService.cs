@@ -27,8 +27,10 @@ namespace NBA.Service.League.Draft
         // structurally changes (created, advanced). Cheap enough at draft cadence (one pick / ~10s).
         public async Task PersistAsync(long leagueId)
         {
-            var state = await _redis.Draft.GetCurrentDraftState(leagueId);
-            var teams = await _redis.Draft.GetDraftTeams(leagueId);
+            var draft = _redis.League(leagueId).Draft;
+
+            var state = await draft.GetState();
+            var teams = await draft.GetTeams();
 
             if (state is null && teams is null)
                 return;
@@ -53,12 +55,13 @@ namespace NBA.Service.League.Draft
 
             if (league.Draftcompleted ?? false) return false;
 
+            var draft = _redis.League(leagueId).Draft;
 
             // Check BOTH keys: Redis can evict them independently under a maxmemory policy, and
             // recovering only on missing state would let an evicted teams key slip through and cause
             // DraftService.DraftOrder to regenerate (reshuffle) the order.
-            var stateExists = await _redis.Draft.DraftStateExists(leagueId);
-            var teamsExist = await _redis.Draft.DraftTeamsExist(leagueId);
+            var stateExists = await draft.StateExists();
+            var teamsExist = await draft.TeamsExist();
             if (stateExists && teamsExist)
                 return false;
 
@@ -71,11 +74,11 @@ namespace NBA.Service.League.Draft
                 var state = JsonSerializer.Deserialize<DraftState>(snapshot.Draftstate, _json);
                 if (state is not null)
                 {
-                    await _redis.Draft.SetDraftState(leagueId, state);
+                    await draft.SetState(state);
 
                     // Only an actively-running draft needs its clock restarted.
                     if (state.DraftStatus == (int)DraftStatus.DraftStarted)
-                        await _redis.Draft.ScheduleDraftTimer(leagueId, DateTimeOffset.UtcNow.AddSeconds(_draftOptions.DraftPickTime));
+                        await draft.ScheduleTimer(DateTimeOffset.UtcNow.AddSeconds(_draftOptions.DraftPickTime));
                 }
             }
 
@@ -83,7 +86,7 @@ namespace NBA.Service.League.Draft
             {
                 var teams = JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(snapshot.Draftteams, _json);
                 if (teams is not null)
-                    await _redis.Draft.SetDraftTeams(teams, leagueId);
+                    await draft.SetTeams(teams);
             }
 
             return true;
