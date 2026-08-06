@@ -24,6 +24,8 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="10.0.0" />
     <!-- Stands in for Postgres so the accept-trade draft/snapshot chain runs without a DB container. -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
+    <!-- In-process HTTP server standing in for balldontlie, so the client is exercised over a real socket. -->
+    <PackageReference Include="WireMock.Net" Version="2.13.0" />
   </ItemGroup>
 
   <ItemGroup>
