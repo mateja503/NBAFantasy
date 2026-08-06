@@ -1,6 +1,7 @@
 using NBA.Api.DTOs;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
+using NBA.Data.Redis.Entities;
 
 namespace NBA.Api.Mappings
 {
@@ -81,6 +82,38 @@ namespace NBA.Api.Mappings
             Leagueid = e.Leagueid,
             Leaguename = e.League?.Name,
             Players = players.Select(p => p.ToPlayerDto()).ToList(),
+        };
+
+        // The schedule never touches Postgres: GameShort is the cached Redis shape produced by
+        // Adapter.ToGameRedis, and this is still the only place it becomes an API contract (rule 5).
+        public static ScheduledGamesDto ToScheduledGamesDto(this ScheduledGames e) => new()
+        {
+            Today = e.Today.Select(g => g.ToGameDto()).ToList(),
+            Tomorrow = e.Tomorrow.Select(g => g.ToGameDto()).ToList(),
+            RestOfWeek = e.RestOfWeek.Select(g => g.ToGameDto()).ToList(),
+        };
+
+        public static GameDto ToGameDto(this GameShort e) => new()
+        {
+            GameId = e.GameId,
+            Date = e.Date,
+            Status = e.Status,
+            Time = e.Time,
+            StartTime = e.StartTime,
+            Postseason = e.Postseason,
+            Postponed = e.Postponed,
+            HomeTeam = e.HomeTeam.ToGameTeamDto(),
+            VisitorTeam = e.VisitorTeam.ToGameTeamDto(),
+        };
+
+        // Null in, null out: a game missing a side is not worth failing the whole schedule over.
+        private static GameTeamDto? ToGameTeamDto(this GameTeamShort? e) => e is null ? null : new GameTeamDto
+        {
+            TeamId = e.TeamId,
+            FullName = e.FullName,
+            Abbreviation = e.Abbreviation,
+            City = e.City,
+            Score = e.Score,
         };
 
         // Mirrors the PlayerShort conversion in NBA.Service/Adapter.cs. It is duplicated rather than

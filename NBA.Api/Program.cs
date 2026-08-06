@@ -157,6 +157,7 @@ builder.Services.AddCors(options =>
 
 #region Services
 builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<GameManager>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
@@ -236,6 +237,7 @@ v1.MapLeaguEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
 v1.MapPlayerEndpoints();
+v1.MapGameEndpoints();
 v1.MapAuthenticationEndpoints();
 
 

@@ -161,6 +161,106 @@ namespace NBA.Tests
 
         #endregion
 
+        #region GetGames
+
+        [Fact]
+        public async Task GetGames_asks_for_the_whole_window_in_one_request()
+        {
+            var handler = StubHttpMessageHandler.RespondsWith(HttpStatusCode.OK, """{"data":[],"meta":{}}""");
+            var client = CreateClient(handler);
+
+            await client.GetGames(new DateOnly(2026, 8, 3), new DateOnly(2026, 8, 9), Meta(perPage: 100), CancellationToken.None);
+
+            // One start_date/end_date call rather than seven dates[] calls: external-api-shield
+            // permits a single concurrent request and has no queue.
+            Assert.Equal("/v1/games", handler.LastRequestUri.AbsolutePath);
+            Assert.Equal("?start_date=2026-08-03&end_date=2026-08-09&per_page=100", handler.LastRequestQuery);
+        }
+
+        [Fact]
+        public async Task GetGames_appends_the_cursor_for_subsequent_pages()
+        {
+            var handler = StubHttpMessageHandler.RespondsWith(HttpStatusCode.OK, """{"data":[],"meta":{}}""");
+            var client = CreateClient(handler);
+
+            await client.GetGames(new DateOnly(2026, 8, 3), new DateOnly(2026, 8, 9), Meta(perPage: 25, cursor: 40), CancellationToken.None);
+
+            Assert.Equal("?start_date=2026-08-03&end_date=2026-08-09&per_page=25&cursor=40", handler.LastRequestQuery);
+        }
+
+        [Fact]
+        public async Task GetGames_deserializes_the_team_details_and_scores()
+        {
+            const string json = """
+            {
+              "data": [
+                {
+                  "id": 1038184,
+                  "date": "2026-08-05",
+                  "status": "7:30 pm ET",
+                  "datetime": "2026-08-05T23:30:00Z",
+                  "time": "23:30",
+                  "postseason": true,
+                  "postponed": false,
+                  "home_team_score": 112,
+                  "visitor_team_score": 109,
+                  "home_team": { "id": 14, "full_name": "Los Angeles Lakers", "abbreviation": "LAL", "city": "Los Angeles" },
+                  "visitor_team": { "id": 2, "full_name": "Boston Celtics", "abbreviation": "BOS", "city": "Boston" }
+                }
+              ],
+              "meta": { "next_cursor": 5, "per_page": 25 }
+            }
+            """;
+
+            var client = CreateClient(StubHttpMessageHandler.RespondsWith(HttpStatusCode.OK, json));
+
+            var response = await client.GetGames(new DateOnly(2026, 8, 5), new DateOnly(2026, 8, 9), Meta(), CancellationToken.None);
+
+            var game = Assert.Single(response.data);
+            Assert.True(game.postseason);
+            Assert.Equal(112, game.home_team_score);
+            Assert.Equal(109, game.visitor_team_score);
+            Assert.Equal("LAL", game.home_team.abbreviation);
+            Assert.Equal("Boston", game.visitor_team.city);
+            Assert.Equal(5, response.meta.Next_cursor);
+        }
+
+        [Fact]
+        public async Task GetGames_still_deserializes_a_payload_without_the_optional_team_details()
+        {
+            // abbreviation/city/scores are deliberately not `required` so an older or trimmed body
+            // does not fail deserialization outright.
+            const string json = """
+            {
+              "data": [
+                {
+                  "id": 1,
+                  "date": "2026-08-05",
+                  "status": "7:30 pm ET",
+                  "time": "23:30",
+                  "postseason": false,
+                  "postponed": false,
+                  "home_team": { "id": 14, "full_name": "Los Angeles Lakers" },
+                  "visitor_team": { "id": 2, "full_name": "Boston Celtics" }
+                }
+              ],
+              "meta": {}
+            }
+            """;
+
+            var client = CreateClient(StubHttpMessageHandler.RespondsWith(HttpStatusCode.OK, json));
+
+            var response = await client.GetGames(new DateOnly(2026, 8, 5), new DateOnly(2026, 8, 9), Meta(), CancellationToken.None);
+
+            var game = Assert.Single(response.data);
+            Assert.Equal(string.Empty, game.home_team.abbreviation);
+            Assert.Equal(string.Empty, game.home_team.city);
+            Assert.Equal(0, game.home_team_score);
+            Assert.Null(response.meta.Next_cursor);
+        }
+
+        #endregion
+
         #region Failure translation
 
         [Theory]

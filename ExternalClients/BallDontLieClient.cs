@@ -1,12 +1,12 @@
 
 using ApplicationDefaults.Exceptions;
+using ApplicationDefaults.Time;
 using BoxScoreBuilder;
 using BoxScoreBuilder.Model;
 using ExternalClients.Poco;
 using ExternalClients.Response;
 using Polly;
 using Polly.Registry;
-using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -17,10 +17,6 @@ namespace ExternalClients
         private readonly HttpClient _httpClient = httpClient;
         private readonly ResiliencePipeline<HttpResponseMessage> _pipeline = pipelineProvider.GetPipeline<HttpResponseMessage>("external-api-shield");
 
-        // balldontlie dates are US dates, so "today" has to be resolved in the NBA's timezone,
-        // not in UTC (a 20:00 ET tip-off is already the next day in UTC).
-        private static readonly TimeZoneInfo NbaTimeZone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
-
         public Task<GetAllPlayersResponse> GetAllPlayers(MetaData metaData, CancellationToken cancellationToken)
         {
             var url = metaData.Next_cursor is null
@@ -30,12 +26,26 @@ namespace ExternalClients
             return GetAsync<GetAllPlayersResponse>(url, cancellationToken);
         }
 
-        public Task<GetTodaysGamesResponse> GetTodaysGames(CancellationToken cancellationToken)
+        public Task<GetGamesResponse> GetTodaysGames(CancellationToken cancellationToken)
         {
-            var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, NbaTimeZone)
-                .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var today = NbaCalendar.Today().ToApiDate();
 
-            return GetAsync<GetTodaysGamesResponse>($"/v1/games?dates[]={today}", cancellationToken);
+            return GetAsync<GetGamesResponse>($"/v1/games?dates[]={today}", cancellationToken);
+        }
+
+        public Task<GetGamesResponse> GetGames(DateOnly startDate, DateOnly endDate, MetaData metaData, CancellationToken cancellationToken)
+        {
+            // start_date/end_date covers the whole window in one request. Fanning out one request per
+            // day would be the obvious alternative, but external-api-shield's concurrency limiter
+            // permits a single in-flight call and has no queue, so the extra calls would be rejected.
+            var url = $"/v1/games?start_date={startDate.ToApiDate()}&end_date={endDate.ToApiDate()}&per_page={metaData.Per_page}";
+
+            if (metaData.Next_cursor is not null)
+            {
+                url += $"&cursor={metaData.Next_cursor}";
+            }
+
+            return GetAsync<GetGamesResponse>(url, cancellationToken);
         }
 
         /// <summary>
