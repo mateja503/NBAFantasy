@@ -1,10 +1,12 @@
 ﻿
 
+using ApplicationDefaults.Time;
 using ExternalClients.Response;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using PlayerData = NBA.Data.Entities.Player;
+using Team = ExternalClients.Response.Team;
 
 namespace NBA.Service
 {
@@ -41,6 +43,41 @@ namespace NBA.Service
                 FullName = $"{p.first_name} {p.last_name}",
                 Position = p.position!
             }).ToList();
+        }
+
+        public static List<GameShort> ToGameRedis(List<GameInfoResponse> games)
+        {
+            return games.Select(game => new GameShort
+            {
+                GameId = game.id,
+                // Normalised here so every consumer downstream can compare it to a yyyy-MM-dd bucket key.
+                Date = NbaCalendar.ToApiDatePart(game.date),
+                Status = game.status,
+                Time = game.time,
+                // default(DateTime) means balldontlie omitted it; null travels better than 0001-01-01.
+                StartTime = game.datetime == default ? null : game.datetime,
+                Postseason = game.postseason,
+                Postponed = game.postponed,
+                HomeTeam = ToGameTeamRedis(game.home_team, game.home_team_score),
+                VisitorTeam = ToGameTeamRedis(game.visitor_team, game.visitor_team_score),
+            }).ToList();
+        }
+
+        private static GameTeamShort? ToGameTeamRedis(Team? team, int score)
+        {
+            if (team is null)
+            {
+                return null;
+            }
+
+            return new GameTeamShort
+            {
+                TeamId = team.id,
+                FullName = team.full_name,
+                Abbreviation = team.abbreviation,
+                City = team.city,
+                Score = score,
+            };
         }
 
         public static List<PlayerShort> ToPlayerRedisFromDB(List<PlayerData> players)
