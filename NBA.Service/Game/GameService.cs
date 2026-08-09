@@ -17,7 +17,7 @@ namespace NBA.Service.Game
 
             foreach (var game in games.data) 
             {
-                DateTimeOffset gameFinishes = new DateTimeOffset(game.datetime).AddHours(4);
+                DateTimeOffset gameFinishes = new DateTimeOffset(game.datetime).AddHours(4);//for each game, schedule a job to fetch the stats after the game is finished (4 hours after the game starts)
 
                 _jobClient.Schedule<PlayerService>(
                     playerService => playerService.GetPlayersGameStats(game.id,game.home_team.id,
