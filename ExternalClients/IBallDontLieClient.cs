@@ -12,7 +12,13 @@ namespace ExternalClients
     {
         Task<GetAllPlayersResponse> GetAllPlayers(MetaData metaData, CancellationToken cancellationToken);
 
-        Task<GetTodaysGamesResponse> GetTodaysGames(CancellationToken cancellationToken);
+        Task<GetGamesResponse> GetTodaysGames(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// One page of the schedule between two dates, inclusive, in the NBA timezone.
+        /// Paging is the caller's job (follow <c>meta.next_cursor</c>), matching <see cref="GetAllPlayers"/>.
+        /// </summary>
+        Task<GetGamesResponse> GetGames(DateOnly startDate, DateOnly endDate, MetaData metaData, CancellationToken cancellationToken);
 
         Task<List<PlayerStatsResponse>> GetPlayerStats(List<long> playerIds, long gameId, CancellationToken cancellationToken);
     }

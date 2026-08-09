@@ -40,6 +40,14 @@ namespace NBA.Data.Redis.Keys
 
         #endregion
 
+        #region Games
+
+        // Scoped to the NBA date the snapshot was built for, so yesterday's schedule can never be
+        // served after the date rolls over even if its TTL has not elapsed yet.
+        public static string GetScheduledGamesKey(string nbaDate) => $"nba:games:schedule:{nbaDate}";
+
+        #endregion
+
         #region Trade
 
         public static string GetProposedDraftTradesKey(long leagueId) => $"draft:trade:proposed:{leagueId}";

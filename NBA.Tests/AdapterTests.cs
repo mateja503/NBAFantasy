@@ -80,6 +80,66 @@ namespace NBA.Tests
         }
 
         [Fact]
+        public void ToGameRedis_flattens_both_sides_and_normalises_the_date()
+        {
+            var input = new List<GameInfoResponse>
+            {
+                new()
+                {
+                    id = 1038184,
+                    // A full ISO timestamp instead of a plain date has been seen in the wild; the
+                    // day part is what the schedule buckets are cut on, so it must survive.
+                    date = "2026-08-05T00:00:00.000Z",
+                    status = "7:30 pm ET",
+                    datetime = new DateTime(2026, 8, 5, 23, 30, 0, DateTimeKind.Utc),
+                    time = "23:30",
+                    postseason = true,
+                    postponed = false,
+                    home_team_score = 112,
+                    visitor_team_score = 109,
+                    home_team = new Team { id = 14, full_name = "Los Angeles Lakers", abbreviation = "LAL", city = "Los Angeles" },
+                    visitor_team = new Team { id = 2, full_name = "Boston Celtics", abbreviation = "BOS", city = "Boston" },
+                }
+            };
+
+            var game = Assert.Single(Adapter.ToGameRedis(input));
+
+            Assert.Equal(1038184, game.GameId);
+            Assert.Equal("2026-08-05", game.Date);
+            Assert.Equal("7:30 pm ET", game.Status);
+            Assert.True(game.Postseason);
+            Assert.Equal("LAL", game.HomeTeam!.Abbreviation);
+            Assert.Equal("Los Angeles", game.HomeTeam.City);
+            Assert.Equal(112, game.HomeTeam.Score);
+            Assert.Equal("BOS", game.VisitorTeam!.Abbreviation);
+            Assert.Equal(109, game.VisitorTeam.Score);
+        }
+
+        [Fact]
+        public void ToGameRedis_nulls_a_missing_datetime_rather_than_emitting_year_one()
+        {
+            var input = new List<GameInfoResponse>
+            {
+                new()
+                {
+                    id = 1,
+                    date = "2026-08-05",
+                    status = "7:30 pm ET",
+                    time = "23:30",
+                    postseason = false,
+                    postponed = false,
+                    home_team = new Team { id = 14, full_name = "Los Angeles Lakers" },
+                    visitor_team = new Team { id = 2, full_name = "Boston Celtics" },
+                }
+            };
+
+            var game = Assert.Single(Adapter.ToGameRedis(input));
+
+            Assert.Null(game.StartTime);
+            Assert.Equal(0, game.HomeTeam!.Score);
+        }
+
+        [Fact]
         public void ToPlayerRedisFromDB_round_trips_position_back_to_string()
         {
             var dbPlayers = Adapter.ToPlayerDb(new List<PlayerInfoResponse>
