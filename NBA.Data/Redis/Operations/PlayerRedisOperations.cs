@@ -59,16 +59,9 @@ namespace NBA.Data.Redis.Operations
             {
                 PlayerId = player.Playerid,
                 FullName = $"{player.Name} {player.Surname}",
-                Position = (long)player.Playerposition! switch
-                {
-                    (long)PlayerPositionEnum.G => "G",
-                    (long)PlayerPositionEnum.F => "F",
-                    (long)PlayerPositionEnum.C => "C",
-                    (long)PlayerPositionEnum.GF => "GF",
-                    (long)PlayerPositionEnum.CF => "CF",
-                    (long)PlayerPositionEnum.FG => "FG",
-                    _ => "UNKOWN"
-                }
+                // Both sides hold PlayerPositionEnum as an int, so this is a copy rather than a
+                // conversion — and no longer dereferences Playerposition, which is nullable.
+                Position = player.Playerposition
             };
 
             await _redisDb.StringSetAsync(rediKey, JsonSerializer.Serialize(entity, _jsonOptions), expiry: TimeSpan.FromDays(30));

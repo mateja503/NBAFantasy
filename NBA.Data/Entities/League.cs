@@ -39,6 +39,8 @@ public partial class League
 
     public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
 
+    public virtual ICollection<Trade> Trades { get; set; } = new List<Trade>();
+
     public virtual ICollection<Transactionleague> Transactionleagues { get; set; } = new List<Transactionleague>();
 
     public virtual ICollection<Userleague> Userleagues { get; set; } = new List<Userleague>();

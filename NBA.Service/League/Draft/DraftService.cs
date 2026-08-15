@@ -11,6 +11,7 @@ using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
+using NBA.Service.League.Roster;
 using Polly.CircuitBreaker;
 using StackExchange.Redis;
 using System.Text.Json;
@@ -20,7 +21,7 @@ namespace NBA.Service.League.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,
-        NbaFantasyRedis redis, DraftSnapshotService snapshot)
+        NbaFantasyRedis redis, DraftSnapshotService snapshot, RosterValidator rosterValidator)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
@@ -28,6 +29,7 @@ namespace NBA.Service.League.Draft
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftSnapshotService _snapshot = snapshot;
+        private readonly RosterValidator _rosterValidator = rosterValidator;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId)
@@ -130,20 +132,21 @@ namespace NBA.Service.League.Draft
                 .Include(u => u.Player)
                 .ToListAsync();
 
-            if (team.Count + 1 > _appOptions.MaxPlayersPerTeam)
-                throw new NBAException("Team has reached maximum number of players", ErrorCodes.TeamMaxPlayersReached);
-
             var player = await _context.GetAllPlayers().FirstOrDefaultAsync(u => u.Playerid == playerId);
 
-            if (player is { Playerposition: (int)PlayerPositionEnum.C })
-            {
-                var countPlayerCenters = team.Count(u => u.Player.Playerposition == (int)PlayerPositionEnum.C);
+            // Previously this was an `else` on the position pattern below, so drafting any non-center
+            // reported "does not exist". Existence is its own check.
+            if (player is null)
+                throw new NBAException($"Player with id {playerId} does not exist", ErrorCodes.DataBaseRecordNotFound);
 
-                if (countPlayerCenters + 1 > _appOptions.CenterLimit)
-                    throw new NBAException("Team has reached maximum number of centers", ErrorCodes.MaxCenterLimitReached);
+            // Both league limits now live in RosterValidator, shared with the trade and free-agency
+            // paths. Counts describe the roster as it would look with this pick applied.
+            var centerCount = team.Count(u => u.Player.Playerposition == (int)PlayerPositionEnum.C);
 
-            }
-            else throw new NBAException($"Player with id {playerId} does not exist", ErrorCodes.DataBaseRecordNotFound);
+            if (player.Playerposition == (int)PlayerPositionEnum.C)
+                centerCount++;
+
+            _rosterValidator.Validate(team.Count + 1, centerCount);
 
             _ = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
             return player;

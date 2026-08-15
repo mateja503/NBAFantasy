@@ -19,5 +19,13 @@ namespace NBA.Data.Redis.Scopes
         public Task<TradeBetweenTeams?> GetProposed(Guid tradeId) => operations.GetProposedTrade(leagueId, tradeId);
 
         public Task<TradeBetweenTeams?> RemoveProposed(Guid tradeId) => operations.RemoveProposedTrade(leagueId, tradeId);
+
+        // In-season proposals: one key per recipient with its own TTL, separate from the draft-time
+        // sorted set the members above use.
+        public Task SetProposedSeason(TradeBetweenTeams trade, TimeSpan ttl) =>
+            operations.SetProposedSeasonTrade(leagueId, trade, ttl);
+
+        public Task<TradeBetweenTeams?> GetProposedSeason(long toTeamId) =>
+            operations.GetProposedSeasonTrade(leagueId, toTeamId);
     }
 }

@@ -127,6 +127,27 @@ namespace NBA.Data.Context
         }
         #endregion
 
+        #region Trades
+        public IQueryable<Trade> GetAllTrades()
+        {
+            return Trades.AsQueryable();
+        }
+
+        public async Task<Trade> AddTrade(Trade trade)
+        {
+            var e = await Trades.AddAsync(trade);
+            _ = await SaveChangesAsync();
+            return e.Entity;
+        }
+
+        public async Task<List<Trade>> UpdateTradeRange(List<Trade> trades)
+        {
+            Trades.UpdateRange(trades);
+            _ = await SaveChangesAsync();
+            return trades;
+        }
+        #endregion
+
         #region LeaguePlayer
         public IQueryable<Leagueplayer> GetAllLeaguePlayers() 
         {

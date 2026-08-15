@@ -73,6 +73,34 @@ namespace NBA.Data.Redis.Operations
             return null;
         }
 
+        // In-season proposal: one key per recipient, holding only the newest offer. StringSet writes
+        // the value and the expiry in a single command, so an overwrite re-arms the full TTL rather
+        // than letting the new offer inherit what was left of the previous one's window.
+        public Task SetProposedSeasonTrade(long leagueId, TradeBetweenTeams trade, TimeSpan ttl)
+        {
+            var redisKey = RedisKeys.GetProposedTradeKey(leagueId, trade.ToTeam);
+
+            return _redisDb.StringSetAsync(redisKey, JsonSerializer.Serialize(trade, _jsonOptions), ttl);
+        }
+
+        public async Task<TradeBetweenTeams?> GetProposedSeasonTrade(long leagueId, long toTeamId)
+        {
+            var value = await _redisDb.StringGetAsync(RedisKeys.GetProposedTradeKey(leagueId, toTeamId));
+
+            if (value.IsNullOrEmpty) return null;
+
+            try
+            {
+                return JsonSerializer.Deserialize<TradeBetweenTeams>(value.ToString(), _jsonOptions);
+            }
+            catch (JsonException)
+            {
+                // A key written by an older shape should read as "nothing cached", not blow up the
+                // request — Postgres remains the source of truth for the proposal either way.
+                return null;
+            }
+        }
+
         public async Task<TradeBetweenTeams?> RemoveProposedTrade(long leagueId, Guid tradeId)
         {
             var redisKey = RedisKeys.GetProposedDraftTradesKey(leagueId);

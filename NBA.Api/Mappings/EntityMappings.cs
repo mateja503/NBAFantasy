@@ -11,6 +11,20 @@ namespace NBA.Api.Mappings
     // (CommissionersTeam, Competesinleague) are composed by the caller so this stays simple.
     public static class EntityMappings
     {
+        public static TradeDto ToTradeDto(this Trade e, bool deliveredLive = false) => new()
+        {
+            Tradeid = e.Tradeid,
+            Tradeguid = e.Tradeguid,
+            Leagueid = e.Leagueid,
+            Fromteamid = e.Fromteamid,
+            Toteamid = e.Toteamid,
+            Playerids = e.Playerids ?? [],
+            Status = e.Status,
+            Tscreated = e.Tscreated,
+            Tsexpires = e.Tsexpires,
+            DeliveredLive = deliveredLive,
+        };
+
         public static LeagueDto ToLeagueDto(this League e) => new()
         {
             Leagueid = e.Leagueid,
@@ -116,9 +130,9 @@ namespace NBA.Api.Mappings
             Score = e.Score,
         };
 
-        // Mirrors the PlayerShort conversion in NBA.Service/Adapter.cs. It is duplicated rather than
-        // shared because Adapter belongs to the balldontlie translation layer while this belongs to
-        // the entity -> DTO layer; they are free to diverge.
+        // The only int -> label conversion left. PlayerShort now carries the raw int code, so the Redis
+        // shape no longer does this; the readable label exists purely for the HTTP contract, which
+        // keeps returning "C" rather than 3.
         private static string ToPositionLabel(this int? playerPosition) => playerPosition switch
         {
             (int)PlayerPositionEnum.G => "G",

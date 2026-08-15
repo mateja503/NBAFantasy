@@ -20,16 +20,7 @@ namespace NBA.Service
                 Name = playerInfo.first_name,
                 Surname = playerInfo.last_name,
                 Tscreated = DateTime.UtcNow,
-                Playerposition = playerInfo.position.ToUpper() switch
-                {
-                    "G" => (int)PlayerPositionEnum.G,
-                    "F" => (int)PlayerPositionEnum.F,
-                    "C" => (int)PlayerPositionEnum.C,
-                    "G-F" => (int)PlayerPositionEnum.GF,
-                    "C-F" => (int)PlayerPositionEnum.CF,
-                    "F-G" => (int)PlayerPositionEnum.FG,
-                    _ => (int)PlayerPositionEnum.UNKOWN
-                },
+                Playerposition = ToPositionCode(playerInfo.position),
                 Irlteamname = playerInfo.team?.full_name,
                 Irlteamid = playerInfo.team?.id
             }).ToList();
@@ -41,9 +32,25 @@ namespace NBA.Service
             {
                 PlayerId = p.id,
                 FullName = $"{p.first_name} {p.last_name}",
-                Position = p.position!
+                // Previously stored the raw balldontlie string; PlayerShort.Position is now the same
+                // int code as Player.Playerposition, so the Redis and Postgres shapes agree.
+                Position = ToPositionCode(p.position)
             }).ToList();
         }
+
+        // balldontlie sends the position as a free-text abbreviation ("G", "C-F"), and it can be absent
+        // entirely — an unrecognised or missing value maps to UNKOWN rather than throwing, because one
+        // odd player record should not fail a whole page import.
+        public static int ToPositionCode(string? position) => position?.ToUpper() switch
+        {
+            "G" => (int)PlayerPositionEnum.G,
+            "F" => (int)PlayerPositionEnum.F,
+            "C" => (int)PlayerPositionEnum.C,
+            "G-F" => (int)PlayerPositionEnum.GF,
+            "C-F" => (int)PlayerPositionEnum.CF,
+            "F-G" => (int)PlayerPositionEnum.FG,
+            _ => (int)PlayerPositionEnum.UNKOWN
+        };
 
         public static List<GameShort> ToGameRedis(List<GameInfoResponse> games)
         {
@@ -86,16 +93,8 @@ namespace NBA.Service
             {
                 PlayerId = player.Playerid,
                 FullName = $"{player.Name} {player.Surname}",
-                Position = (long)player.Playerposition! switch
-                {
-                    (long)PlayerPositionEnum.G => "G",
-                    (long)PlayerPositionEnum.F => "F",
-                    (long)PlayerPositionEnum.C => "C",
-                    (long)PlayerPositionEnum.GF => "GF",
-                    (long)PlayerPositionEnum.CF => "CF",
-                    (long)PlayerPositionEnum.FG => "FG",
-                    _ => "UNKOWN"
-                }
+                // Both sides now hold the same int code, so this is a copy rather than a conversion.
+                Position = player.Playerposition
             }).ToList();
         }
     }

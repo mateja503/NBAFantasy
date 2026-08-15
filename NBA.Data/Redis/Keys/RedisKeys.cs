@@ -53,6 +53,16 @@ namespace NBA.Data.Redis.Keys
         public static string GetProposedDraftTradesKey(long leagueId) => $"draft:trade:proposed:{leagueId}";
         public static string GetAcceptedDraftTradeKey(long leagueId) => $"draft:trade:accepted:{leagueId}";
 
+        // In-season proposal, keyed per recipient so only the newest offer to a team is held. Writing
+        // it with an expiry re-arms the full TTL, which is why "last proposal wins" needs no cleanup.
+        // Separate from the draft keys above: that path keeps every proposal in one sorted set.
+        public static string GetProposedTradeKey(long leagueId, long toTeamId)
+            => $"trade:proposed:{leagueId}:{toTeamId}";
+
+        // Live /tradeHub connection ids for a team. Needed because SignalR client results address a
+        // single connection — there is no "ask whoever is in this group" primitive.
+        public static string GetTeamTradeConnectionsKey(long teamId) => $"trade:presence:team:{teamId}";
+
         #endregion
     }
 }

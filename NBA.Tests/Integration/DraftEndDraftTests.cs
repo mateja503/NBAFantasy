@@ -1,12 +1,14 @@
-using ApplicationDefaults.Options;
+﻿using ApplicationDefaults.Options;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
+using NBA.Service.League.Roster;
 using Xunit;
 
 namespace NBA.Tests.Integration
@@ -36,8 +38,9 @@ namespace NBA.Tests.Integration
             var appOptions = Options.Create(new ApplicationOptions { MaxPlayersPerTeam = 13, CenterLimit = 4 });
             var jsonOptions = Options.Create(new JsonOptions());
             var snapshot = new DraftSnapshotService(context, _fixture.Redis, draftOptions);
+            var rosterValidator = new RosterValidator(appOptions);
 
-            return new DraftService(context, draftOptions, appOptions, jsonOptions, _fixture.Redis, snapshot);
+            return new DraftService(context, draftOptions, appOptions, jsonOptions, _fixture.Redis, snapshot, rosterValidator);
         }
 
         [Fact]
@@ -62,8 +65,8 @@ namespace NBA.Tests.Integration
                 LeagueName = "End Draft League",
                 DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShort>>
                 {
-                    [10] = new() { new PlayerShort { PlayerId = 100, Position = "G" }, new PlayerShort { PlayerId = 101, Position = "C" } },
-                    [20] = new() { new PlayerShort { PlayerId = 200, Position = "F" } },
+                    [10] = new() { new PlayerShort { PlayerId = 100, Position = (int)PlayerPositionEnum.G }, new PlayerShort { PlayerId = 101, Position = (int)PlayerPositionEnum.C } },
+                    [20] = new() { new PlayerShort { PlayerId = 200, Position = (int)PlayerPositionEnum.F } },
                 },
             });
 
@@ -103,7 +106,7 @@ namespace NBA.Tests.Integration
                 LeagueName = "Already Done League",
                 DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShort>>
                 {
-                    [30] = new() { new PlayerShort { PlayerId = 300, Position = "G" } },
+                    [30] = new() { new PlayerShort { PlayerId = 300, Position = (int)PlayerPositionEnum.G } },
                 },
             });
 

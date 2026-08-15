@@ -1,5 +1,6 @@
-using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
+using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Keys;
 using Xunit;
@@ -26,13 +27,13 @@ namespace NBA.Tests.Integration
             {
                 [fromTeam] = new()
                 {
-                    new PlayerShort { PlayerId = 1, Position = "C", FullName = "From Center" },
-                    new PlayerShort { PlayerId = 2, Position = "G", FullName = "From Guard" },
+                    new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C, FullName = "From Center" },
+                    new PlayerShort { PlayerId = 2, Position = (int)PlayerPositionEnum.G, FullName = "From Guard" },
                 },
                 [toTeam] = new()
                 {
-                    new PlayerShort { PlayerId = 3, Position = "C", FullName = "To Center" },
-                    new PlayerShort { PlayerId = 4, Position = "F", FullName = "To Forward" },
+                    new PlayerShort { PlayerId = 3, Position = (int)PlayerPositionEnum.C, FullName = "To Center" },
+                    new PlayerShort { PlayerId = 4, Position = (int)PlayerPositionEnum.F, FullName = "To Forward" },
                 },
             },
         };
@@ -197,7 +198,7 @@ namespace NBA.Tests.Integration
                 LeagueName = "Test League",
                 DraftedPlayersPerTeam = new()
                 {
-                    [fromTeam] = new() { new PlayerShort { PlayerId = 1, Position = "C" } },
+                    [fromTeam] = new() { new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C } },
                 },
             });
 
@@ -267,14 +268,14 @@ namespace NBA.Tests.Integration
                 {
                     [fromTeam] = new()
                     {
-                        new PlayerShort { PlayerId = 1, Position = "C" },
-                        new PlayerShort { PlayerId = 5, Position = "C" },
-                        new PlayerShort { PlayerId = 2, Position = "G" },
+                        new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C },
+                        new PlayerShort { PlayerId = 5, Position = (int)PlayerPositionEnum.C },
+                        new PlayerShort { PlayerId = 2, Position = (int)PlayerPositionEnum.G },
                     },
                     [toTeam] = new()
                     {
-                        new PlayerShort { PlayerId = 3, Position = "C" },
-                        new PlayerShort { PlayerId = 4, Position = "F" },
+                        new PlayerShort { PlayerId = 3, Position = (int)PlayerPositionEnum.C },
+                        new PlayerShort { PlayerId = 4, Position = (int)PlayerPositionEnum.F },
                     },
                 },
             });

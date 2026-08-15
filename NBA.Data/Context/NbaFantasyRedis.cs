@@ -17,6 +17,7 @@ namespace NBA.Data.Context
         private readonly Lazy<TradeRedisOperations> _trade;
         private readonly Lazy<LockRedisOperations> _lock;
         private readonly Lazy<GameRedisOperations> _game;
+        private readonly Lazy<PresenceRedisOperations> _presence;
 
         public NbaFantasyRedis(IConnectionMultiplexer redis)
         {
@@ -28,6 +29,7 @@ namespace NBA.Data.Context
             _lock = new Lazy<LockRedisOperations>(() => new LockRedisOperations(_redisDb));
             _trade = new Lazy<TradeRedisOperations>(() => new TradeRedisOperations(_redisDb, RedisSerializer.Options));
             _game = new Lazy<GameRedisOperations>(() => new GameRedisOperations(_redisDb, RedisSerializer.Options));
+            _presence = new Lazy<PresenceRedisOperations>(() => new PresenceRedisOperations(_redisDb));
         }
 
         public DraftRedisOperations Draft => _draft.Value;
@@ -38,6 +40,9 @@ namespace NBA.Data.Context
         public TradeRedisOperations Trade => _trade.Value;
 
         public GameRedisOperations Game => _game.Value;
+
+        // Team-scoped rather than league-scoped, so it stays off LeagueScope.
+        public PresenceRedisOperations Presence => _presence.Value;
 
         // Binds every league-scoped Redis operation to one league id, so a caller that works on a
         // single league states it once instead of on every call. The *Operations properties above

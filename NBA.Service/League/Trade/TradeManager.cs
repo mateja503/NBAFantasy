@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.Threading;
 using NBA.Data.Context;
+using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
+using NBA.Service.League.Roster;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,16 +15,37 @@ using System.Text;
 
 namespace NBA.Service.League.Trade
 {
-    public class TradeManager(NbaFantasyRedis redis, IOptions<ApplicationOptions> applicationOptions, DraftManager draftManager)
+    public class TradeManager(NbaFantasyRedis redis, IOptions<ApplicationOptions> applicationOptions,
+        DraftManager draftManager, RosterValidator rosterValidator)
     {
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftManager _draftManager = draftManager;
         private readonly ApplicationOptions _applicationOptions = applicationOptions.Value;
+        private readonly RosterValidator _rosterValidator = rosterValidator;
 
         public async Task ProposeDraftTrade(long leagueId, TradeBetweenTeams trade)
         {
             await _redis.League(leagueId).Trades.SetProposed(trade);
         }
+
+        // In-season proposal: one key per recipient, expiring after ProposedTradeTtlMinutes. This is
+        // only the hot copy that drives the live push — the durable record is the nba.trades row
+        // TradeService writes, which outlives this key.
+        public Task ProposeSeasonTrade(long leagueId, TradeBetweenTeams trade) =>
+            _redis.League(leagueId).Trades.SetProposedSeason(
+                trade, TimeSpan.FromMinutes(_applicationOptions.ProposedTradeTtlMinutes));
+
+        public Task<TradeBetweenTeams?> GetProposedSeasonTrade(long leagueId, long toTeamId) =>
+            _redis.League(leagueId).Trades.GetProposedSeason(toTeamId);
+
+        // The /tradeHub connection ids a team currently has open. Only the Redis read lives here —
+        // the SignalR probe that uses these ids is in NBA.Api (TradePresenceProbe), because the hub
+        // client interface belongs to the API layer and NBA.Service must not depend on it.
+        public Task<List<string>> GetTradeConnectionIds(long teamId) =>
+            _redis.Presence.GetTradeConnections(teamId);
+
+        public Task DropTradeConnection(long teamId, string connectionId) =>
+            _redis.Presence.RemoveTradeConnection(teamId, connectionId);
         
         // Rejects a trade that would push either team over the league roster limits. Computes each
         // team's roster as it would look after the swap and checks it.
@@ -101,18 +124,9 @@ namespace NBA.Service.League.Trade
             return (newFromPlayers, newToPlayers);
         }
 
-        private void ValidateRoster(List<PlayerShort> roster)
-        {
-            if (roster.Count > _applicationOptions.MaxPlayersPerTeam)
-                throw new NBAException("Trade exceeds the maximum number of players per team.", ErrorCodes.TradeIsNotValid);
-
-            // A center is the literal position string "C" (matches DraftService.DraftPlayer).
-            if (roster.Count(p => p.Position == "C") > _applicationOptions.CenterLimit)
-                throw new NBAException("Trade exceeds the maximum number of centers per team.", ErrorCodes.TradeIsNotValid);
-        }
-      
-      
-
-        
+        // Counts the roster for the shared rule. PlayerShort.Position holds PlayerPositionEnum as an
+        // int — the same code as Player.Playerposition — so no string comparison is involved.
+        private void ValidateRoster(List<PlayerShort> roster) =>
+            _rosterValidator.Validate(roster.Count, roster.Count(p => p.Position == (int)PlayerPositionEnum.C));
     }
 }

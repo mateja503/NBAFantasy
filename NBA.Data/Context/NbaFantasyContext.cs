@@ -34,6 +34,8 @@ public partial class NbaFantasyContext : DbContext
 
     public virtual DbSet<Teamplayer> Teamplayers { get; set; }
 
+    public virtual DbSet<Trade> Trades { get; set; }
+
     public virtual DbSet<Transaction> Transactions { get; set; }
 
     public virtual DbSet<Transactionleague> Transactionleagues { get; set; }
@@ -51,6 +53,8 @@ public partial class NbaFantasyContext : DbContext
             entity.HasKey(e => e.Userid).HasName("applicationuser_pkey");
 
             entity.ToTable("applicationuser", "nba");
+
+            entity.HasIndex(e => e.Username, "idx_applicationuser_username");
 
             entity.Property(e => e.Userid)
                 .UseIdentityAlwaysColumn()
@@ -129,6 +133,10 @@ public partial class NbaFantasyContext : DbContext
             entity.HasKey(e => e.Leagueplayerid).HasName("leagueplayer_pkey");
 
             entity.ToTable("leagueplayer", "nba");
+
+            entity.HasIndex(e => e.Leagueid, "idx_leagueplayer_leagueid");
+
+            entity.HasIndex(e => e.Playerid, "idx_leagueplayer_playerid");
 
             entity.Property(e => e.Leagueplayerid)
                 .UseIdentityAlwaysColumn()
@@ -324,6 +332,10 @@ public partial class NbaFantasyContext : DbContext
 
             entity.ToTable("team", "nba");
 
+            entity.HasIndex(e => e.Leagueid, "idx_team_leagueid");
+
+            entity.HasIndex(e => e.Userid, "idx_team_userid");
+
             entity.Property(e => e.Teamid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("teamid");
@@ -361,6 +373,10 @@ public partial class NbaFantasyContext : DbContext
 
             entity.ToTable("teamplayer", "nba");
 
+            entity.HasIndex(e => e.Playerid, "idx_teamplayer_playerid");
+
+            entity.HasIndex(e => e.Teamid, "idx_teamplayer_teamid");
+
             entity.Property(e => e.Teamplayerid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("teamplayerid");
@@ -376,6 +392,49 @@ public partial class NbaFantasyContext : DbContext
                 .HasForeignKey(d => d.Teamid)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("fk_teamplayer_team");
+        });
+
+        modelBuilder.Entity<Trade>(entity =>
+        {
+            entity.HasKey(e => e.Tradeid).HasName("trades_pkey");
+
+            entity.ToTable("trades", "nba");
+
+            entity.HasIndex(e => new { e.Toteamid, e.Status }, "ix_trades_toteam_status");
+
+            entity.HasIndex(e => e.Tradeguid, "trades_tradeguid_key").IsUnique();
+
+            entity.Property(e => e.Tradeid)
+                .UseIdentityAlwaysColumn()
+                .HasColumnName("tradeid");
+            entity.Property(e => e.Fromteamid).HasColumnName("fromteamid");
+            entity.Property(e => e.Leagueid).HasColumnName("leagueid");
+            entity.Property(e => e.Playerids).HasColumnName("playerids");
+            entity.Property(e => e.Status)
+                .HasMaxLength(20)
+                .HasDefaultValueSql("'pending'::character varying")
+                .HasColumnName("status");
+            entity.Property(e => e.Toteamid).HasColumnName("toteamid");
+            entity.Property(e => e.Tradeguid).HasColumnName("tradeguid");
+            entity.Property(e => e.Tscreated)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnName("tscreated");
+            entity.Property(e => e.Tsexpires).HasColumnName("tsexpires");
+
+            entity.HasOne(d => d.Fromteam).WithMany(p => p.TradeFromteams)
+                .HasForeignKey(d => d.Fromteamid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_trades_fromteam");
+
+            entity.HasOne(d => d.League).WithMany(p => p.Trades)
+                .HasForeignKey(d => d.Leagueid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_trades_league");
+
+            entity.HasOne(d => d.Toteam).WithMany(p => p.TradeToteams)
+                .HasForeignKey(d => d.Toteamid)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("fk_trades_toteam");
         });
 
         modelBuilder.Entity<Transaction>(entity =>

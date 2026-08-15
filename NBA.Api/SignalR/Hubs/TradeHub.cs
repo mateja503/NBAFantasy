@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using NBA.Api.SignalR.Clients;
+using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.League.Trade;
@@ -10,12 +11,14 @@ namespace NBA.Api.SignalR.Hubs
 {
     [Authorize]
     public class TradeHub(TradeManager tradeManager, DraftManager draftManager,
-        PlayerManager playerManager, IHubContext<DraftHub, IDraftHubClient> draftHub) : Hub<ITradeHubClient>
+        PlayerManager playerManager, IHubContext<DraftHub, IDraftHubClient> draftHub,
+        NbaFantasyRedis redis) : Hub<ITradeHubClient>
     {
         private readonly TradeManager _tradeManager = tradeManager;
         private readonly DraftManager _draftManager = draftManager;
         private readonly PlayerManager _playerManager = playerManager;
         private readonly IHubContext<DraftHub, IDraftHubClient> _draftHub = draftHub;
+        private readonly NbaFantasyRedis _redis = redis;
 
         // The client opens the connection; here we subscribe it to the groups that trade
         // requests are routed to — the league group and the connecting team's group.
@@ -31,9 +34,27 @@ namespace NBA.Api.SignalR.Hubs
             if (long.TryParse(httpContext?.Request.Query["teamId"], out long teamId))
             {
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"team:trade:{teamId}");
+
+                // Groups alone are write-only — SignalR cannot tell POST /propose-trade whether anyone
+                // is in one, and client results need a specific connection id. So record it.
+                await _redis.Presence.AddTradeConnection(teamId, Context.ConnectionId);
             }
 
             await base.OnConnectedAsync();
+        }
+
+        // Group membership is cleaned up by SignalR itself; the presence set is ours to maintain.
+        // This does not run when a process dies uncleanly, which is why readers evict ids that fail.
+        public override async Task OnDisconnectedAsync(Exception? exception)
+        {
+            var httpContext = Context.GetHttpContext();
+
+            if (long.TryParse(httpContext?.Request.Query["teamId"], out long teamId))
+            {
+                await _redis.Presence.RemoveTradeConnection(teamId, Context.ConnectionId);
+            }
+
+            await base.OnDisconnectedAsync(exception);
         }
 
         // Action called by a team to propose a trade: persist it, then route the request to the
