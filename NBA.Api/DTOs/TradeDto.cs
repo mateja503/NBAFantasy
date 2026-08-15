@@ -19,9 +19,5 @@ namespace NBA.Api.DTOs
         // When the Redis hot copy lapses. The offer itself stays open past this — it only ends the
         // real-time push window.
         public DateTime Tsexpires { get; set; }
-
-        // Whether the recipient's client answered that it was on the trade screen, so the proposal
-        // was pushed to them live. False also covers "offline" and "did not answer in time".
-        public bool DeliveredLive { get; set; }
     }
 }

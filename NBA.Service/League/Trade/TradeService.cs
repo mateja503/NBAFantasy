@@ -75,14 +75,44 @@ namespace NBA.Service.League.Trade
             ValidateRoster(newToPlayers);
         }
 
+        // Every offer of record aimed at a team, newest first — a recipient can hold proposals from
+        // several teams at once, and only the proposer's own previous offer is ever retired.
+        //
+        // Deliberately ignores Tsexpires: that timestamp ends the real-time push window, not the offer
+        // itself, so a manager who was away when one arrived is still shown it. Returns the
+        // Redis/SignalR shape rather than the entity so callers can push these straight to a client.
+        public async Task<List<TradeBetweenTeams>> GetPendingProposals(long leagueId, long toTeamId)
+        {
+            var rows = await _context.GetAllTrades()
+                .Where(t => t.Leagueid == leagueId
+                            && t.Toteamid == toTeamId
+                            && t.Status == TradeStatuses.Pending)
+                .OrderByDescending(t => t.Tscreated)
+                .ToListAsync();
+
+            return rows.Select(row => new TradeBetweenTeams
+            {
+                TradeId = row.Tradeguid,
+                FromTeam = row.Fromteamid,
+                ToTeam = row.Toteamid,
+                PlayersIds = row.Playerids ?? [],
+                // SpecifyKind matters: a DateTime whose Kind is Unspecified (what the EF InMemory
+                // provider hands back) would otherwise be read as local time and shift the timestamp
+                // by the machine's UTC offset.
+                TradeDate = new DateTimeOffset(DateTime.SpecifyKind(row.Tscreated, DateTimeKind.Utc)),
+            }).ToList();
+        }
+
         // Records the proposal durably. Redis holds a copy for the live push, but it has no persistence
         // configured, so this row is the only version that survives a restart.
         public async Task<TradeData> AddProposedTrade(long leagueId, TradeBetweenTeams trade, DateTime expiresAt)
         {
-            // Only the newest offer to a team is live — the Redis key is per recipient and overwrites —
-            // so any still-pending row for the same recipient is retired rather than left competing.
+            // A team replaces its own standing offer rather than queuing another one, so the supersede
+            // is scoped to the (fromTeam, toTeam) pair. Offers to the same recipient from *other*
+            // teams stay pending and compete alongside it — mirrors the Redis sorted set.
             var superseded = await _context.GetAllTrades()
                 .Where(t => t.Leagueid == leagueId
+                            && t.Fromteamid == trade.FromTeam
                             && t.Toteamid == trade.ToTeam
                             && t.Status == TradeStatuses.Pending)
                 .ToListAsync();
@@ -139,13 +169,18 @@ namespace NBA.Service.League.Trade
 
             var newEntries = oldEntires.Select(u =>
             {
-                TradeBetweenTeams temp = tradeBetweenTeams!.FirstOrDefault(t => u.Teamid == t.FromTeam)
-                ?? throw new NBAException($"Trade not specified for team with id: {u.Teamid}", ErrorCodes.TradeCantBeExecuted);
+                // A trade moves players BOTH ways, so a row is matched on either side of the pair and
+                // sent to the opposite team. Matching only on FromTeam (as this did) meant every row
+                // belonging to the toTeam found no trade and threw "Trade not specified for team".
+                TradeBetweenTeams temp = tradeBetweenTeams!
+                    .FirstOrDefault(t => (u.Teamid == t.FromTeam || u.Teamid == t.ToTeam)
+                                         && t.PlayersIds.Contains(u.Playerid))
+                    ?? throw new NBAException($"Trade not specified for team with id: {u.Teamid}", ErrorCodes.TradeCantBeExecuted);
 
                 return new Teamplayer
                 {
-                    Teamid = temp.ToTeam,
-                    Playerid = u.Playerid 
+                    Teamid = u.Teamid == temp.FromTeam ? temp.ToTeam : temp.FromTeam,
+                    Playerid = u.Playerid
                 };
             }).ToList();
 
@@ -158,15 +193,49 @@ namespace NBA.Service.League.Trade
 
                     await transaction.CommitAsync();
                 }
-                catch (Exception ex) 
+                catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
                     _logger.LogError("{Log}", new Log("Trade Failed",tradeBetweenTeams,ex.Message).ToJson());
                     throw new NBAException($"Trader failed", ErrorCodes.TradeCantBeExecuted);
-                }       
-            }            
+                }
+            }
 
-         
+
+        }
+
+        // Executes an accepted proposal: re-validates against current rosters, swaps the teamplayer
+        // rows, and marks the row accepted — all before the caller clears the Redis copy.
+        //
+        // Re-validation is not redundant with the check at propose time: rosters drift between the two
+        // (the other team may have picked up free agents), and this is the point where the data
+        // actually changes, so it is the check that protects it.
+        public async Task<TradeData> AcceptProposal(long leagueId, Guid tradeGuid)
+        {
+            var row = await _context.GetAllTrades()
+                .FirstOrDefaultAsync(t => t.Leagueid == leagueId && t.Tradeguid == tradeGuid)
+                ?? throw new NBAException("Trade not found.", ErrorCodes.TradeCantBeExecuted);
+
+            if (row.Status != TradeStatuses.Pending)
+                throw new NBAException($"Trade is {row.Status} and can no longer be accepted.", ErrorCodes.TradeCantBeExecuted);
+
+            var proposal = new TradeBetweenTeams
+            {
+                TradeId = row.Tradeguid,
+                FromTeam = row.Fromteamid,
+                ToTeam = row.Toteamid,
+                PlayersIds = row.Playerids ?? [],
+                TradeDate = new DateTimeOffset(DateTime.SpecifyKind(row.Tscreated, DateTimeKind.Utc)),
+            };
+
+            await ValidateSeasonTrade(leagueId, proposal);
+
+            await Trade([proposal]);
+
+            row.Status = TradeStatuses.Accepted;
+            _ = await _context.UpdateTradeRange([row]);
+
+            return row;
         }
     }
 }

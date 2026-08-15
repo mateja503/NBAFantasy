@@ -11,7 +11,7 @@ namespace NBA.Api.Mappings
     // (CommissionersTeam, Competesinleague) are composed by the caller so this stays simple.
     public static class EntityMappings
     {
-        public static TradeDto ToTradeDto(this Trade e, bool deliveredLive = false) => new()
+        public static TradeDto ToTradeDto(this Trade e) => new()
         {
             Tradeid = e.Tradeid,
             Tradeguid = e.Tradeguid,
@@ -22,7 +22,6 @@ namespace NBA.Api.Mappings
             Status = e.Status,
             Tscreated = e.Tscreated,
             Tsexpires = e.Tsexpires,
-            DeliveredLive = deliveredLive,
         };
 
         public static LeagueDto ToLeagueDto(this League e) => new()

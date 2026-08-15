@@ -5,12 +5,12 @@ namespace NBA.Api.SignalR.Clients
     public interface ITradeHubClient
     {
         Task ReceiveTradeRequest(TradeBetweenTeams trade);
-        Task ReceiveTradeAccepted(TradeBetweenTeams trade);
 
-        // A SignalR *client result*: the server invokes this on the browser and awaits its answer,
-        // rather than pushing one way. The JS handler must RETURN a value
-        // (connection.on("IsOnTradeScreen", () => true)) — a handler that only receives will hang
-        // until the caller's CancellationToken fires.
-        Task<bool> IsOnTradeScreen(CancellationToken cancellationToken);
+        // Initial sync on connect: every offer already waiting for this team, newest first. Separate
+        // from ReceiveTradeRequest so the client can tell "here is your backlog" from "a new offer
+        // just arrived" — the list can legitimately be several trades from different teams.
+        Task ReceiveTradeRequests(List<TradeBetweenTeams> trades);
+
+        Task ReceiveTradeAccepted(TradeBetweenTeams trade);
     }
 }

@@ -102,6 +102,10 @@ namespace NBA.Tests.Integration
                             services.AddScoped<RosterValidator>();
                             services.AddScoped<TradeManager>();
 
+                            // TradeHub.OnConnectedAsync falls back to Postgres for a pending proposal
+                            // when the Redis copy has lapsed, so the hub cannot resolve without this.
+                            services.AddScoped<TradeService>();
+
                             // TradeHub.AcceptTrade repopulates the draft board via
                             // PlayerManager.GetPlayersOnDraftBoard, which only touches Redis — so, as with
                             // DraftManager above, PlayerService is passed as null rather than wiring up its

@@ -28,24 +28,22 @@ namespace NBA.Service.League.Trade
             await _redis.League(leagueId).Trades.SetProposed(trade);
         }
 
-        // In-season proposal: one key per recipient, expiring after ProposedTradeTtlMinutes. This is
-        // only the hot copy that drives the live push — the durable record is the nba.trades row
-        // TradeService writes, which outlives this key.
+        // In-season proposal, expiring after ProposedTradeTtlMinutes. This is only the hot copy that
+        // drives the live push — the durable record is the nba.trades row TradeService writes, which
+        // outlives it. A team replaces its own standing offer; offers from other teams are untouched.
         public Task ProposeSeasonTrade(long leagueId, TradeBetweenTeams trade) =>
             _redis.League(leagueId).Trades.SetProposedSeason(
                 trade, TimeSpan.FromMinutes(_applicationOptions.ProposedTradeTtlMinutes));
 
-        public Task<TradeBetweenTeams?> GetProposedSeasonTrade(long leagueId, long toTeamId) =>
+        // Every live offer aimed at this team, newest first — a recipient can hold proposals from
+        // several teams at once.
+        public Task<List<TradeBetweenTeams>> GetProposedSeasonTrades(long leagueId, long toTeamId) =>
             _redis.League(leagueId).Trades.GetProposedSeason(toTeamId);
 
-        // The /tradeHub connection ids a team currently has open. Only the Redis read lives here —
-        // the SignalR probe that uses these ids is in NBA.Api (TradePresenceProbe), because the hub
-        // client interface belongs to the API layer and NBA.Service must not depend on it.
-        public Task<List<string>> GetTradeConnectionIds(long teamId) =>
-            _redis.Presence.GetTradeConnections(teamId);
-
-        public Task DropTradeConnection(long teamId, string connectionId) =>
-            _redis.Presence.RemoveTradeConnection(teamId, connectionId);
+        // Clears a settled proposal from the recipient's live set. Without this an accepted trade keeps
+        // turning up in the connect-time backlog until its score happens to lapse.
+        public Task<bool> RemoveProposedSeasonTrade(long leagueId, long toTeamId, Guid tradeId) =>
+            _redis.League(leagueId).Trades.RemoveProposedSeason(toTeamId, tradeId);
         
         // Rejects a trade that would push either team over the league roster limits. Computes each
         // team's roster as it would look after the swap and checks it.

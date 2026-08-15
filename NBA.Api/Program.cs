@@ -69,7 +69,12 @@ builder.Services.AddSignalR()
     {
         // Optional: Add a prefix if you share this Redis with other apps
         //options.Configuration.ChannelPrefix = "YourAppName";
-    });
+    })
+    // Scoped to TradeHub rather than added globally: trades are the flow whose failures the client has
+    // to distinguish by ErrorCode, and the other hubs keep SignalR's default error text.
+    .AddHubOptions<TradeHub>(options => options.AddFilter<NBAExceptionHubFilter>());
+
+builder.Services.AddSingleton<NBAExceptionHubFilter>();
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 builder.Services.AddSingleton<NbaFantasyRedis>();
@@ -170,8 +175,6 @@ builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<TradeManager>();
 // Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.
 builder.Services.AddScoped<RosterValidator>();
-// Client-result probe asking a team's browser whether it is on the trade screen.
-builder.Services.AddScoped<TradePresenceProbe>();
 builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<TeamService>();
@@ -242,7 +245,6 @@ v1.TestEndpoints();
 v1.MapLeaguEndpoints();
 v1.MapTeamEndpoints();
 v1.MapDraftEndpoints();
-v1.MapTradeEndpoints();
 v1.MapPlayerEndpoints();
 v1.MapGameEndpoints();
 v1.MapAuthenticationEndpoints();
