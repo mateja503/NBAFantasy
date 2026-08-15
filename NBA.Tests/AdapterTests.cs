@@ -140,7 +140,7 @@ namespace NBA.Tests
         }
 
         [Fact]
-        public void ToPlayerRedisFromDB_round_trips_position_back_to_string()
+        public void ToPlayerRedisFromDB_carries_the_position_code_across()
         {
             var dbPlayers = Adapter.ToPlayerDb(new List<PlayerInfoResponse>
             {
@@ -152,7 +152,7 @@ namespace NBA.Tests
             var entry = Assert.Single(redis);
             Assert.Equal(9, entry.PlayerId);
             Assert.Equal("Jrue Holiday", entry.FullName);
-            Assert.Equal("GF", entry.Position);
+            Assert.Equal((int)PlayerPositionEnum.GF, entry.Position);
         }
 
         [Fact]
@@ -165,7 +165,7 @@ namespace NBA.Tests
 
             var entry = Assert.Single(redis);
             Assert.Equal("Stephen Curry", entry.FullName);
-            Assert.Equal("G", entry.Position);
+            Assert.Equal((int)PlayerPositionEnum.G, entry.Position);
         }
     }
 }

@@ -19,6 +19,7 @@ using NBA.Api.Authentication;
 using NBA.Api.Draft;
 using NBA.Api.Endpoints;
 using NBA.Api.HostedService;
+using NBA.Api.SignalR;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
@@ -28,6 +29,7 @@ using NBA.Service.Game;
 using NBA.Service.League;
 using NBA.Service.League.Draft;
 using NBA.Service.League.FreeAgency;
+using NBA.Service.League.Roster;
 using NBA.Service.League.Trade;
 using NBA.Service.Player;
 using Polly;
@@ -67,7 +69,12 @@ builder.Services.AddSignalR()
     {
         // Optional: Add a prefix if you share this Redis with other apps
         //options.Configuration.ChannelPrefix = "YourAppName";
-    });
+    })
+    // Scoped to TradeHub rather than added globally: trades are the flow whose failures the client has
+    // to distinguish by ErrorCode, and the other hubs keep SignalR's default error text.
+    .AddHubOptions<TradeHub>(options => options.AddFilter<NBAExceptionHubFilter>());
+
+builder.Services.AddSingleton<NBAExceptionHubFilter>();
 
 builder.AddNpgsqlDbContext<NbaFantasyContext>("nbafantasydb");
 builder.Services.AddSingleton<NbaFantasyRedis>();
@@ -166,6 +173,8 @@ builder.Services.AddScoped<DraftManager>();
 builder.Services.AddScoped<DraftSnapshotService>();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<TradeManager>();
+// Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.
+builder.Services.AddScoped<RosterValidator>();
 builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<TeamService>();

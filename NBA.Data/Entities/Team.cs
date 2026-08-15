@@ -29,5 +29,9 @@ public partial class Team
 
     public virtual ICollection<Teamplayer> Teamplayers { get; set; } = new List<Teamplayer>();
 
+    public virtual ICollection<Trade> TradeFromteams { get; set; } = new List<Trade>();
+
+    public virtual ICollection<Trade> TradeToteams { get; set; } = new List<Trade>();
+
     public virtual Applicationuser? User { get; set; }
 }

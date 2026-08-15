@@ -151,6 +151,30 @@ CREATE TABLE nba.teamplayer (
 );
 
 
+-- Durable record of a proposed trade. Redis holds a short-lived copy that drives the live push,
+-- but Redis has no persistence configured, so this table is the only copy that survives a restart.
+-- tsexpires records when the Redis hot copy lapses; the row itself outlives it.
+-- playerids is an array rather than a child table: nothing queries trades by player, and it maps
+-- straight onto TradeBetweenTeams.PlayersIds. The trade-off is no foreign key into nba.player.
+CREATE TABLE nba.trades (
+    tradeid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    tradeguid UUID NOT NULL UNIQUE,
+    leagueid BIGINT NOT NULL,
+    fromteamid BIGINT NOT NULL,
+    toteamid BIGINT NOT NULL,
+    playerids BIGINT[] NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    tscreated TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tsexpires TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT fk_trades_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid),
+    CONSTRAINT fk_trades_fromteam FOREIGN KEY (fromteamid) REFERENCES nba.team(teamid),
+    CONSTRAINT fk_trades_toteam FOREIGN KEY (toteamid) REFERENCES nba.team(teamid)
+);
+
+-- Serves the "pending proposals for this team" lookup behind GET /v1/trade/get-proposed-trades.
+CREATE INDEX ix_trades_toteam_status ON nba.trades (toteamid, status);
+
+
 CREATE TABLE nba.userleague (
     userleagueid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     userid BIGINT NOT NULL,

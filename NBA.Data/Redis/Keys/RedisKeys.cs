@@ -53,6 +53,14 @@ namespace NBA.Data.Redis.Keys
         public static string GetProposedDraftTradesKey(long leagueId) => $"draft:trade:proposed:{leagueId}";
         public static string GetAcceptedDraftTradeKey(long leagueId) => $"draft:trade:accepted:{leagueId}";
 
+        // In-season proposals for one recipient: a sorted set whose members are the trade JSON and
+        // whose scores are each proposal's expiry (unix-ms). A team can hold offers from several
+        // proposers at once, and Redis has no per-member TTL, so the score carries the expiry and
+        // expired members are pruned on read. Scoped per recipient rather than per league so
+        // "everything pending for this team" is a single round trip.
+        public static string GetProposedTradeKey(long leagueId, long toTeamId)
+            => $"trade:proposed:{leagueId}:{toTeamId}";
+
         #endregion
     }
 }

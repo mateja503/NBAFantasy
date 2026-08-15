@@ -17,6 +17,7 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Service.League.Draft;
+using NBA.Service.League.Roster;
 using NBA.Service.League.Trade;
 using NBA.Service.Player;
 using StackExchange.Redis;
@@ -96,7 +97,14 @@ namespace NBA.Tests.Integration
                                 null!,
                                 sp.GetRequiredService<DraftSnapshotService>()));
 
+                            // Roster limits (MaxPlayersPerTeam / CenterLimit) moved out of TradeManager
+                            // into RosterValidator, which TradeManager now takes as a dependency.
+                            services.AddScoped<RosterValidator>();
                             services.AddScoped<TradeManager>();
+
+                            // TradeHub.OnConnectedAsync falls back to Postgres for a pending proposal
+                            // when the Redis copy has lapsed, so the hub cannot resolve without this.
+                            services.AddScoped<TradeService>();
 
                             // TradeHub.AcceptTrade repopulates the draft board via
                             // PlayerManager.GetPlayersOnDraftBoard, which only touches Redis — so, as with

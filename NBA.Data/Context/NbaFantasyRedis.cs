@@ -1,4 +1,4 @@
-using NBA.Data.Redis;
+﻿using NBA.Data.Redis;
 using NBA.Data.Redis.Operations;
 using NBA.Data.Redis.Scopes;
 using StackExchange.Redis;
