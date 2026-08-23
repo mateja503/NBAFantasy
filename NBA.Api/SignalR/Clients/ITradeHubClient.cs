@@ -12,5 +12,15 @@ namespace NBA.Api.SignalR.Clients
         Task ReceiveTradeRequests(List<TradeBetweenTeams> trades);
 
         Task ReceiveTradeAccepted(TradeBetweenTeams trade);
+
+        // A standing offer was closed without executing — declined outright, or retired by the
+        // counter-offer that answers it. Sent to the league so every board drops it, not just the two
+        // teams involved.
+        Task ReceiveTradeRejected(TradeBetweenTeams trade);
+
+        // The proposer replaced this offer with a newer one to the same team. Distinct from
+        // ReceiveTradeRejected because nobody declined it: the offer is gone, but the negotiation is
+        // still live, and a board that said "declined" would misread what happened.
+        Task ReceiveTradeSuperseded(TradeBetweenTeams trade);
     }
 }

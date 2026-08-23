@@ -15,5 +15,9 @@ namespace NBA.Data.Constants
         public const string Accepted = "accepted";
 
         public const string Rejected = "rejected";
+
+        // The whole vocabulary, for validating a caller-supplied status filter. Kept next to the
+        // constants so adding a status here can't leave the filter silently rejecting it.
+        public static readonly string[] All = [Pending, Superseded, Accepted, Rejected];
     }
 }

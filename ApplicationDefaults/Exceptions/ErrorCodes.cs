@@ -26,6 +26,7 @@ namespace ApplicationDefaults.Exceptions
         public const string UserAlreadyHasTeamInLeague = "5656-USERALREADYHASTEAMINLEAGUE";
         public const string LoginFailed = "5656-LOGINFAILED";
         public const string UserIdMismatch = "5656-USERIDMISMATCH";
+        public const string UserNotInLeague = "5656-USERNOTINLEAGUE";
         public const string UsernameAlreadyExists = "5656-USERNAMEALREADYEXISTS";
         public const string DraftAlreadyStarted = "5656-DRAFTALREADYSTARTED";
         public const string DraftNotStarted = "5656-DRAFTNOTSTARTED";

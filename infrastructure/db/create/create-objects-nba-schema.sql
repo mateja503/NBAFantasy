@@ -174,6 +174,10 @@ CREATE TABLE nba.trades (
 -- Serves the "pending proposals for this team" lookup behind GET /v1/trade/get-proposed-trades.
 CREATE INDEX ix_trades_toteam_status ON nba.trades (toteamid, status);
 
+-- Serves the trade board behind GET /v1/trades: every trade in one league, newest first. The
+-- toteam index above cannot answer it — that query never filters on a recipient.
+CREATE INDEX ix_trades_league_created ON nba.trades (leagueid, tscreated DESC);
+
 
 CREATE TABLE nba.userleague (
     userleagueid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

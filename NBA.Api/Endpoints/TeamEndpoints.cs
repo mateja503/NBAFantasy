@@ -36,6 +36,18 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(teams.Select(kvp => kvp.Key.ToUserTeamDto(kvp.Value)));
             });
 
+            // Any roster in a league you play in — what the trade board needs to show both sides of an
+            // offer. The service enforces the league-membership check; the id in the route is not
+            // trusted on its own.
+            team.MapGet("/get-team-players/{teamId}", async (long teamId, ClaimsPrincipal user, TeamService teamService) =>
+            {
+                var players = await teamService.GetTeamPlayersAsync(teamId, user.GetUserId());
+
+                // No leagueId passed: the fantasy-team column is meaningless here, the roster already
+                // says which team these players belong to.
+                return Results.Ok(players.Select(p => p.ToPlayerDto()));
+            });
+
             return team;
         }
     }
