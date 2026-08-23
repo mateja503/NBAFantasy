@@ -400,12 +400,12 @@ public partial class NbaFantasyContext : DbContext
 
             entity.ToTable("trades", "nba");
 
+            entity.HasIndex(e => new { e.Leagueid, e.Tscreated }, "ix_trades_league_created").IsDescending(false, true);
+
             entity.HasIndex(e => new { e.Toteamid, e.Status }, "ix_trades_toteam_status");
 
-            entity.HasIndex(e => e.Tradeguid, "trades_tradeguid_key").IsUnique();
-
             entity.Property(e => e.Tradeid)
-                .UseIdentityAlwaysColumn()
+                .HasDefaultValueSql("gen_random_uuid()")
                 .HasColumnName("tradeid");
             entity.Property(e => e.Fromteamid).HasColumnName("fromteamid");
             entity.Property(e => e.Leagueid).HasColumnName("leagueid");
@@ -415,7 +415,6 @@ public partial class NbaFantasyContext : DbContext
                 .HasDefaultValueSql("'pending'::character varying")
                 .HasColumnName("status");
             entity.Property(e => e.Toteamid).HasColumnName("toteamid");
-            entity.Property(e => e.Tradeguid).HasColumnName("tradeguid");
             entity.Property(e => e.Tscreated)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("tscreated");

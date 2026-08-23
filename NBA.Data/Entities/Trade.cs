@@ -5,9 +5,7 @@ namespace NBA.Data.Entities;
 
 public partial class Trade
 {
-    public long Tradeid { get; set; }
-
-    public Guid Tradeguid { get; set; }
+    public Guid Tradeid { get; set; }
 
     public long Leagueid { get; set; }
 

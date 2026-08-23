@@ -166,7 +166,7 @@ namespace NBA.Api.SignalR.Hubs
             // in its backlog and every board still shows it as open.
             foreach (var row in superseded)
             {
-                await _tradeManager.RemoveProposedSeasonTrade(leagueId, row.Toteamid, row.Tradeguid);
+                await _tradeManager.RemoveProposedSeasonTrade(leagueId, row.Toteamid, row.Tradeid);
                 await Clients.Group($"league:trade:{leagueId}").ReceiveTradeSuperseded(ToSettled(row));
             }
 
@@ -220,7 +220,7 @@ namespace NBA.Api.SignalR.Hubs
         // carry is context for rendering, not identity.
         private static TradeBetweenTeams ToSettled(TradeData row) => new()
         {
-            TradeId = row.Tradeguid,
+            TradeId = row.Tradeid,
             FromTeam = row.Fromteamid,
             ToTeam = row.Toteamid,
             PlayersIds = row.Playerids ?? [],

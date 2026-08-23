@@ -92,7 +92,7 @@ namespace NBA.Service.League.Trade
 
             return rows.Select(row => new TradeBetweenTeams
             {
-                TradeId = row.Tradeguid,
+                TradeId = row.Tradeid,
                 FromTeam = row.Fromteamid,
                 ToTeam = row.Toteamid,
                 PlayersIds = row.Playerids ?? [],
@@ -140,10 +140,10 @@ namespace NBA.Service.League.Trade
         // Closes a standing offer without executing it. Separate from letting it lapse: Tsexpires only
         // ends the real-time push window, so an untouched offer stays 'pending' forever and would keep
         // reappearing on the board. This is what a counter-offer uses to retire the offer it answers.
-        public async Task<TradeData> RejectProposal(long leagueId, Guid tradeGuid)
+        public async Task<TradeData> RejectProposal(long leagueId, Guid tradeId)
         {
             var row = await _context.GetAllTrades()
-                .FirstOrDefaultAsync(t => t.Leagueid == leagueId && t.Tradeguid == tradeGuid)
+                .FirstOrDefaultAsync(t => t.Leagueid == leagueId && t.Tradeid == tradeId)
                 ?? throw new NBAException("Trade not found.", ErrorCodes.TradeCantBeExecuted);
 
             // Same guard as AcceptProposal: a settled trade must not flip status, or an accepted swap
@@ -177,19 +177,9 @@ namespace NBA.Service.League.Trade
         public async Task<(TradeData Created, List<TradeData> Superseded)> AddProposedTrade(
             long leagueId, TradeBetweenTeams trade, DateTime expiresAt)
         {
-            // A team replaces its own standing offer rather than queuing another one, so the supersede
-            // is scoped to the (fromTeam, toTeam) pair. Offers to the same recipient from *other*
-            // teams stay pending and compete alongside it — mirrors the Redis sorted set.
-            var superseded = await _context.GetAllTrades()
-                .Where(t => t.Leagueid == leagueId
-                            && t.Fromteamid == trade.FromTeam
-                            && t.Toteamid == trade.ToTeam
-                            && t.Status == TradeStatuses.Pending)
-                .ToListAsync();
-
             var row = new TradeData
             {
-                Tradeguid = trade.TradeId,
+                Tradeid = trade.TradeId,
                 Leagueid = leagueId,
                 Fromteamid = trade.FromTeam,
                 Toteamid = trade.ToTeam,
@@ -199,26 +189,52 @@ namespace NBA.Service.League.Trade
                 Tsexpires = expiresAt,
             };
 
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            // Aspire's AddNpgsqlDbContext enables EnableRetryOnFailure, and a retrying execution
+            // strategy refuses a user-initiated transaction unless the whole unit runs through it:
+            // it can replay one operation, but not the others that a hand-rolled transaction had
+            // already grouped with it, so replaying blindly could commit half a trade. Without this
+            // wrapper the first SaveChanges inside the transaction throws and the catch below buries
+            // the reason under "Proposing the trade failed". Same shape as DraftService.EndDraft.
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            return await strategy.ExecuteAsync(async () =>
             {
-                if (superseded.Count > 0)
+                // Read inside the delegate: a retry replays this whole block, and a list captured
+                // before the first attempt would be stale — with its entities already mutated.
+                //
+                // A team replaces its own standing offer rather than queuing another one, so the
+                // supersede is scoped to the (fromTeam, toTeam) pair. Offers to the same recipient
+                // from *other* teams stay pending and compete alongside it.
+                var superseded = await _context.GetAllTrades()
+                    .Where(t => t.Leagueid == leagueId
+                                && t.Fromteamid == trade.FromTeam
+                                && t.Toteamid == trade.ToTeam
+                                && t.Status == TradeStatuses.Pending)
+                    .ToListAsync();
+
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    superseded.ForEach(t => t.Status = TradeStatuses.Superseded);
-                    _ = await _context.UpdateTradeRange(superseded);
+                    if (superseded.Count > 0)
+                    {
+                        superseded.ForEach(t => t.Status = TradeStatuses.Superseded);
+                        _ = await _context.UpdateTradeRange(superseded);
+                    }
+
+                    var created = await _context.AddTrade(row);
+
+                    await transaction.CommitAsync();
+                    return (created, superseded);
                 }
-
-                var created = await _context.AddTrade(row);
-
-                await transaction.CommitAsync();
-                return (created, superseded);
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                _logger.LogError("{Log}", new Log("Proposing trade failed", trade, ex.Message).ToJson());
-                throw new NBAException("Proposing the trade failed", ErrorCodes.TradeCantBeExecuted);
-            }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    // The exception object, not just its message: the cause is replaced by a generic
+                    // NBAException below, so this log is the only place it survives.
+                    _logger.LogError(ex, "{Log}", new Log("Proposing trade failed", trade, ex.Message).ToJson());
+                    throw new NBAException("Proposing the trade failed", ErrorCodes.TradeCantBeExecuted);
+                }
+            });
         }
 
         private void ValidateRoster(List<Teamplayer> roster) =>
@@ -254,8 +270,13 @@ namespace NBA.Service.League.Trade
                 };
             }).ToList();
 
-            using (var transaction = await _context.Database.BeginTransactionAsync())
+            // Same reason as AddProposedTrade: the retrying execution strategy has to own the
+            // transaction, or the first SaveChanges inside it throws before a single row moves.
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
             {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
                     _ = await _context.DeleteTeamPlayerRange(oldEntires);
@@ -266,10 +287,10 @@ namespace NBA.Service.League.Trade
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    _logger.LogError("{Log}", new Log("Trade Failed",tradeBetweenTeams,ex.Message).ToJson());
+                    _logger.LogError(ex, "{Log}", new Log("Trade Failed",tradeBetweenTeams,ex.Message).ToJson());
                     throw new NBAException($"Trader failed", ErrorCodes.TradeCantBeExecuted);
                 }
-            }
+            });
 
 
         }
@@ -280,10 +301,10 @@ namespace NBA.Service.League.Trade
         // Re-validation is not redundant with the check at propose time: rosters drift between the two
         // (the other team may have picked up free agents), and this is the point where the data
         // actually changes, so it is the check that protects it.
-        public async Task<TradeData> AcceptProposal(long leagueId, Guid tradeGuid)
+        public async Task<TradeData> AcceptProposal(long leagueId, Guid tradeId)
         {
             var row = await _context.GetAllTrades()
-                .FirstOrDefaultAsync(t => t.Leagueid == leagueId && t.Tradeguid == tradeGuid)
+                .FirstOrDefaultAsync(t => t.Leagueid == leagueId && t.Tradeid == tradeId)
                 ?? throw new NBAException("Trade not found.", ErrorCodes.TradeCantBeExecuted);
 
             if (row.Status != TradeStatuses.Pending)
@@ -291,7 +312,7 @@ namespace NBA.Service.League.Trade
 
             var proposal = new TradeBetweenTeams
             {
-                TradeId = row.Tradeguid,
+                TradeId = row.Tradeid,
                 FromTeam = row.Fromteamid,
                 ToTeam = row.Toteamid,
                 PlayersIds = row.Playerids ?? [],

@@ -156,9 +156,11 @@ CREATE TABLE nba.teamplayer (
 -- tsexpires records when the Redis hot copy lapses; the row itself outlives it.
 -- playerids is an array rather than a child table: nothing queries trades by player, and it maps
 -- straight onto TradeBetweenTeams.PlayersIds. The trade-off is no foreign key into nba.player.
+-- tradeid is a UUID the application supplies, not a generated surrogate: the same id travels in the
+-- Redis copy and over SignalR, so one identifier serves all three and clients quote back the key
+-- itself. The default only covers a row inserted by hand.
 CREATE TABLE nba.trades (
-    tradeid BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    tradeguid UUID NOT NULL UNIQUE,
+    tradeid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     leagueid BIGINT NOT NULL,
     fromteamid BIGINT NOT NULL,
     toteamid BIGINT NOT NULL,
