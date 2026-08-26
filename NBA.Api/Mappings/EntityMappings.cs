@@ -14,7 +14,6 @@ namespace NBA.Api.Mappings
         public static TradeDto ToTradeDto(this Trade e) => new()
         {
             Tradeid = e.Tradeid,
-            Tradeguid = e.Tradeguid,
             Leagueid = e.Leagueid,
             Fromteamid = e.Fromteamid,
             Toteamid = e.Toteamid,

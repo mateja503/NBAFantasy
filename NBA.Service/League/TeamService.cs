@@ -45,5 +45,36 @@ namespace NBA.Service.League
                 t => t,
                 t => t.Teamplayers.Select(tp => tp.Player).ToList());
         }
+
+        // One team's roster. GetUserTeamsWithPlayersAsync only ever returns teams the caller owns, which
+        // is no use to the trade board: to offer a swap you have to see the other side's players too.
+        //
+        // The guard is league membership rather than ownership — you may read any roster in a league you
+        // play in, and none outside it.
+        public async Task<List<PlayerData>> GetTeamPlayersAsync(long teamId, long userId)
+        {
+            if (teamId <= 0)
+                throw new NBAException($"{nameof(teamId)} is missing", ErrorCodes.MissingParametar);
+
+            // Leagueid is nullable, so a null here means either "no such team" or "team not in a
+            // league". Both are the same answer to the caller: there is no roster it may read.
+            var leagueId = await _context.GetAllTeams()
+                .Where(t => t.Teamid == teamId)
+                .Select(t => t.Leagueid)
+                .FirstOrDefaultAsync()
+                ?? throw new NBAException($"Team {teamId} was not found in a league.", ErrorCodes.DataBaseRecordNotFound);
+
+            var isMember = await _context.GetAllTeams()
+                .AnyAsync(t => t.Leagueid == leagueId && t.Userid == userId);
+
+            if (!isMember)
+                throw new NBAException($"User does not manage a team in league {leagueId}.", ErrorCodes.UserNotInLeague);
+
+            return await _context.GetAllTeamPlayer()
+                .Where(tp => tp.Teamid == teamId)
+                .Select(tp => tp.Player)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

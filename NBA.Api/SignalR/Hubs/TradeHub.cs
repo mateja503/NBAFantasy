@@ -10,6 +10,8 @@ using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.League.Trade;
 using NBA.Service.Player;
+// NBA.Service.League.Trade is a namespace, so the entity needs an alias to be reachable here.
+using TradeData = NBA.Data.Entities.Trade;
 
 namespace NBA.Api.SignalR.Hubs
 {
@@ -155,14 +157,27 @@ namespace NBA.Api.SignalR.Hubs
 
             var ttl = TimeSpan.FromMinutes(_applicationOptions.ProposedTradeTtlMinutes);
 
-            var created = await _tradeService.AddProposedTrade(leagueId, proposal, DateTime.UtcNow.Add(ttl));
+            var (created, superseded) = await _tradeService.AddProposedTrade(leagueId, proposal, DateTime.UtcNow.Add(ttl));
 
             await _tradeManager.ProposeSeasonTrade(leagueId, proposal);
 
-            // No-ops when the recipient is not on the trade screen — their connection only exists
-            // while that component is mounted, so an empty group *is* "they are not looking". They
-            // pick the offer up from the backlog on their next connect.
-            await Clients.Group($"team:trade:{toTeam}").ReceiveTradeRequest(proposal);
+            // A team holds only one standing offer to any given team, so this proposal displaced its
+            // own predecessor. Clear the hot copies and say so, or the recipient keeps the dead offer
+            // in its backlog and every board still shows it as open.
+            foreach (var row in superseded)
+            {
+                await _tradeManager.RemoveProposedSeasonTrade(leagueId, row.Toteamid, row.Tradeid);
+                await Clients.Group($"league:trade:{leagueId}").ReceiveTradeSuperseded(ToSettled(row));
+            }
+
+            // League-wide, unlike the draft-time ProposeTrade above which targets the recipient alone:
+            // the season trade board shows every open offer in the league, so a proposal between two
+            // other teams still has to land on everyone's screen. The recipient is in this group too,
+            // so it is one send, not two — nobody gets the offer twice.
+            //
+            // No-ops for anyone not on the trade screen: their connection only exists while that
+            // component is mounted. They pick the offer up from GET /v1/trades on their next visit.
+            await Clients.Group($"league:trade:{leagueId}").ReceiveTradeRequest(proposal);
 
             return created.ToTradeDto();
         }
@@ -175,18 +190,40 @@ namespace NBA.Api.SignalR.Hubs
 
             await _tradeManager.RemoveProposedSeasonTrade(leagueId, accepted.Toteamid, tradeId);
 
-            var settled = new TradeBetweenTeams
-            {
-                TradeId = accepted.Tradeguid,
-                FromTeam = accepted.Fromteamid,
-                ToTeam = accepted.Toteamid,
-                PlayersIds = accepted.Playerids ?? [],
-            };
-
             // Both teams are in the league group, so one send reaches everyone exactly once.
-            await Clients.Group($"league:trade:{leagueId}").ReceiveTradeAccepted(settled);
+            await Clients.Group($"league:trade:{leagueId}").ReceiveTradeAccepted(ToSettled(accepted));
 
             return accepted.ToTradeDto();
         }
+
+        // Closes a standing offer without executing it. Two callers: a manager declining outright, and
+        // the counter-offer flow, which proposes its own trade first and then retires the offer it is
+        // answering — in that order, so a validation failure on the counter leaves the original open
+        // rather than killing an offer and putting nothing in its place.
+        //
+        // Nothing moves between rosters here, so unlike AcceptSeasonTrade there is no draft-state
+        // rebuild to push.
+        public async Task<TradeDto> RejectSeasonTrade(long leagueId, Guid tradeId)
+        {
+            var rejected = await _tradeService.RejectProposal(leagueId, tradeId);
+
+            // Clear the hot copy as well, or the offer would be handed back to the recipient as part of
+            // its backlog on the next connect even though the row is settled.
+            await _tradeManager.RemoveProposedSeasonTrade(leagueId, rejected.Toteamid, tradeId);
+
+            await Clients.Group($"league:trade:{leagueId}").ReceiveTradeRejected(ToSettled(rejected));
+
+            return rejected.ToTradeDto();
+        }
+
+        // The settled-trade payload. Clients key every event on TradeId, so what the other fields
+        // carry is context for rendering, not identity.
+        private static TradeBetweenTeams ToSettled(TradeData row) => new()
+        {
+            TradeId = row.Tradeid,
+            FromTeam = row.Fromteamid,
+            ToTeam = row.Toteamid,
+            PlayersIds = row.Playerids ?? [],
+        };
     }
 }
