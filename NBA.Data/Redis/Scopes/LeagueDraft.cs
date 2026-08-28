@@ -1,3 +1,4 @@
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Operations;
 
@@ -32,7 +33,7 @@ namespace NBA.Data.Redis.Scopes
 
         public Task DeleteTeams() => operations.DeleteDraftTeams(leagueId);
 
-        public Task<Dictionary<long, List<PlayerShort>>> GetAllTeamsDraftedPlayers() =>
+        public Task<Dictionary<long, List<PlayerShortDto>>> GetAllTeamsDraftedPlayers() =>
             operations.GetAllTeamsDraftedPlayersForLeague(leagueId);
 
         public Task ScheduleTimer(DateTimeOffset dueAt) => operations.ScheduleDraftTimer(leagueId, dueAt);

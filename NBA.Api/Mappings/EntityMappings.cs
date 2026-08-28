@@ -127,19 +127,5 @@ namespace NBA.Api.Mappings
             City = e.City,
             Score = e.Score,
         };
-
-        // The only int -> label conversion left. PlayerShort now carries the raw int code, so the Redis
-        // shape no longer does this; the readable label exists purely for the HTTP contract, which
-        // keeps returning "C" rather than 3.
-        private static string ToPositionLabel(this int? playerPosition) => playerPosition switch
-        {
-            (int)PlayerPositionEnum.G => "G",
-            (int)PlayerPositionEnum.F => "F",
-            (int)PlayerPositionEnum.C => "C",
-            (int)PlayerPositionEnum.GF => "GF",
-            (int)PlayerPositionEnum.CF => "CF",
-            (int)PlayerPositionEnum.FG => "FG",
-            _ => nameof(PlayerPositionEnum.UNKOWN),
-        };
     }
 }

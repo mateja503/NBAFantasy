@@ -6,6 +6,7 @@ using k8s.ClientSets;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using System;
@@ -56,7 +57,9 @@ namespace NBA.Service.Player
     
 
      
-        public async Task<List<PlayerShort>> GetPlayersOnDraftBoard(long leagueid) 
+        // Returns the DTO shape: this feeds DraftState.DraftPlayers, which is serialized straight to
+        // clients, so positions leave here as labels rather than PlayerPositionEnum codes.
+        public async Task<List<PlayerShortDto>> GetPlayersOnDraftBoard(long leagueid) 
         {
             
             var leaguePlayers = _redis.League(leagueid).Players;
@@ -74,11 +77,11 @@ namespace NBA.Service.Player
 
             if (draftedPlayers is null) 
             {
-                return leaguesAvailablePlayers.ToList();
+                return leaguesAvailablePlayers.ToPlayerShortDtos();
             }
 
             return leaguesAvailablePlayers.Where(p => !draftedPlayers.Contains(p.PlayerId ?? 0))
-                .ToList();
+                .ToPlayerShortDtos();
         }
       
     }

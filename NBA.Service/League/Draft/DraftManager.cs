@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
 
@@ -191,8 +192,9 @@ namespace NBA.Service.League.Draft
 
             if (teamsDraftedPlayers is not null)
             {
-                state.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShort>>();
-                state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers;
+                state.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShortDto>>();
+                // The roster comes off the player cache as entities; the draft state holds the client shape.
+                state.DraftedPlayersPerTeam[teamId] = teamsDraftedPlayers.ToPlayerShortDtos();
             }
 
             return state;

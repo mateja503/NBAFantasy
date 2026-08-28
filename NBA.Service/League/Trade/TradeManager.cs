@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualStudio.Threading;
 using NBA.Data.Context;
 using NBA.Data.Enumerations;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.League.Roster;
@@ -75,7 +76,7 @@ namespace NBA.Service.League.Trade
 
             // A state without rosters means nothing has been drafted yet — treat it as an empty board so
             // ComputeSwappedRosters reports the missing team instead of dereferencing null.
-            draftState.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShort>>();
+            draftState.DraftedPlayersPerTeam ??= new Dictionary<long, List<PlayerShortDto>>();
 
             var (newFromPlayers, newToPlayers) = ComputeSwappedRosters(draftState.DraftedPlayersPerTeam, trade, ErrorCodes.TradeCantBeExecuted);
 
@@ -104,8 +105,8 @@ namespace NBA.Service.League.Trade
         // Computes both teams' rosters as they would look after the swap defined by the trade: each
         // team keeps the players it isn't trading away and gains the other team's traded players.
         // errorCode lets each caller surface its own error (proposal vs. accept).
-        private (List<PlayerShort> newFromPlayers, List<PlayerShort> newToPlayers) ComputeSwappedRosters(
-            Dictionary<long, List<PlayerShort>> teamPlayers, TradeBetweenTeams trade, string errorCode)
+        private (List<PlayerShortDto> newFromPlayers, List<PlayerShortDto> newToPlayers) ComputeSwappedRosters(
+            Dictionary<long, List<PlayerShortDto>> teamPlayers, TradeBetweenTeams trade, string errorCode)
         {
             if (!teamPlayers.TryGetValue(trade.FromTeam, out var fromTeamDraftedPlayers))
                 throw new NBAException("From team not found.", errorCode);
@@ -122,9 +123,11 @@ namespace NBA.Service.League.Trade
             return (newFromPlayers, newToPlayers);
         }
 
-        // Counts the roster for the shared rule. PlayerShort.Position holds PlayerPositionEnum as an
-        // int — the same code as Player.Playerposition — so no string comparison is involved.
-        private void ValidateRoster(List<PlayerShort> roster) =>
-            _rosterValidator.Validate(roster.Count, roster.Count(p => p.Position == (int)PlayerPositionEnum.C));
+        // Counts the roster for the shared rule. The rosters live on DraftState, so they are DTOs and
+        // the position is a label — compared through nameof so renaming the enum member cannot silently
+        // stop matching centers. Exact "C" only: a "CF" is not a center, matching the code comparison
+        // the Postgres-side checks in DraftService and TradeService still make.
+        private void ValidateRoster(List<PlayerShortDto> roster) =>
+            _rosterValidator.Validate(roster.Count, roster.Count(p => p.Position == nameof(PlayerPositionEnum.C)));
     }
 }

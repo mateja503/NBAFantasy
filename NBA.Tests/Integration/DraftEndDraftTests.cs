@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Service.League.Draft;
 using NBA.Service.League.Roster;
@@ -63,10 +64,10 @@ namespace NBA.Tests.Integration
             await _fixture.Redis.Draft.SetDraftState(leagueId, new DraftState
             {
                 LeagueName = "End Draft League",
-                DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShort>>
+                DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShortDto>>
                 {
-                    [10] = new() { new PlayerShort { PlayerId = 100, Position = (int)PlayerPositionEnum.G }, new PlayerShort { PlayerId = 101, Position = (int)PlayerPositionEnum.C } },
-                    [20] = new() { new PlayerShort { PlayerId = 200, Position = (int)PlayerPositionEnum.F } },
+                    [10] = new() { new PlayerShortDto { PlayerId = 100, Position = nameof(PlayerPositionEnum.G) }, new PlayerShortDto { PlayerId = 101, Position = nameof(PlayerPositionEnum.C) } },
+                    [20] = new() { new PlayerShortDto { PlayerId = 200, Position = nameof(PlayerPositionEnum.F) } },
                 },
             });
 
@@ -104,9 +105,9 @@ namespace NBA.Tests.Integration
             await _fixture.Redis.Draft.SetDraftState(leagueId, new DraftState
             {
                 LeagueName = "Already Done League",
-                DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShort>>
+                DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShortDto>>
                 {
-                    [30] = new() { new PlayerShort { PlayerId = 300, Position = (int)PlayerPositionEnum.G } },
+                    [30] = new() { new PlayerShortDto { PlayerId = 300, Position = nameof(PlayerPositionEnum.G) } },
                 },
             });
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using NBA.Data.Enumerations;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Keys;
 using Xunit;
@@ -27,13 +28,13 @@ namespace NBA.Tests.Integration
             {
                 [fromTeam] = new()
                 {
-                    new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C, FullName = "From Center" },
-                    new PlayerShort { PlayerId = 2, Position = (int)PlayerPositionEnum.G, FullName = "From Guard" },
+                    new PlayerShortDto { PlayerId = 1, Position = nameof(PlayerPositionEnum.C), FullName = "From Center" },
+                    new PlayerShortDto { PlayerId = 2, Position = nameof(PlayerPositionEnum.G), FullName = "From Guard" },
                 },
                 [toTeam] = new()
                 {
-                    new PlayerShort { PlayerId = 3, Position = (int)PlayerPositionEnum.C, FullName = "To Center" },
-                    new PlayerShort { PlayerId = 4, Position = (int)PlayerPositionEnum.F, FullName = "To Forward" },
+                    new PlayerShortDto { PlayerId = 3, Position = nameof(PlayerPositionEnum.C), FullName = "To Center" },
+                    new PlayerShortDto { PlayerId = 4, Position = nameof(PlayerPositionEnum.F), FullName = "To Forward" },
                 },
             },
         };
@@ -198,7 +199,7 @@ namespace NBA.Tests.Integration
                 LeagueName = "Test League",
                 DraftedPlayersPerTeam = new()
                 {
-                    [fromTeam] = new() { new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C } },
+                    [fromTeam] = new() { new PlayerShortDto { PlayerId = 1, Position = nameof(PlayerPositionEnum.C) } },
                 },
             });
 
@@ -268,14 +269,14 @@ namespace NBA.Tests.Integration
                 {
                     [fromTeam] = new()
                     {
-                        new PlayerShort { PlayerId = 1, Position = (int)PlayerPositionEnum.C },
-                        new PlayerShort { PlayerId = 5, Position = (int)PlayerPositionEnum.C },
-                        new PlayerShort { PlayerId = 2, Position = (int)PlayerPositionEnum.G },
+                        new PlayerShortDto { PlayerId = 1, Position = nameof(PlayerPositionEnum.C) },
+                        new PlayerShortDto { PlayerId = 5, Position = nameof(PlayerPositionEnum.C) },
+                        new PlayerShortDto { PlayerId = 2, Position = nameof(PlayerPositionEnum.G) },
                     },
                     [toTeam] = new()
                     {
-                        new PlayerShort { PlayerId = 3, Position = (int)PlayerPositionEnum.C },
-                        new PlayerShort { PlayerId = 4, Position = (int)PlayerPositionEnum.F },
+                        new PlayerShortDto { PlayerId = 3, Position = nameof(PlayerPositionEnum.C) },
+                        new PlayerShortDto { PlayerId = 4, Position = nameof(PlayerPositionEnum.F) },
                     },
                 },
             });

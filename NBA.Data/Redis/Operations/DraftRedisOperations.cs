@@ -1,4 +1,5 @@
 ﻿using NBA.Data.Entities;
+using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Keys;
 using StackExchange.Redis;
@@ -112,10 +113,10 @@ namespace NBA.Data.Redis.Operations
             return value.HasValue ? JsonSerializer.Deserialize<Dictionary<long, Queue<TeamDraftBoard>>>(value.ToString(), _jsonOptions) : null;
         }
 
-        public async Task<Dictionary<long, List<PlayerShort>>> GetAllTeamsDraftedPlayersForLeague(long leagueId)
+        public async Task<Dictionary<long, List<PlayerShortDto>>> GetAllTeamsDraftedPlayersForLeague(long leagueId)
         {
             var state = await GetCurrentDraftState(leagueId);
-            return state?.DraftedPlayersPerTeam ?? new Dictionary<long, List<PlayerShort>>();
+            return state?.DraftedPlayersPerTeam ?? new Dictionary<long, List<PlayerShortDto>>();
         }
 
         // Acquires a short-lived per-league lock so that only one actor can advance the draft

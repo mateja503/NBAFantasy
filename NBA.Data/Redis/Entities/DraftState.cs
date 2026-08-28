@@ -1,4 +1,5 @@
-﻿using NBA.Data.Redis.Enumerations;
+﻿using NBA.Data.Redis.Dtos;
+using NBA.Data.Redis.Enumerations;
 
 namespace NBA.Data.Redis.Entities
 {
@@ -15,7 +16,9 @@ namespace NBA.Data.Redis.Entities
         //public bool? IsDraftEnded { get; set; } = false;
         //public bool? IsDraftCompleted { get; set; } = false;
         public DraftBoardTeams? DraftBoardTeams { get; set; }
-        public List<PlayerShort>? DraftPlayers { get; set; }
-        public Dictionary<long, List<PlayerShort>>? DraftedPlayersPerTeam { get; set; } = new Dictionary<long, List<PlayerShort>>();
+        // PlayerShortDto, not the PlayerShort entity: this object is serialized straight to clients over
+        // /draftHub, so the positions in it are labels rather than PlayerPositionEnum codes.
+        public List<PlayerShortDto>? DraftPlayers { get; set; }
+        public Dictionary<long, List<PlayerShortDto>>? DraftedPlayersPerTeam { get; set; } = new Dictionary<long, List<PlayerShortDto>>();
     }
 }
