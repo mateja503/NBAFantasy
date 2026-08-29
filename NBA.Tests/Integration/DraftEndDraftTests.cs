@@ -40,8 +40,14 @@ namespace NBA.Tests.Integration
             var jsonOptions = Options.Create(new JsonOptions());
             var snapshot = new DraftSnapshotService(context, _fixture.Redis, draftOptions);
             var rosterValidator = new RosterValidator(appOptions);
+            // EndDraft now lives on DraftLifecycleService; DraftService delegates to it, so this test
+            // still exercises the same write path through the same entry point.
+            var lifecycle = new DraftLifecycleService(context, draftOptions, _fixture.Redis);
+            // DraftService reaches the draft-order Redis key through DraftOrderManager now; EndDraft
+            // does not use it, but the ctor requires it.
+            var draftOrder = new DraftOrderManager(_fixture.Redis);
 
-            return new DraftService(context, draftOptions, appOptions, jsonOptions, _fixture.Redis, snapshot, rosterValidator);
+            return new DraftService(context, draftOptions, appOptions, jsonOptions, draftOrder, snapshot, rosterValidator, lifecycle);
         }
 
         [Fact]
