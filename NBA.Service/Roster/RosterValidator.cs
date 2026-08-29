@@ -2,7 +2,7 @@ using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
 using Microsoft.Extensions.Options;
 
-namespace NBA.Service.League.Roster
+namespace NBA.Service.Roster
 {
     // League roster composition rules (squad size, center cap) in one place, so the draft, trade and
     // free-agency paths cannot drift apart — they already had: the trade path threw the generic

@@ -7,14 +7,14 @@ using NBA.Data.Context;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Draft;
-using NBA.Service.League.Roster;
+using NBA.Service.Draft;
+using NBA.Service.Roster;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
-namespace NBA.Service.League.Trade
+namespace NBA.Service.Trade
 {
     public class TradeManager(NbaFantasyRedis redis, IOptions<ApplicationOptions> applicationOptions,
         DraftManager draftManager, RosterValidator rosterValidator)

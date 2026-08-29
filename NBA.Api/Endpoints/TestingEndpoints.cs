@@ -1,7 +1,7 @@
 ﻿using ExternalClients;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
-using NBA.Service.League.Draft;
+using NBA.Service.Draft;
 
 namespace NBA.Api.Endpoints
 {

@@ -6,7 +6,7 @@ using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
 using PlayerData = NBA.Data.Entities.Player;
-using Team = ExternalClients.Response.Team;
+using ApiTeam = ExternalClients.Response.Team;
 
 namespace NBA.Service
 {
@@ -70,7 +70,7 @@ namespace NBA.Service
             }).ToList();
         }
 
-        private static GameTeamShort? ToGameTeamRedis(Team? team, int score)
+        private static GameTeamShort? ToGameTeamRedis(ApiTeam? team, int score)
         {
             if (team is null)
             {

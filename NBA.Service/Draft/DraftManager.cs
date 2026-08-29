@@ -8,7 +8,7 @@ using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
 
-namespace NBA.Service.League.Draft
+namespace NBA.Service.Draft
 {
     public class DraftManager(NbaFantasyContext context,
         IOptions<DraftOptions> draftOptions,

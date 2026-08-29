@@ -7,10 +7,11 @@ using NBA.Api.DTOs;
 using NBA.Api.Mappings;
 using NBA.Api.SignalR.Clients;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Draft;
-using NBA.Service.League.Trade;
+using NBA.Service.Draft;
 using NBA.Service.Player;
-// NBA.Service.League.Trade is a namespace, so the entity needs an alias to be reachable here.
+using NBA.Service.Trade;
+
+// NBA.Service.Trade is a namespace, so the entity needs an alias to be reachable here.
 using TradeData = NBA.Data.Entities.Trade;
 
 namespace NBA.Api.SignalR.Hubs

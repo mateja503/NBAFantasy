@@ -8,12 +8,12 @@ using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Roster;
+using NBA.Service.Roster;
 using PlayerData = NBA.Data.Entities.Player;
-// NBA.Service.League.Trade is a namespace, so the entity needs an alias to be reachable here — the
+// NBA.Service.Trade is a namespace, so the entity needs an alias to be reachable here — the
 // same problem PlayerData above solves for NBA.Service.Player.
 using TradeData = NBA.Data.Entities.Trade;
-namespace NBA.Service.League.Trade
+namespace NBA.Service.Trade
 {
     public class TradeService(NbaFantasyContext context, ILogger<TradeService> logger, RosterValidator rosterValidator)
     {

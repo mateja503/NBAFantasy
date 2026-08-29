@@ -3,7 +3,7 @@ using ApplicationDefaults.Exceptions;
 using NBA.Api.Authentication;
 using NBA.Api.Mappings;
 using NBA.Api.Requests.Team;
-using NBA.Service.League;
+using NBA.Service.Team;
 
 namespace NBA.Api.Endpoints
 {

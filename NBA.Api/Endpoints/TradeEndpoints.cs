@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using NBA.Api.Authentication;
 using NBA.Api.Mappings;
-using NBA.Service.League.Trade;
+using NBA.Service.Trade;
 
 namespace NBA.Api.Endpoints
 {

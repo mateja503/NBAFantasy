@@ -27,15 +27,16 @@ using NBA.Service.Authentication;
 using NBA.Service.CalculateBoxScore;
 using NBA.Service.Game;
 using NBA.Service.League;
-using NBA.Service.League.Draft;
-using NBA.Service.League.FreeAgency;
-using NBA.Service.League.Roster;
-using NBA.Service.League.Trade;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
+using NBA.Service.Draft;
+using NBA.Service.FreeAgency;
+using NBA.Service.Roster;
+using NBA.Service.Trade;
+using NBA.Service.Team;
 
 
 var builder = WebApplication.CreateBuilder(args);

@@ -6,7 +6,7 @@ using NBA.Api.SignalR.Clients;
 using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
-using NBA.Service.League.Draft;
+using NBA.Service.Draft;
 using NBA.Service.Player;
 
 namespace NBA.Api.SignalR.Hubs

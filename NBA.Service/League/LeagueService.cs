@@ -2,6 +2,7 @@ using ApplicationDefaults.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using TeamData = NBA.Data.Entities.Team;
 
 namespace NBA.Service.League
 {
@@ -26,7 +27,7 @@ namespace NBA.Service.League
 
     public record JoinLeagueInput(long? LeagueId, string? TeamName, long? UserId);
 
-    public record JoinLeagueResult(Team Team, NBA.Data.Entities.League League);
+    public record JoinLeagueResult(TeamData Team, NBA.Data.Entities.League League);
 
     public class LeagueService(NbaFantasyContext context)
     {
@@ -150,7 +151,7 @@ namespace NBA.Service.League
             if(league.Teams.Any(u => u.Userid!.Value == input.UserId))
                 throw new NBAException($"User with id {input.UserId} already has a team in league {league.Name}", ErrorCodes.UserAlreadyHasTeamInLeague);
 
-            var team = await _context.AddTeam(new Team
+            var team = await _context.AddTeam(new TeamData
             {
                 Name = input.TeamName,
                 Leagueid = league.Leagueid,

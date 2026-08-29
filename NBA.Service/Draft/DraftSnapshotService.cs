@@ -9,7 +9,7 @@ using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
 using System.Text.Json;
 
-namespace NBA.Service.League.Draft
+namespace NBA.Service.Draft
 {
     // Durability layer for the live draft. The authoritative live copy stays in Redis (fast);
     // this mirrors it into Postgres so a Redis eviction/restart mid-draft can be recovered.

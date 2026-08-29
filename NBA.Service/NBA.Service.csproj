@@ -19,8 +19,4 @@
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="1.1.10" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Team\" />
-  </ItemGroup>
-
 </Project>

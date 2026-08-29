@@ -3,22 +3,23 @@ using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using PlayerData = NBA.Data.Entities.Player;
+using TeamData = NBA.Data.Entities.Team;
 
-namespace NBA.Service.League
+namespace NBA.Service.Team
 {
     public class TeamService(NbaFantasyContext context)
     {
         private readonly NbaFantasyContext _context = context;
 
-        public async Task<Team> AddAsync(string? teamName)
+        public async Task<TeamData> AddAsync(string? teamName)
         {
             if (string.IsNullOrEmpty(teamName))
                 throw new NBAException($"{nameof(teamName)} is missing", ErrorCodes.MissingParametar);
 
-            return await _context.AddTeam(new Team { Name = teamName });
+            return await _context.AddTeam(new TeamData { Name = teamName });
         }
 
-        public async Task<List<Team>> GetLeagueTeamsAsync(long leagueId)
+        public async Task<List<TeamData>> GetLeagueTeamsAsync(long leagueId)
         {
             return await _context.GetAllTeams()
                 .Where(t => t.Leagueid == leagueId)
@@ -28,7 +29,7 @@ namespace NBA.Service.League
 
         // Every team the user owns, keyed by the team itself so the caller gets the roster without a
         // second lookup. A team with nobody drafted yet maps to an empty list, never a missing key.
-        public async Task<Dictionary<Team, List<PlayerData>>> GetUserTeamsWithPlayersAsync(long userId)
+        public async Task<Dictionary<TeamData, List<PlayerData>>> GetUserTeamsWithPlayersAsync(long userId)
         {
             if (userId <= 0)
                 throw new NBAException($"{nameof(userId)} is missing", ErrorCodes.MissingParametar);

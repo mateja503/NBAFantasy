@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using PlayerData = NBA.Data.Entities.Player;
 
-namespace NBA.Service.League.FreeAgency
+namespace NBA.Service.FreeAgency
 {
     public class FreeAgencyService(NbaFantasyContext context)
     {

@@ -9,7 +9,7 @@ using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Redis.Entities;
 using NBA.Data.Redis.Enumerations;
-using NBA.Service.League.Draft;
+using NBA.Service.Draft;
 using StackExchange.Redis;
 using System.Text.Json;
 namespace NBA.Api.Endpoints

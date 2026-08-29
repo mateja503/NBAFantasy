@@ -10,14 +10,13 @@ using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Draft;
-using NBA.Service.League.Roster;
+using NBA.Service.Roster;
 using Polly.CircuitBreaker;
 using StackExchange.Redis;
 using System.Text.Json;
 using PlayerData = NBA.Data.Entities.Player;
 
-namespace NBA.Service.League.Draft
+namespace NBA.Service.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,

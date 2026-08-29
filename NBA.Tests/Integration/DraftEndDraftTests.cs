@@ -8,8 +8,8 @@ using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Draft;
-using NBA.Service.League.Roster;
+using NBA.Service.Draft;
+using NBA.Service.Roster;
 using Xunit;
 
 namespace NBA.Tests.Integration

@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using TeamData = NBA.Data.Entities.Team;
 
 namespace NBA.Service.Authentication
 {
     public record LoginResult(
         Applicationuser User,
         List<NBA.Data.Entities.League> CommissionerLeagues,
-        List<Team> OtherTeams);
+        List<TeamData> OtherTeams);
 
     public class AuthService(NbaFantasyContext context, IPasswordHasher<Applicationuser> passwordHasher)
     {

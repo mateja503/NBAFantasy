@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
-using NBA.Service.League.Draft;
+using NBA.Service.Draft;
 using System;
 using System.Collections.Generic;
 using System.Text;
