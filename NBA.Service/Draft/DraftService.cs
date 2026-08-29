@@ -20,15 +20,17 @@ namespace NBA.Service.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,
-        NbaFantasyRedis redis, DraftSnapshotService snapshot, RosterValidator rosterValidator)
+        DraftOrderManager draftOrder, DraftSnapshotService snapshot, RosterValidator rosterValidator,
+        DraftLifecycleService lifecycle)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
-        private readonly NbaFantasyRedis _redis = redis;
+        private readonly DraftOrderManager _draftOrder = draftOrder;
         private readonly DraftSnapshotService _snapshot = snapshot;
         private readonly RosterValidator _rosterValidator = rosterValidator;
+        private readonly DraftLifecycleService _lifecycle = lifecycle;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId)
@@ -37,10 +39,7 @@ namespace NBA.Service.Draft
             // Without this, a Redis flush mid-draft would fall through and reshuffle the draft order.
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
-            // Named draftRedis rather than draft — the generated order below already owns that name.
-            var draftRedis = _redis.League(leagueId).Draft;
-
-            var draftTeams = await draftRedis.GetTeams();
+            var draftTeams = await _draftOrder.GetTeams(leagueId);
 
             if (draftTeams is not null)
                 return draftTeams;
@@ -73,20 +72,20 @@ namespace NBA.Service.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await draftRedis.SetTeams(draft);
+                    await _draftOrder.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<TeamDraftBoard>(teams));
-                    await draftRedis.SetTeams(draft);
+                    await _draftOrder.SetTeams(leagueId, draft);
                     return draft;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
 
-                    await draftRedis.SetTeams(draft);
+                    await _draftOrder.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.RRR:
@@ -96,33 +95,22 @@ namespace NBA.Service.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await draftRedis.SetTeams(draft);
+                    await _draftOrder.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<TeamDraftBoard>(teams));
-                    await draftRedis.SetTeams(draft);
+                    await _draftOrder.SetTeams(leagueId, draft);
                     return draft;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);
             }
         }
 
+        // Moved to DraftLifecycleService (shared with DraftManager); kept here as a pass-through so
+        // the hub and the timer processor keep calling it through DraftService.
         public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<TeamDraftBoard>> teams)
-        {
-            var currentRound = teams.Keys.FirstOrDefault();
-            if (currentRound == 0) return null;
-
-            var onTheClockTeam = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).FirstOrDefault();
-            var onTheClockTeams = teams[currentRound].Select(t => new TeamDraftBoard { TeamId = t.TeamId, TeamName = t.TeamName!, Pick = t.Pick }).Skip(1).Take(_draftOptions.ShowTeamDraftBoardCount).ToList();
-
-            return new DraftBoardTeams
-            {
-                CurrentRound = currentRound,
-                onTheClockTeam = onTheClockTeam,
-                DraftOrder = onTheClockTeams
-            };
-        }
+            => _lifecycle.PrepareDraftBoard(teams);
 
         public async Task<PlayerData> DraftPlayer(long teamId, long playerId)
         {
@@ -152,41 +140,9 @@ namespace NBA.Service.Draft
         }
 
 
-        public async Task EndDraft(long leagueId)
-        {
-            var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid)
-                    ?? throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
-
-            if (league.Draftcompleted == true) return;
-
-            var draftedPerTeam = await _redis.League(leagueId).Draft.GetAllTeamsDraftedPlayers();
-            var teamPlayers = draftedPerTeam
-                .SelectMany(kvp => kvp.Value.Select(p => new Teamplayer { Teamid = kvp.Key, Playerid = p.PlayerId ?? 0 }))
-                .ToList();
-
-
-            var strategy = _context.Database.CreateExecutionStrategy();
-
-            await strategy.ExecuteAsync(async () =>
-            {
-                await using var tx = await _context.Database.BeginTransactionAsync();
-                try
-                {
-                    if (teamPlayers.Count > 0)
-                        await _context.AddTeamPlayerRange(teamPlayers);
-
-                    league.Draftcompleted = true;
-                    await _context.UpdateLeague(league);
-
-                    await tx.CommitAsync();
-                }
-                catch
-                {
-                    await tx.RollbackAsync();
-                    throw;
-                }
-            });
-        }
+        // Moved to DraftLifecycleService (shared with DraftManager); kept here as a pass-through so
+        // existing callers of DraftService.EndDraft are unaffected.
+        public Task EndDraft(long leagueId) => _lifecycle.EndDraft(leagueId);
 
 
         public async Task<bool> CheckDraftCompleted(long leagueId)

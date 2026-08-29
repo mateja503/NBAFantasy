@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
 using ExternalClients;
@@ -169,9 +169,7 @@ builder.Services.AddScoped<GameManager>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
-builder.Services.AddScoped<DraftService>();
-builder.Services.AddScoped<DraftManager>();
-builder.Services.AddScoped<DraftSnapshotService>();
+builder.Services.RegisterDraft();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<TradeManager>();
 // Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.

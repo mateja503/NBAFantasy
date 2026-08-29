@@ -366,6 +366,8 @@ graphify-out/cache/
 graphify-out/cost.json
 graphify-out/.graphify_python
 graphify-out/.graphify_root
+# graphify cross-project edge cache, written to the repo root
+.xproj.json
 
 # Claude Code local hooks (absolute paths, machine-specific)
 .claude/

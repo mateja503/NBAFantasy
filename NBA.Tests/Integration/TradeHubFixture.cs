@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using ApplicationDefaults.Options;
 using Microsoft.AspNetCore.Authentication;
@@ -88,14 +88,15 @@ namespace NBA.Tests.Integration
                             services.AddScoped<DraftSnapshotService>();
 
                             // DraftManager.GetDraftState / UpdaterDraftState (the only methods the accept
-                            // path calls) use the snapshot service + Redis and never touch DraftService, so
-                            // we pass null for it rather than wiring DraftService's whole graph.
+                            // path calls) use the snapshot service + Redis and never touch the lifecycle
+                            // service, but it only needs the context/options/Redis already registered
+                            // here, so it is wired up properly rather than passed as null.
+                            services.AddScoped<DraftLifecycleService>();
                             services.AddScoped(sp => new DraftManager(
-                                sp.GetRequiredService<NbaFantasyContext>(),
                                 sp.GetRequiredService<IOptions<DraftOptions>>(),
                                 sp.GetRequiredService<NbaFantasyRedis>(),
-                                null!,
-                                sp.GetRequiredService<DraftSnapshotService>()));
+                                sp.GetRequiredService<DraftSnapshotService>(),
+                                sp.GetRequiredService<DraftLifecycleService>()));
 
                             // Roster limits (MaxPlayersPerTeam / CenterLimit) moved out of TradeManager
                             // into RosterValidator, which TradeManager now takes as a dependency.

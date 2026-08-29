@@ -1,7 +1,6 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.Options;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NBA.Data.Context;
 using NBA.Data.Redis.Dtos;
@@ -10,19 +9,23 @@ using NBA.Data.Redis.Enumerations;
 
 namespace NBA.Service.Draft
 {
-    public class DraftManager(NbaFantasyContext context,
+    // Redis-only coordinator for the live draft (rule 4): every read/write here goes through
+    // NbaFantasyRedis. The handful of Postgres reads this used to do directly now come from
+    // DraftLifecycleService, so the manager no longer takes a DbContext at all.
+    public class DraftManager(
         IOptions<DraftOptions> draftOptions,
-        NbaFantasyRedis redis, DraftService draftService, DraftSnapshotService snapshot)
+        NbaFantasyRedis redis, DraftSnapshotService snapshot, DraftLifecycleService lifecycle)
     {
-        private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
-        private readonly DraftService _draftService = draftService;
         private readonly DraftSnapshotService _snapshot = snapshot;
+        // The draft operations shared with DraftService, plus the league/team lookups this type used
+        // to run against the DbContext itself.
+        private readonly DraftLifecycleService _lifecycle = lifecycle;
 
         public async Task<DraftState> CreateDraftState(long leagueId)
         {
-            var leagueName = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId).Select(u => u.Name).SingleOrDefaultAsync();
+            var leagueName = await _lifecycle.GetLeagueName(leagueId);
 
             var state = new DraftState
             {
@@ -76,14 +79,11 @@ namespace NBA.Service.Draft
 
             // Writes the drafted rosters into Postgres — it reads DraftedPlayersPerTeam off draft:state,
             // so it has to run before the Redis clean-up below.
-            await _draftService.EndDraft(leagueId);
+            await _lifecycle.EndDraft(leagueId);
 
             // The draft board, the available player pool and the per-team roster sets are draft-time
             // scratch data; once the rosters are in Teamplayer there is nothing left to draft from.
-            var teamIds = await _context.GetAllTeams()
-                .Where(t => t.Leagueid == leagueId)
-                .Select(t => t.Teamid)
-                .ToListAsync();
+            var teamIds = await _lifecycle.GetLeagueTeamIds(leagueId);
 
             await league.Players.DeleteDraftPlayers(teamIds);
 
@@ -119,8 +119,7 @@ namespace NBA.Service.Draft
 
             if (state is null)
             {
-                var leagueName = await _context.GetAllLeagues().Where(u => u.Leagueid == leagueId)
-                    .Select(u => u.Name).SingleOrDefaultAsync();
+                var leagueName = await _lifecycle.GetLeagueName(leagueId);
 
                 state = new DraftState { LeagueName = leagueName ?? "NO LEAGUE" };
             }
@@ -176,7 +175,7 @@ namespace NBA.Service.Draft
             if (draftTeams.Count == 0)
                 MarkEnded(state);
             else
-                state.DraftBoardTeams = _draftService.PrepareDraftBoard(draftTeams);
+                state.DraftBoardTeams = _lifecycle.PrepareDraftBoard(draftTeams);
 
             var saved = await draft.SetState(state);
 
