@@ -172,6 +172,9 @@ builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.RegisterDraft();
 builder.Services.AddScoped<TradeService>();
 builder.Services.AddScoped<TradeManager>();
+// TradeHub depends on the interface, not on the two above: the orchestrator is the seam that lets the
+// hub be constructed without a live Postgres and Redis behind it.
+builder.Services.AddScoped<ITradeOrchestrator, TradeOrchestrator>();
 // Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.
 builder.Services.AddScoped<RosterValidator>();
 builder.Services.AddScoped<FreeAgencyService>();
