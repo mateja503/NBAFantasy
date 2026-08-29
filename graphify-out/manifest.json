@@ -1,10 +1,4 @@
 {
-  ".claude/settings.local.json": {
-    "mtime": 1785585437.6312802,
-    "seen": 1788002034.0806732,
-    "ast_hash": "33003f81ad62258acf8f7c48bcbc87e0",
-    "semantic_hash": "33003f81ad62258acf8f7c48bcbc87e0"
-  },
   "ApplicationDefaults/ApplicationDefaults.csproj": {
     "mtime": 1773505725.5165982,
     "seen": 1788002034.0806832,
@@ -1062,27 +1056,9 @@
     "semantic_hash": "351c7f7f0e2545fcf2771faa1848f94f"
   },
   "CLAUDE.md": {
-    "mtime": 1786281964.1717389,
-    "seen": 1788002034.0808916,
-    "ast_hash": "71d70cfc942f4336984bb6b4037c0c8b",
-    "semantic_hash": "71d70cfc942f4336984bb6b4037c0c8b"
-  },
-  "NBA.Api/wwwroot/lib/jquery-validation-unobtrusive/LICENSE.txt": {
-    "mtime": 1769976989.1963248,
-    "seen": 1788002034.0808926,
-    "ast_hash": "ba2bed45d99b13d4c31485d0631ae675",
-    "semantic_hash": "ba2bed45d99b13d4c31485d0631ae675"
-  },
-  "NBA.Api/wwwroot/lib/jquery-validation/LICENSE.md": {
-    "mtime": 1769976989.0741222,
-    "seen": 1788002034.0808938,
-    "ast_hash": "41ef1b919db5e3aeaf47308518e7bcee",
-    "semantic_hash": "41ef1b919db5e3aeaf47308518e7bcee"
-  },
-  "NBA.Api/wwwroot/lib/jquery/LICENSE.txt": {
-    "mtime": 1769976989.067123,
-    "seen": 1788002034.080895,
-    "ast_hash": "f661402a551136dbe74282edc5bea28d",
-    "semantic_hash": "f661402a551136dbe74282edc5bea28d"
+    "mtime": 1788002097.7530513,
+    "seen": 1788003542.7726977,
+    "ast_hash": "2badee55acdeeea7c5a6d071c5057cdc",
+    "semantic_hash": ""
   }
 }
