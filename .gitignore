@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# graphify - local only (regenerable / machine-specific)
+graphify-out/cache/
+graphify-out/cost.json
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+
+# Claude Code local hooks (absolute paths, machine-specific)
+.claude/

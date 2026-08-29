@@ -1,0 +1,12 @@
+# .graphifyignore
+
+# build output
+bin/
+obj/
+
+# vendored front-end libraries (jQuery et al. - not our source)
+NBA.Api/wwwroot/lib/
+
+# JS artifacts (not present today, kept so the file ports to other repos)
+node_modules/
+dist/
