@@ -31,7 +31,7 @@ namespace NBA.Service.CalculateBoxScore
                     } 
                 )
                 .Where(player => player != null)
-                .ToList(); ;
+                .ToList();
 
              await _context.UpdatePlayersRange(result!);
         }

@@ -1,6 +1,5 @@
 ﻿using ApplicationDefaults.Exceptions;
 using ApplicationDefaults.LogDefaults;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBA.Data.Constants;
@@ -21,9 +20,9 @@ namespace NBA.Service.Trade
         private readonly ILogger<TradeService> _logger = logger;
         private readonly RosterValidator _rosterValidator = rosterValidator;
 
-        // Validates an in-season proposal. Deliberately separate from TradeManager.IsTradeValid, which
-        // reads the live DraftState out of Redis: by the season that state is gone, so the rosters have
-        // to come from nba.teamplayer instead. The roster limits themselves are the same shared rule.
+        // Validates a proposal against the rosters in nba.teamplayer. This is now the only trade
+        // validation: the draft-time counterpart, which checked the live DraftState in Redis, went with
+        // draft-night trading. Roster limits come from the shared RosterValidator rule.
         public async Task ValidateSeasonTrade(long leagueId, TradeBetweenTeams trade)
         {
             if (trade.FromTeam == trade.ToTeam)
@@ -241,8 +240,14 @@ namespace NBA.Service.Trade
             _rosterValidator.Validate(
                 roster.Count,
                 roster.Count(tp => tp.Player?.Playerposition == (int)PlayerPositionEnum.C));
-        public async Task Trade(List<TradeBetweenTeams> tradeBetweenTeams)
+        // Moves the players between the two rosters. Private and single-trade: AcceptProposal is the only
+        // caller and only ever settles one proposal, so the list parameter this used to take was a
+        // generality nothing asked for — and one that made the "which trade does this row belong to"
+        // lookup below necessary in the first place.
+        private async Task ApplyTrade(TradeBetweenTeams trade)
         {
+            List<TradeBetweenTeams> tradeBetweenTeams = [trade];
+
             var teamIds = tradeBetweenTeams.SelectMany(u => new[] { u.FromTeam, u.ToTeam })
                 .Distinct()
                 .ToList();
@@ -321,7 +326,7 @@ namespace NBA.Service.Trade
 
             await ValidateSeasonTrade(leagueId, proposal);
 
-            await Trade([proposal]);
+            await ApplyTrade(proposal);
 
             row.Status = TradeStatuses.Accepted;
             _ = await _context.UpdateTradeRange([row]);

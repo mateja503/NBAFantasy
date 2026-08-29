@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ using Microsoft.Extensions.Options;
 using NBA.Api.SignalR.Hubs;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Data.Enumerations;
 using NBA.Service.Draft;
 using NBA.Service.Player;
 using NBA.Service.Roster;
@@ -29,18 +31,38 @@ namespace NBA.Tests.Integration
     // Shared across the trade integration tests (one Redis container per run). Provides:
     //  - a throwaway Redis container + a NbaFantasyRedis bound to it (for direct Redis-write assertions), and
     //  - an in-memory TestServer hosting the TradeHub.
-    // The accept path goes through DraftManager -> DraftSnapshotService, which needs a relational DB
-    // (a league row). We stand that in with EF Core InMemory + seeded leagues so AcceptDraftTrade runs
-    // for real without a Postgres container; the live state still lives in the real Redis container.
+    // The in-season trade path validates and persists against the relational store, so that is stood in
+    // with EF Core InMemory (seeded with leagues, teams, players and rosters) rather than a Postgres
+    // container; the live/hot copies still go to the real Redis container.
     public class TradeHubFixture : IAsyncLifetime
     {
         // League roster limits the hub validates against. Small CenterLimit lets the "invalid" test
         // push a team over the center limit with a single swap.
         public const int MaxPlayersPerTeam = 10;
         public const int CenterLimit = 1;
+        public const int ProposedTradeTtlMinutes = 10;
 
         // Leagues seeded into the InMemory DB; tests pick one each so they don't collide.
         public static readonly long[] SeededLeagueIds = { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+        // Leagues for the in-season trade tests. Kept apart from SeededLeagueIds because the season
+        // path validates against nba.teamplayer rather than Redis, so these leagues additionally need
+        // teams and rosters in the relational store.
+        public static readonly long[] SeasonLeagueIds = { 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 };
+
+        // Team ids are derived from the league rather than shared across leagues (as the draft tests do
+        // with 100/200): ValidateSeasonTrade rejects a trade whose teams belong to another league, so a
+        // team id reused across leagues would fail that check on every league but the first.
+        public static long SeasonTeamA(long leagueId) => leagueId * 100 + 1;
+        public static long SeasonTeamB(long leagueId) => leagueId * 100 + 2;
+
+        // The seeded roster, mirroring BuildDraftState in the draft tests so the roster-limit cases
+        // read the same either side: team A holds C(1) + G(2), team B holds C(3) + F(4). Swapping
+        // [2,4] is valid; taking B's center (3) puts A over CenterLimit.
+        public const long PlayerCenterA = 1;
+        public const long PlayerGuardA = 2;
+        public const long PlayerCenterB = 3;
+        public const long PlayerForwardB = 4;
 
         private readonly RedisContainer _redisContainer = new RedisBuilder("redis:7.4").Build();
 
@@ -50,6 +72,11 @@ namespace NBA.Tests.Integration
         private TestServer Server => _host.GetTestServer();
 
         public IDatabase Database => _multiplexer.GetDatabase();
+
+        // Lets a test open its own scope to read the relational store back. The season trade path writes
+        // its durable record through the hub's scoped context, so assertions have to read it from a
+        // fresh scope rather than a context the test captured earlier.
+        public IServiceProvider Services => _host.Services;
 
         // A NbaFantasyRedis bound to the test container, for seeding/reading state directly in tests.
         public NbaFantasyRedis Redis => new(_multiplexer);
@@ -75,49 +102,34 @@ namespace NBA.Tests.Integration
                             {
                                 o.MaxPlayersPerTeam = MaxPlayersPerTeam;
                                 o.CenterLimit = CenterLimit;
+                                // Long enough that no season test races the hot copy's expiry; the
+                                // backlog test asserts the Redis copy is present, not that it lapses.
+                                o.ProposedTradeTtlMinutes = ProposedTradeTtlMinutes;
                             });
 
                             // InMemory stand-in for Postgres so the accept-path draft/snapshot chain runs.
-                            services.AddDbContext<NbaFantasyContext>(o => o.UseInMemoryDatabase("trade-tests"));
-                            services.Configure<DraftOptions>(o =>
-                            {
-                                o.Rounds = 1;
-                                o.DraftPickTime = 60;
-                                o.ShowTeamDraftBoardCount = 1;
-                            });
-                            services.AddScoped<DraftSnapshotService>();
-
-                            // DraftManager.GetDraftState / UpdaterDraftState (the only methods the accept
-                            // path calls) use the snapshot service + Redis and never touch the lifecycle
-                            // service, but it only needs the context/options/Redis already registered
-                            // here, so it is wired up properly rather than passed as null.
-                            services.AddScoped<DraftLifecycleService>();
-                            services.AddScoped(sp => new DraftManager(
-                                sp.GetRequiredService<IOptions<DraftOptions>>(),
-                                sp.GetRequiredService<NbaFantasyRedis>(),
-                                sp.GetRequiredService<DraftSnapshotService>(),
-                                sp.GetRequiredService<DraftLifecycleService>()));
-
-                            // Roster limits (MaxPlayersPerTeam / CenterLimit) moved out of TradeManager
-                            // into RosterValidator, which TradeManager now takes as a dependency.
+                            //
+                            // TransactionIgnoredWarning is downgraded because TradeService wraps both
+                            // AddProposedTrade and Trade in an explicit transaction, and the InMemory
+                            // provider raises that warning as an error rather than running one. Ignoring
+                            // it makes the transaction a no-op, which is what lets the season path run
+                            // here at all — the trade-off is that these tests cover the ordering and the
+                            // rules, never the rollback. Rollback behaviour needs a real Postgres.
+                            services.AddDbContext<NbaFantasyContext>(o => o
+                                .UseInMemoryDatabase("trade-tests")
+                                .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
+                            // Roster limits (MaxPlayersPerTeam / CenterLimit) live in RosterValidator,
+                            // which TradeService takes as a dependency.
                             services.AddScoped<RosterValidator>();
+
+                            // TradeManager owns the Redis hot copies, TradeService the durable rows, and
+                            // TradeOrchestrator coordinates them. TradeHub itself now depends only on
+                            // ITradeOrchestrator. The draft wiring this fixture used to need
+                            // (DraftManager, PlayerManager, DraftSnapshotService, DraftLifecycleService,
+                            // DraftOptions) went with draft-night trading.
                             services.AddScoped<TradeManager>();
-
-                            // TradeHub.OnConnectedAsync falls back to Postgres for a pending proposal
-                            // when the Redis copy has lapsed, so the hub cannot resolve without this.
                             services.AddScoped<TradeService>();
-
-                            // TradeHub.AcceptTrade repopulates the draft board via
-                            // PlayerManager.GetPlayersOnDraftBoard, which only touches Redis — so, as with
-                            // DraftManager above, PlayerService is passed as null rather than wiring up its
-                            // BallDontLieClient/BoxScore graph. IHubContext<DraftHub, IDraftHubClient> (the
-                            // hub's other dependency) comes from AddSignalR; DraftHub itself is never mapped,
-                            // so that broadcast goes nowhere, which is fine — these tests assert on TradeHub.
-                            services.AddScoped(sp => new PlayerManager(
-                                sp.GetRequiredService<NbaFantasyContext>(),
-                                sp.GetRequiredService<IOptions<JsonOptions>>(),
-                                sp.GetRequiredService<NbaFantasyRedis>(),
-                                null!));
+                            services.AddScoped<ITradeOrchestrator, TradeOrchestrator>();
 
                             // [Authorize] on the hub needs an authenticated user; this scheme always succeeds.
                             services.AddAuthentication("Test")
@@ -139,12 +151,15 @@ namespace NBA.Tests.Integration
 
         // DraftSnapshotService.EnsureRehydratedAsync requires a league row (and treats a completed draft
         // as a no-op), so each test league needs an in-progress League in the InMemory DB.
+        //
+        // The season leagues additionally need teams, players and teamplayer rows: the in-season path
+        // validates against those rows rather than the Redis draft state.
         private async Task SeedLeaguesAsync()
         {
             using var scope = _host.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<NbaFantasyContext>();
 
-            foreach (var leagueId in SeededLeagueIds)
+            foreach (var leagueId in SeededLeagueIds.Concat(SeasonLeagueIds))
             {
                 context.Leagues.Add(new League
                 {
@@ -156,8 +171,58 @@ namespace NBA.Tests.Integration
                 });
             }
 
+            // One shared player pool: the rosters below are per-team rows, so the same player can sit
+            // on a team in every season league without the leagues interfering.
+            context.Players.AddRange(
+                NewPlayer(PlayerCenterA, "Center A", PlayerPositionEnum.C),
+                NewPlayer(PlayerGuardA, "Guard A", PlayerPositionEnum.G),
+                NewPlayer(PlayerCenterB, "Center B", PlayerPositionEnum.C),
+                NewPlayer(PlayerForwardB, "Forward B", PlayerPositionEnum.F));
+
+            foreach (var leagueId in SeasonLeagueIds)
+            {
+                long teamA = SeasonTeamA(leagueId), teamB = SeasonTeamB(leagueId);
+
+                context.Teams.Add(NewTeam(teamA, leagueId, $"Team A {leagueId}"));
+                context.Teams.Add(NewTeam(teamB, leagueId, $"Team B {leagueId}"));
+
+                // Teamplayerid is the key, so it has to be unique across every league, not just within
+                // one — hence deriving it from the league rather than a per-league counter.
+                context.Teamplayers.AddRange(
+                    NewTeamPlayer(leagueId * 1000 + 1, teamA, PlayerCenterA),
+                    NewTeamPlayer(leagueId * 1000 + 2, teamA, PlayerGuardA),
+                    NewTeamPlayer(leagueId * 1000 + 3, teamB, PlayerCenterB),
+                    NewTeamPlayer(leagueId * 1000 + 4, teamB, PlayerForwardB));
+            }
+
             await context.SaveChangesAsync();
         }
+
+        private static Player NewPlayer(long playerId, string name, PlayerPositionEnum position) => new()
+        {
+            Playerid = playerId,
+            Name = name,
+            Surname = "Test",
+            Playerposition = (int)position,
+        };
+
+        // Userid is set because GetLeagueTrades gates on the caller managing a team in the league; the
+        // hub tests do not exercise that read, but seeding it keeps the rows realistic for ones that do.
+        private static Team NewTeam(long teamId, long leagueId, string name) => new()
+        {
+            Teamid = teamId,
+            Leagueid = leagueId,
+            Name = name,
+            Userid = 1,
+            Approved = true,
+        };
+
+        private static Teamplayer NewTeamPlayer(long id, long teamId, long playerId) => new()
+        {
+            Teamplayerid = id,
+            Teamid = teamId,
+            Playerid = playerId,
+        };
 
         public async Task DisposeAsync()
         {

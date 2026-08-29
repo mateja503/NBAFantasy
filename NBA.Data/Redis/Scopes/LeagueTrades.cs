@@ -4,24 +4,15 @@ using NBA.Data.Redis.Operations;
 namespace NBA.Data.Redis.Scopes
 {
     // League-bound view over TradeRedisOperations. Every trade key is per-league, so the whole class
-    // maps onto the scope. "DraftTrade" collapses to the proposed/accepted distinction that actually
-    // varies between the calls.
+    // maps onto the scope.
+    //
+    // Trading during the draft was removed, so the draft-time members (a per-league sorted set of
+    // proposed and accepted trades) are gone with it — what remains is the in-season set below.
     public readonly struct LeagueTrades(TradeRedisOperations operations, long leagueId)
     {
         public long LeagueId => leagueId;
 
-        public Task SetProposed(TradeBetweenTeams trade) => operations.SetProposedTrade(leagueId, trade);
-
-        public Task SetAccepted(TradeBetweenTeams trade) => operations.SetAcceptedDraftTrade(leagueId, trade);
-
-        public Task<List<TradeBetweenTeams>> GetAccepted() => operations.GetAcceptedDraftTrades(leagueId);
-
-        public Task<TradeBetweenTeams?> GetProposed(Guid tradeId) => operations.GetProposedTrade(leagueId, tradeId);
-
-        public Task<TradeBetweenTeams?> RemoveProposed(Guid tradeId) => operations.RemoveProposedTrade(leagueId, tradeId);
-
-        // In-season proposals: a sorted set per recipient holding every live offer aimed at that team,
-        // separate from the draft-time sorted set the members above use.
+        // In-season proposals: a sorted set per recipient holding every live offer aimed at that team.
         public Task SetProposedSeason(TradeBetweenTeams trade, TimeSpan ttl) =>
             operations.SetProposedSeasonTrade(leagueId, trade, ttl);
 
