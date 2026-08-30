@@ -369,8 +369,13 @@ graphify-out/.graphify_root
 # graphify cross-project edge cache, written to the repo root
 .xproj.json
 
-# Claude Code local hooks (absolute paths, machine-specific)
-.claude/
+# Claude Code local hooks (absolute paths, machine-specific).
+# `.claude/*` rather than `.claude/` because git will not re-include anything
+# under an excluded directory - the negation below only works if the parent is
+# left traversable. Skills are shared project knowledge, so they are tracked;
+# settings.json / settings.local.json stay ignored.
+.claude/*
+!.claude/skills/
 
 # graphify dated pre-overwrite backups - git history already covers graph.json
 graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/

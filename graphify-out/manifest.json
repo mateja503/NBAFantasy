@@ -216,9 +216,9 @@
     "semantic_hash": "33610053be7404cf6320246d18b09aaf"
   },
   "NBA.Api/Draft/DraftTimerProcessor.cs": {
-    "mtime": 1788091622.0257514,
-    "seen": 1788091767.3790674,
-    "ast_hash": "f8ea99424d2daf08e0b15cb0c1049304",
+    "mtime": 1788093855.4681206,
+    "seen": 1788095562.3172438,
+    "ast_hash": "52374e58ba2f6d91370ce7459cffcfec",
     "semantic_hash": ""
   },
   "NBA.Api/Endpoints/AuthenticationEndpoints.cs": {
@@ -228,9 +228,9 @@
     "semantic_hash": "848d10e9fb3502bbdfa554c55b6c42e9"
   },
   "NBA.Api/Endpoints/DraftEndpoints.cs": {
-    "mtime": 1788091622.0292528,
-    "seen": 1788091767.379071,
-    "ast_hash": "ccdf0dd4380acbf902a1aca8d5f289ba",
+    "mtime": 1788093855.4761639,
+    "seen": 1788095562.3172474,
+    "ast_hash": "848cf7d279f651b2aee326da8d145450",
     "semantic_hash": ""
   },
   "NBA.Api/Endpoints/GameEndpoints.cs": {
@@ -414,9 +414,9 @@
     "semantic_hash": "f3f7257cf2ad09a087d3359f13a73807"
   },
   "NBA.Api/SignalR/Hubs/DraftHub.cs": {
-    "mtime": 1788091622.027774,
-    "seen": 1788091767.3791049,
-    "ast_hash": "845980d25b7ecc4019f7c623462deff3",
+    "mtime": 1788093855.4806228,
+    "seen": 1788095562.317281,
+    "ast_hash": "ff832d0b3b5297ffe70da927a66768b3",
     "semantic_hash": ""
   },
   "NBA.Api/SignalR/Hubs/TradeHub.cs": {
@@ -768,15 +768,15 @@
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftManager.cs": {
-    "mtime": 1788091604.9637058,
-    "seen": 1788091767.3791714,
-    "ast_hash": "8b82c6e7346136b7ff0afcd99b09b4c3",
+    "mtime": 1788093855.4947982,
+    "seen": 1788095562.3173835,
+    "ast_hash": "5c0141c02dabcb4d60526d4253bd66fc",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftService.cs": {
-    "mtime": 1788091600.0675807,
-    "seen": 1788091767.3791733,
-    "ast_hash": "4c4a8c67de12adc14563889ade054e9e",
+    "mtime": 1788093855.4990587,
+    "seen": 1788095562.3173854,
+    "ast_hash": "3db7d220249e7c8e5e9ee665b718f2fa",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftSnapshotService.cs": {
@@ -912,9 +912,9 @@
     "semantic_hash": "4a4b2539f7d9e6d21d1967ea17072219"
   },
   "NBA.Tests/Integration/DraftEndDraftTests.cs": {
-    "mtime": 1788092855.2748785,
-    "seen": 1788092963.5710387,
-    "ast_hash": "0228101f90c376d167a7afbb19ef241d",
+    "mtime": 1788093855.5030947,
+    "seen": 1788095562.317417,
+    "ast_hash": "0f1e35baac843f88009f82cf27327a42",
     "semantic_hash": ""
   },
   "NBA.Tests/Integration/TradeHubFixture.cs": {
@@ -996,8 +996,8 @@
     "semantic_hash": "c541fcd64b809709c319c475852cff5d"
   },
   "infrastructure/db/create/create-objects-nba-schema.sql": {
-    "mtime": 1788093061.5771039,
-    "seen": 1788093382.968399,
+    "mtime": 1788093855.5607214,
+    "seen": 1788095562.317436,
     "ast_hash": "11b772bb54e3528f0eec3cc2fcdb8e73",
     "semantic_hash": ""
   },
@@ -1044,15 +1044,15 @@
     "semantic_hash": "351c7f7f0e2545fcf2771faa1848f94f"
   },
   "CLAUDE.md": {
-    "mtime": 1788004858.8392835,
-    "seen": 1788007582.2882109,
-    "ast_hash": "2badee55acdeeea7c5a6d071c5057cdc",
+    "mtime": 1788093966.2231503,
+    "seen": 1788095562.317447,
+    "ast_hash": "abf5c9ad644de78754f55e4b01e79ba2",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftLifecycleService.cs": {
-    "mtime": 1788092928.4326386,
-    "seen": 1788092963.5709379,
-    "ast_hash": "d6d8b7b0a5f5996f82f342d8a92005f8",
+    "mtime": 1788093855.4877641,
+    "seen": 1788095562.317382,
+    "ast_hash": "ff68b7c7495b69accabe75dc16d15995",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftOrderManager.cs": {
@@ -1062,9 +1062,9 @@
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftExtention.cs": {
-    "mtime": 1788091664.1862838,
-    "seen": 1788091767.3791685,
-    "ast_hash": "22a9fe2af8b08f70a21c71c43ce9ee6e",
+    "mtime": 1788093855.485706,
+    "seen": 1788095562.3173802,
+    "ast_hash": "403543a2bda3e266723993aa716d5a96",
     "semantic_hash": ""
   },
   "NBA.Service/Trade/ITradeOrchestrator.cs": {
@@ -1107,6 +1107,18 @@
     "mtime": 1788020237.0022845,
     "seen": 1788091767.3791902,
     "ast_hash": "06ef90834c59dd6181037dc0f55f46ee",
+    "semantic_hash": ""
+  },
+  ".claude/skills/adding-an-endpoint/SKILL.md": {
+    "mtime": 1788093955.9754105,
+    "seen": 1788095562.3174443,
+    "ast_hash": "caa8302f07aa6b05276dfc34f32a738c",
+    "semantic_hash": ""
+  },
+  ".claude/skills/first-time-setup/SKILL.md": {
+    "mtime": 1788093955.9728422,
+    "seen": 1788095562.3174455,
+    "ast_hash": "d565a2684e218efb346decc9fcd7634f",
     "semantic_hash": ""
   }
 }
