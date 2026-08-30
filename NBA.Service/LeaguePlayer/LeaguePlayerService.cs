@@ -6,7 +6,7 @@ namespace NBA.Service.LeaguePlayer
 {
     // Owns nba.leagueplayer: the per-league player pool that FreeAgencyService toggles. Named
     // *Service under rule 4 because every member here writes to Postgres - the pool it is seeded
-    // from is resolved elsewhere (PlayerService.ResolvePlayerPoolIds) and arrives as a parameter,
+    // from is resolved elsewhere (PlayerCoordinator.ResolvePlayerPoolIds) and arrives as a parameter,
     // so this type never touches Redis.
     public class LeaguePlayerService(NbaFantasyContext context)
     {

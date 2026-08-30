@@ -31,15 +31,15 @@ namespace NBA.Service.League
 
     public record JoinLeagueResult(TeamData Team, NBA.Data.Entities.League League);
 
-    // PlayerService and LeaguePlayerService are collaborators, not layers: both live in NBA.Service,
+    // PlayerCoordinator and LeaguePlayerService are collaborators, not layers: both live in NBA.Service,
     // so this is a sideways dependency and the Api -> Service -> Data direction still holds. Taking
     // them here is what lets CreateAsync own the whole invariant - a league is a league plus its
     // player pool - instead of leaving each caller to remember the second half.
-    public class LeagueService(NbaFantasyContext context, PlayerService playerService,
+    public class LeagueService(NbaFantasyContext context, PlayerCoordinator playerCoordinator,
         LeaguePlayerService leaguePlayerService)
     {
         private readonly NbaFantasyContext _context = context;
-        private readonly PlayerService _playerService = playerService;
+        private readonly PlayerCoordinator _playerCoordinator = playerCoordinator;
         private readonly LeaguePlayerService _leaguePlayerService = leaguePlayerService;
 
         private const int MaxPageSize = 100;
@@ -93,7 +93,7 @@ namespace NBA.Service.League
             // in nba.player) is the one failure this flow actually expects, and doing the read first
             // means it throws before a league row exists rather than after one has to be undone. It is
             // also a pure read, so it does not belong inside the transaction.
-            var playerIds = await _playerService.ResolvePlayerPoolIds();
+            var playerIds = await _playerCoordinator.ResolvePlayerPoolIds();
 
             // The statsvalue and league are two separate SaveChanges calls; wrap them so a failed
             // league insert can't leave an orphaned statsvalue row behind.
