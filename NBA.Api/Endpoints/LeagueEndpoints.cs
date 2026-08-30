@@ -7,8 +7,6 @@ using NBA.Api.Requests.League;
 using NBA.Api.Requests.LeagueTeam;
 using NBA.Service;
 using NBA.Service.League;
-using NBA.Service.LeaguePlayer;
-using NBA.Service.Player;
 
 namespace NBA.Api.Endpoints
 {
@@ -31,14 +29,10 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(result);
             });
 
-            // The league and its player pool are two writes, not one: CreateAsync commits the league
-            // (with its statsvalue) before the pool can be seeded, because the seed needs the
-            // generated Leagueid. The pool is resolved by PlayerService and written by
-            // LeaguePlayerService, and the try/catch is what keeps the pair all-or-nothing - a league
-            // with no leagueplayer rows is unusable, so a failed seed undoes the league rather than
-            // leaving one behind.
+            // Creating the league also seeds its player pool; both live inside LeagueService.CreateAsync
+            // and share one transaction, so there is nothing for the handler to sequence or undo.
             league.MapPost("/add", async (LeagueRequest? request, ClaimsPrincipal user,
-                LeagueService leagueService, PlayerService playerService, LeaguePlayerService leaguePlayerService) =>
+                LeagueService leagueService) =>
             {
                 var input = new CreateLeagueInput(
                     user.GetUserId(),
@@ -62,29 +56,9 @@ namespace NBA.Api.Endpoints
                         request.StatsValue.FTMissed,
                         request.StatsValue.Turnovers));
 
-                // Declared out here so the catch can undo it; null until CreateAsync has committed,
-                // which is also how the catch tells a failed create (nothing to undo) from a failed
-                // seed (a committed league to remove).
-                NBA.Data.Entities.League? created = null;
-                try
-                {
-                    created = await leagueService.CreateAsync(input);
+                var created = await leagueService.CreateAsync(input);
 
-                    // Every league starts with the whole player pool available as free agents.
-                    var playerIds = await playerService.ResolvePlayerPoolIds();
-                    _ = await leaguePlayerService.SeedLeaguePool(created.Leagueid, playerIds);
-
-                    return Results.Ok(created.ToLeagueDto());
-                }
-                catch
-                {
-                    if (created is not null)
-                        await leagueService.DeleteAsync(created.Leagueid);
-
-                    // Rethrown so GlobalExceptionHandler still turns the original NBAException into
-                    // the response - the delete is compensation, not error handling.
-                    throw;
-                }
+                return Results.Ok(created.ToLeagueDto());
             });
 
             league.MapPost("/join", async ([FromBody] LeagueTeamInsertRequest request, ClaimsPrincipal user, LeagueService leagueService) =>

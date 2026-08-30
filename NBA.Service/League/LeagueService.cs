@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Service.LeaguePlayer;
+using NBA.Service.Player;
 using TeamData = NBA.Data.Entities.Team;
 
 namespace NBA.Service.League
@@ -29,9 +31,16 @@ namespace NBA.Service.League
 
     public record JoinLeagueResult(TeamData Team, NBA.Data.Entities.League League);
 
-    public class LeagueService(NbaFantasyContext context)
+    // PlayerService and LeaguePlayerService are collaborators, not layers: both live in NBA.Service,
+    // so this is a sideways dependency and the Api -> Service -> Data direction still holds. Taking
+    // them here is what lets CreateAsync own the whole invariant - a league is a league plus its
+    // player pool - instead of leaving each caller to remember the second half.
+    public class LeagueService(NbaFantasyContext context, PlayerService playerService,
+        LeaguePlayerService leaguePlayerService)
     {
         private readonly NbaFantasyContext _context = context;
+        private readonly PlayerService _playerService = playerService;
+        private readonly LeaguePlayerService _leaguePlayerService = leaguePlayerService;
 
         private const int MaxPageSize = 100;
 
@@ -77,6 +86,14 @@ namespace NBA.Service.League
 
             var year = DateTime.UtcNow.Year;
             var seasonYear = $"{year}/{year + 1}";
+
+            // Every league starts with the whole player pool available as free agents.
+            //
+            // Resolved before the first write, on purpose: an empty pool (nothing in Redis and nothing
+            // in nba.player) is the one failure this flow actually expects, and doing the read first
+            // means it throws before a league row exists rather than after one has to be undone. It is
+            // also a pure read, so it does not belong inside the transaction.
+            var playerIds = await _playerService.ResolvePlayerPoolIds();
 
             // The statsvalue and league are two separate SaveChanges calls; wrap them so a failed
             // league insert can't leave an orphaned statsvalue row behind.
@@ -126,6 +143,12 @@ namespace NBA.Service.League
                         Statsvalueid = newStatsValue.Statsvalueid
                     });
 
+                    // Seeded inside the same transaction as the league itself: a committed league with
+                    // no leagueplayer rows is unusable and ToggleFreeAgencyStatus can never repair it,
+                    // so the fan-out commits with the league or rolls back with it. This is why the
+                    // caller no longer needs a compensating delete.
+                    _ = await _leaguePlayerService.SeedLeaguePool(created.Leagueid, playerIds);
+
                     await transaction.CommitAsync();
                     return created;
                 }
@@ -137,9 +160,9 @@ namespace NBA.Service.League
             });
         }
 
-        // Compensating delete for a league whose creation only half-succeeded. CreateAsync commits
-        // the league before its player pool is seeded (the seed is sequenced by the caller), so a
-        // failed seed would otherwise leave a league no one can use - this is what undoes it.
+        // Deletes a league and everything that only exists because of it. CreateAsync is atomic now,
+        // so this is no longer a compensating step on that path - it is the ordinary teardown, and the
+        // safety net for a league that was left behind before the seed moved into the transaction.
         //
         // Order matters: leagueplayer rows reference the league and the league references the
         // statsvalue, so the children go first or the foreign keys reject the delete. Wrapped in a

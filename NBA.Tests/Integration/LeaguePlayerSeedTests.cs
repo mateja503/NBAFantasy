@@ -17,11 +17,10 @@ namespace NBA.Tests.Integration
     // InMemory Postgres stand-in, and the fallback path is exercised by emptying Redis and leaving the
     // rows only in the relational store.
     //
-    // The sequence under test lives in the POST /v1/league/add handler, which a minimal-API lambda
-    // makes unreachable without standing up the whole API host - no fixture here does that. So
-    // CreateLeagueWithPoolAsync below mirrors that handler exactly (create, resolve, seed, undo on
-    // failure). It covers the three services and their ordering; it does not cover the DI wiring or
-    // the route itself, so a change to the handler has to be mirrored here by hand.
+    // The sequence under test lives in LeagueService.CreateAsync, which resolves the pool and seeds
+    // it in the same call (and, against Postgres, the same transaction) as the league insert. The
+    // tests drive that service directly, so they cover the three services and their ordering but not
+    // the DI wiring or the POST /v1/league/add route itself.
     //
     // nba:master:players is a single global key, not a league-scoped one, so each test clears it first
     // and writes exactly the membership it wants. That is safe because everything in this collection
@@ -74,30 +73,11 @@ namespace NBA.Tests.Integration
         private PlayerService BuildPlayerService(NbaFantasyContext context) =>
             new(null!, context, new BoxScoreCalculationService(context), _fixture.Redis);
 
-        // Mirrors the POST /v1/league/add handler: create the league, resolve the pool, seed it, and
-        // undo the league if any of that fails.
-        private async Task<League> CreateLeagueWithPoolAsync(NbaFantasyContext context, string leagueName)
-        {
-            var leagueService = new LeagueService(context);
-            League? created = null;
+        private LeagueService BuildLeagueService(NbaFantasyContext context) =>
+            new(context, BuildPlayerService(context), new LeaguePlayerService(context));
 
-            try
-            {
-                created = await leagueService.CreateAsync(NewLeagueInput(leagueName));
-
-                var playerIds = await BuildPlayerService(context).ResolvePlayerPoolIds();
-                _ = await new LeaguePlayerService(context).SeedLeaguePool(created.Leagueid, playerIds);
-
-                return created;
-            }
-            catch
-            {
-                if (created is not null)
-                    await leagueService.DeleteAsync(created.Leagueid);
-
-                throw;
-            }
-        }
+        private Task<League> CreateLeagueWithPoolAsync(NbaFantasyContext context, string leagueName) =>
+            BuildLeagueService(context).CreateAsync(NewLeagueInput(leagueName));
 
         [Fact]
         public async Task Creating_a_league_seeds_one_free_agent_row_per_id_in_the_master_set()
@@ -139,7 +119,7 @@ namespace NBA.Tests.Integration
         }
 
         [Fact]
-        public async Task Creating_a_league_throws_and_undoes_the_league_when_both_sources_are_empty()
+        public async Task Creating_a_league_throws_before_writing_anything_when_both_sources_are_empty()
         {
             using var context = NewContext();
 
@@ -150,9 +130,9 @@ namespace NBA.Tests.Integration
 
             Assert.Equal(ErrorCodes.PlayerPoolEmpty, ex.ErrorCode);
 
-            // CreateAsync commits before the pool is resolved, so the league did briefly exist here.
-            // The compensating DeleteAsync is the only reason nothing is left - without it this would
-            // be a league with no free agents, which ToggleFreeAgencyStatus can never repair.
+            // CreateAsync resolves the pool before its first write, so an empty pool throws with no
+            // league ever inserted - nothing to compensate for. Without that ordering this would be a
+            // league with no free agents, which ToggleFreeAgencyStatus can never repair.
             Assert.Empty(await context.Leagues.ToListAsync());
             Assert.Empty(await context.Statsvalues.ToListAsync());
             Assert.Empty(await context.Leagueplayers.ToListAsync());
@@ -170,7 +150,7 @@ namespace NBA.Tests.Integration
 
             // DeleteAsync has to clear the pool before the league: leagueplayer rows point at it, so
             // leaving them would orphan rows against a league id that no longer exists.
-            await new LeagueService(context).DeleteAsync(created.Leagueid);
+            await BuildLeagueService(context).DeleteAsync(created.Leagueid);
 
             Assert.Empty(await context.Leagues.ToListAsync());
             Assert.Empty(await context.Statsvalues.ToListAsync());
