@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-08-30T14:45:52.676047+00:00",
+  "nodes": {
+    "nba_data_redis_dtos_playershortdto_nba_data_redis_dtos_playershortdto": {
+      "code_fingerprint": "e779be2af90793d29ce9503f80cdeb264564c0ae6dd8bc95f2aa8e167f92a017",
+      "label": "PlayerShortDto",
+      "last": "2026-08-30T13:29:17.358354+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T13:29:17.358354+00:00",
+          "outcome": "useful",
+          "q": "Tell me how individual players are stored in redis"
+        }
+      ],
+      "score": 0.998771885,
+      "source_file": "NBA.Data/Redis/Dtos/PlayerShortDto.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "nba_data_redis_operations_playerredisoperations_nba_data_redis_operations_playerredisoperations": {
+      "code_fingerprint": "c84b67d9d924d9f8bb3eb9bdf86174b0a9be5604ad6e28ecba930b7d422b9a18",
+      "label": "PlayerRedisOperations",
+      "last": "2026-08-30T13:29:17.358354+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T13:29:17.358354+00:00",
+          "outcome": "useful",
+          "q": "Tell me how individual players are stored in redis"
+        }
+      ],
+      "score": 0.998771885,
+      "source_file": "NBA.Data/Redis/Operations/PlayerRedisOperations.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "nba_data_redis_redisserializer_nba_data_redis_redisserializer": {
+      "code_fingerprint": "e38764134070b43e37e2542f516b333b767086d31680e815655311b77a1b3da0",
+      "label": "RedisSerializer",
+      "last": "2026-08-30T13:29:17.358354+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T13:29:17.358354+00:00",
+          "outcome": "useful",
+          "q": "Tell me how individual players are stored in redis"
+        }
+      ],
+      "score": 0.998771885,
+      "source_file": "NBA.Data/Redis/RedisSerializer.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "nba_data_redis_scopes_leagueplayers_nba_data_redis_scopes_leagueplayers": {
+      "code_fingerprint": "27e151973bbb98fe7dcdb3b11c9962c624939b646aa9a2e57b7c75840f32f50a",
+      "label": "LeaguePlayers",
+      "last": "2026-08-30T13:29:17.358354+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T13:29:17.358354+00:00",
+          "outcome": "useful",
+          "q": "Tell me how individual players are stored in redis"
+        }
+      ],
+      "score": 0.998771885,
+      "source_file": "NBA.Data/Redis/Scopes/LeaguePlayers.cs",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}
