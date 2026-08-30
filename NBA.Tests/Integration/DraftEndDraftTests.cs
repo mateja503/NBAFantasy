@@ -62,6 +62,24 @@ namespace NBA.Tests.Integration
                 context.Teams.Add(new Team { Teamid = teamId, Leagueid = leagueId, Name = $"Team {teamId}", Approved = true });
         }
 
+        // The pool LeagueService.CreateAsync seeds: one row per player, every one a free agent.
+        // Leagueplayerid is assigned explicitly because the InMemory store shares its key generator
+        // across the whole context and two leagues seeding the same player ids would otherwise collide.
+        private static void SeedLeaguePool(NbaFantasyContext context, long leagueId, params long[] playerIds)
+        {
+            foreach (var playerId in playerIds)
+                context.Leagueplayers.Add(new Leagueplayer
+                {
+                    Leagueplayerid = leagueId * 1000 + playerId,
+                    Leagueid = leagueId,
+                    Playerid = playerId,
+                    Isfreeagent = true,
+                });
+        }
+
+        private static async Task<bool> IsFreeAgentAsync(NbaFantasyContext context, long leagueId, long playerId) =>
+            (await context.Leagueplayers.SingleAsync(lp => lp.Leagueid == leagueId && lp.Playerid == playerId)).Isfreeagent;
+
         // Puts a league into the state a live draft leaves behind: draft state (carrying the rosters
         // EndDraft flushes), the remaining pick order, the available pool, the league's pick-ordered
         // drafted set, one roster set per team, an armed pick deadline and a durable snapshot row.
@@ -272,6 +290,108 @@ namespace NBA.Tests.Integration
             Assert.Equal(2, rows.Count);
             Assert.Equal(2, rows.Select(r => (r.Teamid, r.Playerid)).Distinct().Count());
 
+            await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
+        }
+
+        [Fact]
+        public async Task EndDraft_clears_the_free_agent_flag_for_drafted_players_only()
+        {
+            const long leagueId = 106;
+            long[] teamIds = [1060, 1061];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Free Agency League", draftCompleted: false, teamIds);
+            // SeedLiveDraftAsync hands out 900 and 901 (900 + team index); 999 is the pool entry
+            // nobody picks, so it is the control row.
+            SeedLeaguePool(context, leagueId, 900, 901, 999);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Free Agency League", teamIds);
+
+            await BuildService(context).EndDraft(leagueId);
+
+            Assert.False(await IsFreeAgentAsync(context, leagueId, 900));
+            Assert.False(await IsFreeAgentAsync(context, leagueId, 901));
+            Assert.True(await IsFreeAgentAsync(context, leagueId, 999));
+        }
+
+        [Fact]
+        public async Task EndDraft_does_not_touch_leagueplayer_rows_of_another_league()
+        {
+            const long leagueId = 107;
+            const long otherLeagueId = 110;
+            long[] teamIds = [1070, 1071];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Drafting League", draftCompleted: false, teamIds);
+            SeedLeaguePool(context, leagueId, 900, 901);
+
+            // Same player ids, different league: the update is scoped by Leagueid, so this pool has to
+            // come out untouched.
+            SeedLeague(context, otherLeagueId, "Bystander League", draftCompleted: false);
+            SeedLeaguePool(context, otherLeagueId, 900, 901);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Drafting League", teamIds);
+
+            await BuildService(context).EndDraft(leagueId);
+
+            Assert.False(await IsFreeAgentAsync(context, leagueId, 900));
+            Assert.True(await IsFreeAgentAsync(context, otherLeagueId, 900));
+            Assert.True(await IsFreeAgentAsync(context, otherLeagueId, 901));
+        }
+
+        [Fact]
+        public async Task EndDraft_leaves_leagueplayer_untouched_when_the_league_draft_is_already_completed()
+        {
+            const long leagueId = 108;
+            long[] teamIds = [1080, 1081];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Already Done Free Agency League", draftCompleted: true, teamIds);
+            SeedLeaguePool(context, leagueId, 900, 901, 999);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Already Done Free Agency League", teamIds);
+
+            await BuildService(context).EndDraft(leagueId);
+
+            // The update sits inside the Draftcompleted guard alongside the roster flush, so a re-run
+            // must not become a second code path that writes half the state.
+            Assert.All(await context.Leagueplayers.Where(lp => lp.Leagueid == leagueId).ToListAsync(),
+                lp => Assert.True(lp.Isfreeagent));
+
+            await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
+        }
+
+        [Fact]
+        public async Task EndDraft_with_no_drafted_players_leaves_every_leagueplayer_row_a_free_agent()
+        {
+            const long leagueId = 109;
+            long[] teamIds = [1090, 1091];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Empty Draft League", draftCompleted: false, teamIds);
+            SeedLeaguePool(context, leagueId, 900, 901, 999);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Empty Draft League", teamIds);
+
+            // Overwrite the rosters the helper seeded: a draft that ended with nobody picked.
+            await _fixture.Redis.League(leagueId).Draft.SetState(new DraftState
+            {
+                LeagueName = "Empty Draft League",
+                DraftedPlayersPerTeam = new Dictionary<long, List<PlayerShortDto>>(),
+            });
+
+            await BuildService(context).EndDraft(leagueId);
+
+            Assert.Empty(await context.Teamplayers.ToListAsync());
+            Assert.All(await context.Leagueplayers.Where(lp => lp.Leagueid == leagueId).ToListAsync(),
+                lp => Assert.True(lp.Isfreeagent));
+
+            // The rest of the teardown still runs: the league is completed and the draft-time keys go.
+            Assert.True((await context.Leagues.SingleAsync(l => l.Leagueid == leagueId)).Draftcompleted);
             await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
         }
     }

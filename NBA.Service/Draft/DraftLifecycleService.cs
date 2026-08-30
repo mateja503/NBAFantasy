@@ -93,7 +93,19 @@ namespace NBA.Service.Draft
                     try
                     {
                         if (teamPlayers.Count > 0)
+                        {
                             await _context.AddTeamPlayerRange(teamPlayers);
+
+                            // Same transaction as the roster flush: a committed roster whose players
+                            // still read as free agents is a corrupt league. Only the drafted ids are
+                            // touched - whoever nobody picked stays a free agent, which is what makes
+                            // the post-draft pool meaningful.
+                            //
+                            // Distinct() because draftedPerTeam is keyed per team; a player id
+                            // appearing under two teams would widen the Contains list for no reason.
+                            var draftedPlayerIds = teamPlayers.Select(tp => tp.Playerid).Distinct().ToList();
+                            _ = await _context.SetLeaguePlayersDrafted(leagueId, draftedPlayerIds);
+                        }
 
                         league.Draftcompleted = true;
                         await _context.UpdateLeague(league);

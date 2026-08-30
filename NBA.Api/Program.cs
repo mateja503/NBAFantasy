@@ -173,9 +173,9 @@ builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.RegisterDraft();
 builder.Services.RegisterTrade();
 builder.Services.RegisterLeaguePlayer();
+builder.Services.RegisterFreeAgency();
 // Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.
 builder.Services.AddScoped<RosterValidator>();
-builder.Services.AddScoped<FreeAgencyService>();
 builder.Services.AddScoped<LeagueService>();
 builder.Services.AddScoped<TeamService>();
 builder.Services.AddScoped<AuthService>();
@@ -248,6 +248,7 @@ v1.MapDraftEndpoints();
 v1.MapPlayerEndpoints();
 v1.MapGameEndpoints();
 v1.MapTradeEndpoints();
+v1.MapFreeAgencyEndpoints();
 v1.MapAuthenticationEndpoints();
 
 

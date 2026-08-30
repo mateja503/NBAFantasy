@@ -168,6 +168,35 @@ namespace NBA.Data.Context
             return leagueplayers;
         }
 
+        // Clears the free-agent flag for the players a draft handed out. Returns the number of rows
+        // changed, matching the ExecuteUpdateAsync shape a caller would expect.
+        //
+        // Deliberately load-then-update rather than the single-statement
+        //     .Where(...).ExecuteUpdateAsync(s => s.SetProperty(lp => lp.Isfreeagent, false))
+        // ExecuteUpdate/ExecuteUpdateAsync is relational-only: the EF InMemory provider throws
+        // InvalidOperationException ("...are not supported by the current database provider"), and
+        // DraftEndDraftTests runs EndDraft against InMemory. The bulk path was written, run and
+        // rejected on that basis - do not "optimize" it back without also moving those tests off
+        // InMemory. Bounded work either way: the list is one draft's worth of player ids.
+        public async Task<int> SetLeaguePlayersDrafted(long leagueId, List<long> playerIds)
+        {
+            if (playerIds is null || playerIds.Count == 0)
+                return 0;
+
+            var rows = await Leagueplayers
+                .Where(lp => lp.Leagueid == leagueId && playerIds.Contains(lp.Playerid))
+                .ToListAsync();
+
+            if (rows.Count == 0)
+                return 0;
+
+            foreach (var row in rows)
+                row.Isfreeagent = false;
+
+            _ = await UpdatLeaguePlayersRange(rows);
+            return rows.Count;
+        }
+
         public async Task<List<Leagueplayer>> DeleteLeaguePlayersRange(List<Leagueplayer> leagueplayers)
         {
             Leagueplayers.RemoveRange(leagueplayers);
