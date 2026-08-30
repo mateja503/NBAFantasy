@@ -27,6 +27,7 @@ using NBA.Service.Authentication;
 using NBA.Service.CalculateBoxScore;
 using NBA.Service.Game;
 using NBA.Service.League;
+using NBA.Service.LeaguePlayer;
 using NBA.Service.Player;
 using Polly;
 using Scalar.AspNetCore;
@@ -171,6 +172,7 @@ builder.Services.AddScoped<PlayerManager>();
 builder.Services.AddScoped<BoxScoreCalculationService>();
 builder.Services.RegisterDraft();
 builder.Services.RegisterTrade();
+builder.Services.RegisterLeaguePlayer();
 // Shared league roster limits (squad size, center cap) — used by the draft, trade and free-agency paths.
 builder.Services.AddScoped<RosterValidator>();
 builder.Services.AddScoped<FreeAgencyService>();

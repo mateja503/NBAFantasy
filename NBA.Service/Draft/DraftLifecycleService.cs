@@ -28,6 +28,12 @@ namespace NBA.Service.Draft
 
         // League name for the draft state. Returns null when the league is missing; the caller owns
         // the display fallback ("NO LEAGUE"), which is what DraftManager did before this moved here.
+        public Task<Dictionary<long, Queue<TeamDraftBoard>>?> GetTeams(long leagueId) =>
+          _redis.League(leagueId).Draft.GetTeams();
+
+        public Task SetTeams(long leagueId, Dictionary<long, Queue<TeamDraftBoard>> teams) =>
+            _redis.League(leagueId).Draft.SetTeams(teams);
+
         public Task<string?> GetLeagueName(long leagueId) =>
             _context.GetAllLeagues().Where(u => u.Leagueid == leagueId).Select(u => u.Name).SingleOrDefaultAsync();
 

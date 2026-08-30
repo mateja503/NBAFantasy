@@ -154,9 +154,23 @@ namespace NBA.Data.Context
             return Leagueplayers.AsQueryable();
         }
 
+        public async Task<List<Leagueplayer>> AddLeaguePlayersRange(List<Leagueplayer> leagueplayers)
+        {
+            await Leagueplayers.AddRangeAsync(leagueplayers);
+            _ = await SaveChangesAsync();
+            return leagueplayers;
+        }
+
         public async Task<List<Leagueplayer>> UpdatLeaguePlayersRange(List<Leagueplayer> leagueplayers) 
         {
             Leagueplayers.UpdateRange(leagueplayers);
+            _ = await SaveChangesAsync();
+            return leagueplayers;
+        }
+
+        public async Task<List<Leagueplayer>> DeleteLeaguePlayersRange(List<Leagueplayer> leagueplayers)
+        {
+            Leagueplayers.RemoveRange(leagueplayers);
             _ = await SaveChangesAsync();
             return leagueplayers;
         }
@@ -203,6 +217,13 @@ namespace NBA.Data.Context
             return e.Entity;
         }
 
+        public async Task<League> DeleteLeague(League league)
+        {
+            Leagues.Remove(league);
+            _ = await SaveChangesAsync();
+            return league;
+        }
+
         #endregion
 
         #region StatsValue
@@ -215,6 +236,13 @@ namespace NBA.Data.Context
             var e = await Statsvalues.AddAsync(statsvalue);
             _ = await SaveChangesAsync();
             return e.Entity;
+        }
+
+        public async Task<Statsvalue> DeleteStatsValue(Statsvalue statsvalue)
+        {
+            Statsvalues.Remove(statsvalue);
+            _ = await SaveChangesAsync();
+            return statsvalue;
         }
         #endregion
 

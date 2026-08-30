@@ -67,13 +67,38 @@ namespace NBA.Service.Player
     }
 
     //use hangfire so this service to be executaed at a spefici time
-    public class PlayerService(IBallDontLieClient ballClient, NbaFantasyContext nbaContext, BoxScoreCalculationService boxScoreCalculationService)
+    public class PlayerService(IBallDontLieClient ballClient, NbaFantasyContext nbaContext,
+        BoxScoreCalculationService boxScoreCalculationService, NbaFantasyRedis redis)
     {
         private readonly IBallDontLieClient _ballDontLieClient = ballClient;
         private readonly NbaFantasyContext _nbaContext = nbaContext;
         private readonly BoxScoreCalculationService _boxScoreCalculationService = boxScoreCalculationService;
+        // Only ResolvePlayerPoolIds uses this: the master player set is a cache in front of nba.player,
+        // so the read that prefers it belongs next to the durable copy it falls back to.
+        private readonly NbaFantasyRedis _redis = redis;
 
         private const int MaxPageSize = 100;
+
+        // The full player pool, as ids. Callers that seed a per-league pool (LeagueService.CreateAsync)
+        // need the membership of the master set, not the player payloads.
+        //
+        // Reading Redis first and Postgres second is not a fallback for convenience: nba:master:players
+        // is only a boot-time cache, seeded under GetStartupSeedLockKey(). If Redis was flushed, failing
+        // here would block league creation for a reason the user cannot act on - so the durable copy in
+        // nba.player answers instead. Only an empty pool in both places is an error.
+        public async Task<List<long>> ResolvePlayerPoolIds()
+        {
+            var playerIds = await _redis.Player.GetAllPlayerIds();
+
+            if (playerIds.Count == 0)
+                playerIds = await _nbaContext.GetAllPlayers().Select(p => p.Playerid).ToListAsync();
+
+            if (playerIds.Count == 0)
+                throw new NBAException("Player pool is empty in Redis and in the database; cannot seed league players",
+                    ErrorCodes.PlayerPoolEmpty);
+
+            return playerIds;
+        }
         public async Task<GetAllPlayersResponse> AddPlayersToDb(MetaData metadata, CancellationToken cancellationToken) 
         {
             var externalPlayers = await _ballDontLieClient.GetAllPlayers(metadata, cancellationToken);
