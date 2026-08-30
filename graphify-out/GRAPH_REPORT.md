@@ -1,16 +1,16 @@
 # Graph Report - NBAFantasy  (2026-08-30)
 
 ## Corpus Check
-- 193 files · ~56,986 words
+- 193 files · ~56,971 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2055 nodes · 3964 edges · 116 communities (111 shown, 5 thin omitted)
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 307 edges (avg confidence: 0.82)
+- 2080 nodes · 3919 edges · 142 communities (122 shown, 20 thin omitted)
+- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 296 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f8a47794`
+- Built from commit: `0e453313`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,32 +24,32 @@
 - Player
 - PlayersFilterSearch
 - .League
-- DraftSnapshotService
+- .EnsureRehydratedAsync
 - PlayerSearchInput
 - NBAException
 - BoxScoreStatsBuilder
 - TradeBetweenTeams
-- Leagueplayer
+- LeaguePlayerService
 - League & Stats Value Requests
 - TradeHubFixture
 - NbaFantasyContext
-- NBA.Data.Redis.Entities
+- NBA.Data.Context
 - Applicationuser
 - Team
 - PlayerDto
 - GameDto
-- TradeHub
-- BoxScoreCalculationBuilder
-- League
-- DraftEndDraftTests
-- DraftTimerHostedService
-- NBA.Data.Enumerations
+- BallDontLieWireMockFixture
 - Player
+- League
+- NbaFantasyContext
+- DraftTimerHostedService
+- NBA.Data.Redis.Entities
+- ExternalClients.Response
 - GameService
 - AppHost Launch Settings
-- NBA.Data.Context
+- ApplicationDefaults.Exceptions
 - create-objects-nba-schema.sql
-- LeagueDto
+- ShortenJobExpirationFilter
 - GameShort
 - ExternalClients Project Files
 - BallDontLieClientWireMockTests
@@ -67,20 +67,24 @@
 - Aspire Manifest OTEL Config
 - NBA.Api.Requests.Authentication
 - PlayerService
-- LoginDto
-- ITradeOrchestrator
+- Playermemento
+- BallDontLieClient
 - GameInfoResponse
-- .BuildHub
-- TeamDto
-- FreeAgencyPickUpRequest
+- TradeDto
+- LeagueDto
+- FreeAgencyEndpoints.cs
 - .ToPlayerDb
-- .PerformCalculations
+- AuthTokenIssuer
 - Trade
 - UserTeamDto
 - Test Project Packages
-- TradeDto
+- .GetUserTeamsWithPlayersAsync
+- ScheduledGames
+- .DraftOrder
 - EntityMappings
 - NBA.Api Package References
+- .LoginAsync
+- .AddProposedTrade
 - PlayerManager
 - ServiceDefaults Packages
 - Entity Mapping Tests
@@ -88,23 +92,25 @@
 - Aspire Postgres Container
 - DraftService
 - ServiceDefaults Extensions
-- ScheduledGames
+- GameRedisOperations
 - DraftType
 - AppHost Packages
 - GameTeamDto
 - TeamInfoResponse
 - DraftState
-- .ToggleFreeAgencyStatus
+- .BucketByDay
+- .MapFreeAgencyEndpoints
 - Aspire HTTPS Bindings
 - ApplicationHostedService
+- NBA.Service.FreeAgency
 - NBA.Data.Entities
 - Draft Status Enum
-- TradeOutcome
+- .Generate
 - PlayerPositionEnum
 - AppHost Hosting Packages
-- ApplicationDefaults.Exceptions
+- TeamEndpoints.cs
 - Aspire Server Bindings
-- Argon2idPasswordHasher
+- Argon2idPasswordHasherTests
 - LeaguePlayerSeedTests
 - LeagueTeamDto
 - Aspire Password Parameters
@@ -114,39 +120,59 @@
 - Chat Schema DDL
 - NbaFantasyRedis
 - Aspire HTTP Bindings
-- PagedResult
+- League
 - Infrastructure Init Entry
 - Naming Rule
-- ChatHub
+- Teamplayer
+- Userleague
+- Team
+- ScheduledGamesDto
+- Argon2Options
 - LockRedisOperations
-- .OnModelCreating
+- .CreateToken
+- Draftsnapshot
+- NBA.Data.Redis
 - Q: Tell me how individual players are stored in redis
+- .MapPlayerEndpoints
+- .MapTradeEndpoints
+- .ToPlayerDb_maps_position_string_to_enum
+- IEndpointRouteBuilder
+- CancellationToken
+- Player
+- Trade
+- Dictionary
+- DraftBoardTeams
+- IOptions
+- Queue
+- IServiceCollection
 - adding-an-endpoint/SKILL.md
 - first-time-setup/SKILL.md
+- Fact
+- IReadOnlyList
 
 ## God Nodes (most connected - your core abstractions)
-1. `NbaFantasyContext` - 106 edges
+1. `NbaFantasyContext` - 63 edges
 2. `NBAException` - 49 edges
 3. `TradeBetweenTeams` - 49 edges
-4. `NBA.Data.Entities` - 45 edges
+4. `NbaFantasyContext` - 43 edges
 5. `Trade` - 41 edges
 6. `PlayerSearchInput` - 40 edges
-7. `PlayersFilterSearch` - 38 edges
-8. `NBA.Data.Redis.Entities` - 38 edges
-9. `Team` - 36 edges
-10. `Applicationuser` - 35 edges
+7. `NBA.Data.Entities` - 40 edges
+8. `PlayersFilterSearch` - 38 edges
+9. `NBA.Data.Redis.Entities` - 36 edges
+10. `Team` - 33 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `DraftService` --references--> `ApplicationOptions`  [EXTRACTED]
-  NBA.Service/Draft/DraftService.cs → ApplicationDefaults/Options/ApplicationOptions.cs
-- `RosterValidator` --references--> `ApplicationOptions`  [EXTRACTED]
-  NBA.Service/Roster/RosterValidator.cs → ApplicationDefaults/Options/ApplicationOptions.cs
-- `TradeManager` --references--> `ApplicationOptions`  [EXTRACTED]
-  NBA.Service/Trade/TradeManager.cs → ApplicationDefaults/Options/ApplicationOptions.cs
-- `TradeOrchestrator` --references--> `ApplicationOptions`  [EXTRACTED]
-  NBA.Service/Trade/TradeOrchestrator.cs → ApplicationDefaults/Options/ApplicationOptions.cs
-- `GameService` --references--> `BallDontLieClientOptions`  [EXTRACTED]
-  NBA.Service/Game/GameService.cs → ApplicationDefaults/Options/BallDontLieClientOptions.cs
+- `DraftLifecycleService` --references--> `NbaFantasyContext`  [EXTRACTED]
+  NBA.Service/Draft/DraftLifecycleService.cs → NBA.Data/Context/NbaFantasyContextExt.cs
+- `FreeAgencyService` --references--> `NbaFantasyContext`  [EXTRACTED]
+  NBA.Service/FreeAgency/FreeAgencyService.cs → NBA.Data/Context/NbaFantasyContextExt.cs
+- `DraftTimerProcessor` --references--> `DraftLifecycleService`  [EXTRACTED]
+  NBA.Api/Draft/DraftTimerProcessor.cs → NBA.Service/Draft/DraftLifecycleService.cs
+- `DraftHub` --references--> `DraftLifecycleService`  [EXTRACTED]
+  NBA.Api/SignalR/Hubs/DraftHub.cs → NBA.Service/Draft/DraftLifecycleService.cs
+- `AuthTokenIssuer` --references--> `JwtOptions`  [EXTRACTED]
+  NBA.Api/Authentication/AuthTokenIssuer.cs → ApplicationDefaults/Options/JwtOptions.cs
 
 ## Import Cycles
 - None detected.
@@ -156,23 +182,23 @@
 - **Draft Timer & Deadline Coordination** — claude_drafttimerhostedservice, claude_draftredisoperations, claude_draftmanager, claude_draft_realtime [EXTRACTED 0.95]
 - **External HTTP Resilience Strategy** — claude_resilience_pipeline_rule, claude_externalclients, claude_nba_servicedefaults [INFERRED 0.85]
 
-## Communities (116 total, 5 thin omitted)
+## Communities (142 total, 20 thin omitted)
 
 ### Community 0 - "JwtOptions"
-Cohesion: 0.05
-Nodes (36): JwtOptions, AccessTokenMinutes, Audience, Issuer, RefreshTokenDays, SigningKey, ApplyStateContext, NBA.Api.HangFire (+28 more)
+Cohesion: 0.17
+Nodes (12): JwtOptions, AccessTokenMinutes, Audience, Issuer, RefreshTokenDays, SigningKey, InvalidOperationException, IOptions (+4 more)
 
 ### Community 1 - "DraftRedisOperations"
-Cohesion: 0.09
-Nodes (17): DateTimeOffset, Dictionary, IDatabase, JsonSerializerOptions, List, Queue, Task, TimeSpan (+9 more)
+Cohesion: 0.06
+Nodes (30): PlayerShortDto, FullName, PlayerId, Position, List, DraftBoardTeams, CurrentRound, DraftOrder (+22 more)
 
 ### Community 2 - ".ProposeAsync"
 Cohesion: 0.16
 Nodes (12): IServiceCollection, TradeExtention, Guid, IOptions, List, Task, TradeManager, Guid (+4 more)
 
 ### Community 3 - "PlayerShort"
-Cohesion: 0.07
-Nodes (26): PlayerShort, FullName, PlayerId, Position, RedisKeys, IDatabase, Task, TimeSpan (+18 more)
+Cohesion: 0.06
+Nodes (29): IEnumerable, List, PlayerShortMappings, PlayerShort, FullName, PlayerId, Position, RedisKeys (+21 more)
 
 ### Community 4 - "Project Rules & Vendor Licenses"
 Cohesion: 0.05
@@ -183,19 +209,19 @@ Cohesion: 0.11
 Nodes (26): Action, HttpMessageHandler, HttpRequestMessage, Fact, HttpResponseMessage, HttpStatusCode, InlineData, JsonException (+18 more)
 
 ### Community 6 - "Player"
-Cohesion: 0.04
-Nodes (43): DateTime, ICollection, Player, Allowdrop, Assists, Blocks, Fieldgoal, Freethrow (+35 more)
+Cohesion: 0.07
+Nodes (28): DateTime, ICollection, Player, Allowdrop, Assists, Blocks, Fieldgoal, Freethrow (+20 more)
 
 ### Community 7 - "PlayersFilterSearch"
 Cohesion: 0.05
 Nodes (38): NBA.Api.Requests.Player, DateTime, PlayersFilterSearch, allowdrop, gameready, irlteamid, irlteamname, islock (+30 more)
 
 ### Community 8 - ".League"
-Cohesion: 0.20
+Cohesion: 0.21
 Nodes (7): Task, IEndpointRouteBuilder, DraftEndpoints, Task, IOptions, Task, DraftManager
 
-### Community 9 - "DraftSnapshotService"
-Cohesion: 0.15
+### Community 9 - ".EnsureRehydratedAsync"
+Cohesion: 0.18
 Nodes (8): IServiceCollection, DraftExtention, Dictionary, IOptions, JsonSerializerOptions, Queue, Task, DraftSnapshotService
 
 ### Community 10 - "PlayerSearchInput"
@@ -203,116 +229,120 @@ Cohesion: 0.06
 Nodes (36): PlayerSearchInput, Allowdrop, Gameready, Irlteamid, Irlteamname, Islock, LeagueId, MaxAssists (+28 more)
 
 ### Community 11 - "NBAException"
-Cohesion: 0.06
-Nodes (35): NBAException, ErrorCode, AuthenticateResult, ClaimsPrincipal, Created, Exception, IQueryable, ClaimsPrincipalExtensions (+27 more)
+Cohesion: 0.20
+Nodes (9): NBAException, ErrorCode, Exception, IQueryable, Guid, ILogger, List, Task (+1 more)
 
 ### Community 12 - "BoxScoreStatsBuilder"
 Cohesion: 0.07
 Nodes (17): BoxScoreStatsBuilder, PlayerStats, ast, blk, fg3a, fg3m, fga, fgm (+9 more)
 
 ### Community 13 - "TradeBetweenTeams"
-Cohesion: 0.06
-Nodes (40): IHubCallerClients, Method, List, Task, ITradeHubClient, DateTimeOffset, Guid, List (+32 more)
+Cohesion: 0.05
+Nodes (45): IHubCallerClients, Method, List, Task, ITradeHubClient, DateTimeOffset, Guid, List (+37 more)
 
-### Community 14 - "Leagueplayer"
-Cohesion: 0.12
-Nodes (13): LeaguePlayerData, Leagueplayer, Isfreeagent, League, Leagueid, Leagueplayerid, Playerid, LeagueService (+5 more)
+### Community 14 - "LeaguePlayerService"
+Cohesion: 0.40
+Nodes (3): IServiceCollection, LeaguePlayerExtention, LeaguePlayerService
 
 ### Community 15 - "League & Stats Value Requests"
 Cohesion: 0.07
 Nodes (27): NBA.Api.Requests.League, NBA.Api.Requests.StatValue, LeagueRequest, Autostart, DraftStyle, LeagueName, LeagueType, ScoringSystem (+19 more)
 
 ### Community 16 - "TradeHubFixture"
-Cohesion: 0.10
-Nodes (35): HubConnection, HubException, HubInvocationContext, ICollectionFixture, IConnectionMultiplexer, IHost, IHubFilter, Func (+27 more)
+Cohesion: 0.09
+Nodes (36): NBA.Api.SignalR, HubConnection, HubException, HubInvocationContext, ICollectionFixture, IConnectionMultiplexer, IHost, IHubFilter (+28 more)
 
 ### Community 17 - "NbaFantasyContext"
 Cohesion: 0.09
-Nodes (25): DbContext, DbSet, NbaFantasyContext, Applicationusers, Draftsnapshots, Leagueplayers, Leagues, Playermementos (+17 more)
+Nodes (24): DbContext, DbSet, ModelBuilder, Player, Trade, NbaFantasyContext, Applicationusers, Draftsnapshots (+16 more)
 
-### Community 18 - "NBA.Data.Redis.Entities"
-Cohesion: 0.17
-Nodes (9): NBA.Api.SignalR.Clients, NBA.Tests.Fakes, NBA.Data.Redis.Enumerations, NBA.Service.Draft, NBA.Api.SignalR.Hubs, NBA.Data.Redis.Entities, NBA.Service.Trade, NBA.Service.Roster (+1 more)
+### Community 18 - "NBA.Data.Context"
+Cohesion: 0.21
+Nodes (7): NBA.Api.Draft, NBA.Api.SignalR.Clients, NBA.Data.Context, NBA.Data.Redis.Enumerations, NBA.Service.Draft, NBA.Api.SignalR.Hubs, NBA.Api.Endpoints
 
 ### Community 19 - "Applicationuser"
-Cohesion: 0.11
-Nodes (16): ICollection, Applicationuser, Email, Managerlevel, Password, Teams, Userid, Userleagues (+8 more)
+Cohesion: 0.12
+Nodes (15): IPasswordHasher, ICollection, Applicationuser, Email, Managerlevel, Password, Teams, Userid (+7 more)
 
 ### Community 20 - "Team"
-Cohesion: 0.07
-Nodes (29): IEndpointRouteBuilder, LeagueEndpoints, IEndpointRouteBuilder, TestingEndpoints, League, ICollection, Team, Approved (+21 more)
+Cohesion: 0.11
+Nodes (17): ICollection, Team, Approved, Categoryleaguepoints, Islock, Lastweekpoints, League, Leagueid (+9 more)
 
 ### Community 21 - "PlayerDto"
 Cohesion: 0.08
 Nodes (24): DateTime, PlayerDto, Allowdrop, Assists, Blocks, Fieldgoal, Freethrow, Gameready (+16 more)
 
 ### Community 22 - "GameDto"
-Cohesion: 0.12
-Nodes (16): DateTime, List, GameDto, Date, GameId, HomeTeam, Postponed, Postseason (+8 more)
+Cohesion: 0.18
+Nodes (11): DateTime, GameDto, Date, GameId, HomeTeam, Postponed, Postseason, StartTime (+3 more)
 
-### Community 23 - "TradeHub"
-Cohesion: 0.29
-Nodes (6): Guid, ILogger, IReadOnlyList, List, Task, TradeHub
+### Community 23 - "BallDontLieWireMockFixture"
+Cohesion: 0.12
+Nodes (13): BallDontLieClientOptions, ApiKey, BaseUrl, Per_Page, IAsyncLifetime, HttpResponseMessage, IOptions, Task (+5 more)
+
+### Community 24 - "Player"
+Cohesion: 0.16
+Nodes (3): NBA.Service.Builder, Player, BoxScoreCalculationBuilder
 
 ### Community 25 - "League"
-Cohesion: 0.09
-Nodes (21): ICollection, League, Autostart, Commissioner, Draftcompleted, Draftsnapshot, Draftstyle, Leagueid (+13 more)
+Cohesion: 0.07
+Nodes (27): ICollection, League, Autostart, Commissioner, Draftcompleted, Draftsnapshot, Draftstyle, Leagueid (+19 more)
 
-### Community 26 - "DraftEndDraftTests"
-Cohesion: 0.23
-Nodes (11): IEnumerable, List, PlayerShortDto, FullName, PlayerId, Position, PlayerShortMappings, Fact (+3 more)
+### Community 26 - "NbaFantasyContext"
+Cohesion: 0.09
+Nodes (21): Applicationuser, CancellationToken, Dictionary, Draftsnapshot, Fact, IReadOnlyList, League, Leagueplayer (+13 more)
 
 ### Community 27 - "DraftTimerHostedService"
 Cohesion: 0.31
 Nodes (7): BackgroundService, CancellationToken, ILogger, IServiceProvider, Task, TimeSpan, DraftTimerHostedService
 
-### Community 28 - "NBA.Data.Enumerations"
-Cohesion: 0.12
-Nodes (9): NBA.Data.Redis.Operations, NBA.Data.Redis.Scopes, NBA.Data.Enumerations, NBA.Data.Redis.Keys, NBA.Data.Redis.Dtos, NBA.Data.Redis, PlayerPositionExtensions, JsonSerializerOptions (+1 more)
-
-### Community 29 - "Player"
+### Community 28 - "NBA.Data.Redis.Entities"
 Cohesion: 0.13
-Nodes (10): ApplicationDefaults.Time, ExternalClients.Response, ExternalClients, NBA.Service.Game, NBA.Service.Player, NBA.Tests.Integration, NBA.Service.CalculateBoxScore, ExternalClients.Poco (+2 more)
+Nodes (9): NBA.Data.Redis.Operations, NBA.Data.Redis.Scopes, NBA.Data.Enumerations, NBA.Tests.Fakes, NBA.Data.Redis.Keys, NBA.Data.Redis.Entities, NBA.Service.Trade, NBA.Data.Redis.Dtos (+1 more)
+
+### Community 29 - "ExternalClients.Response"
+Cohesion: 0.16
+Nodes (7): ApplicationDefaults.Time, ExternalClients.Response, NBA.Api.HostedService, ExternalClients, NBA.Service.Game, NBA.Service.Player, ExternalClients.Poco
 
 ### Community 30 - "GameService"
-Cohesion: 0.18
-Nodes (12): IBackgroundJobClient, IEndpointRouteBuilder, GameEndpoints, DateOnly, Task, TimeSpan, GameManager, CancellationToken (+4 more)
+Cohesion: 0.23
+Nodes (9): IBackgroundJobClient, IEndpointRouteBuilder, GameEndpoints, CancellationToken, DateOnly, IOptions, List, Task (+1 more)
 
 ### Community 31 - "AppHost Launch Settings"
 Cohesion: 0.13
 Nodes (18): ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL, ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL, ASPNETCORE_ENVIRONMENT, DOTNET_ENVIRONMENT, applicationUrl, commandName, dotnetRunMessages, environmentVariables (+10 more)
 
-### Community 32 - "NBA.Data.Context"
-Cohesion: 0.15
-Nodes (7): NBA.Data.Context, ApplicationDefaults.LogDefaults, NBA.Data.Constants, IExceptionHandler, GlobalExceptionHandler, ILogger, TradeStatuses
+### Community 32 - "ApplicationDefaults.Exceptions"
+Cohesion: 0.13
+Nodes (9): ErrorCodes, ApplicationDefaults.LogDefaults, ApplicationDefaults.Exceptions, NBA.Tests.Integration, NBA.Service.Roster, NBA.Service.CalculateBoxScore, NBA.Service.LeaguePlayer, NBA.Data.Constants (+1 more)
 
 ### Community 33 - "create-objects-nba-schema.sql"
 Cohesion: 0.22
 Nodes (18): nba.applicationuser, nba.draftsnapshot, nba.league, nba.leagueplayer, nba.player, nba.playermemento, nba.playoff, nba.playoffbracket (+10 more)
 
-### Community 34 - "LeagueDto"
-Cohesion: 0.14
-Nodes (13): LeagueDto, Autostart, Commissioner, CommissionersTeam, Draftstyle, Leagueid, Name, Seasonyear (+5 more)
+### Community 34 - "ShortenJobExpirationFilter"
+Cohesion: 0.15
+Nodes (11): ApplyStateContext, NBA.Api.HangFire, NBA.Api, IApplyStateFilter, IConfiguration, IWriteOnlyTransaction, JobFilterAttribute, HttpResponseMessage (+3 more)
 
 ### Community 35 - "GameShort"
-Cohesion: 0.11
-Nodes (20): DateTime, GameShort, Date, GameId, HomeTeam, Postponed, Postseason, StartTime (+12 more)
+Cohesion: 0.12
+Nodes (17): DateTime, GameShort, Date, GameId, HomeTeam, Postponed, Postseason, StartTime (+9 more)
 
 ### Community 36 - "ExternalClients Project Files"
 Cohesion: 0.13
 Nodes (16): ApplicationDefaults, net10.0, Microsoft.NET.Sdk, BoxScoreBuilder, net10.0, Microsoft.NET.Sdk, ExternalClients, net10.0 (+8 more)
 
 ### Community 37 - "BallDontLieClientWireMockTests"
-Cohesion: 0.10
-Nodes (24): IAsyncLifetime, IClassFixture, IRequestMessage, IResponseBuilder, Fact, HttpStatusCode, InlineData, JsonException (+16 more)
+Cohesion: 0.16
+Nodes (15): IClassFixture, IRequestMessage, IResponseBuilder, Fact, HttpStatusCode, InlineData, JsonException, OperationCanceledException (+7 more)
 
 ### Community 38 - "PlayerInfoResponse"
-Cohesion: 0.09
-Nodes (21): List, GetAllPlayersResponse, data, meta, PlayerInfoResponse, college, country, draft_number (+13 more)
+Cohesion: 0.12
+Nodes (16): PlayerInfoResponse, college, country, draft_number, draft_round, draft_year, first_name, height (+8 more)
 
 ### Community 39 - "MetaData"
-Cohesion: 0.11
-Nodes (22): CancellationToken, DateOnly, HttpResponseMessage, List, Task, BallDontLieClient, CancellationToken, DateOnly (+14 more)
+Cohesion: 0.13
+Nodes (17): CancellationToken, DateOnly, List, Task, IBallDontLieClient, MetaData, Next_cursor, Per_page (+9 more)
 
 ### Community 40 - "API Launch Profiles"
 Cohesion: 0.13
@@ -327,19 +357,19 @@ Cohesion: 0.12
 Nodes (14): DateTime, ICollection, Transaction, Transactionid, Transactionleagues, Transactionstatus, Tscreated, Typetransaction (+6 more)
 
 ### Community 43 - ".InitializeAsync"
-Cohesion: 0.25
-Nodes (7): ApplicationOptions, CenterLimit, MaxPlayersPerTeam, ProposedTradeTtlMinutes, AuthenticationHandler, AuthenticationSchemeOptions, TestAuthHandler
+Cohesion: 0.14
+Nodes (12): ApplicationOptions, CenterLimit, MaxPlayersPerTeam, ProposedTradeTtlMinutes, AuthenticateResult, AuthenticationHandler, AuthenticationSchemeOptions, ClaimsPrincipal (+4 more)
 
 ### Community 44 - "PlayerStatsResponse"
-Cohesion: 0.13
-Nodes (14): PlayerStatsResponse, ast, blk, fg3a, fg3m, fga, fgm, fta (+6 more)
+Cohesion: 0.10
+Nodes (18): PlayerStatsResponse, ast, blk, fg3a, fg3m, fga, fgm, fta (+10 more)
 
 ### Community 45 - "Per-League Stats Values"
 Cohesion: 0.13
 Nodes (14): Statsvalue, Assistsvalue, Blocksvalue, Fieldgoalvaluemade, Fieldgoalvaluemissed, Freethrowvaluemade, Freethrowvaluemissed, League (+6 more)
 
 ### Community 46 - "NbaCalendar"
-Cohesion: 0.24
+Cohesion: 0.23
 Nodes (5): NbaCalendar, DateOnly, InlineData, Theory, TimeZoneInfo
 
 ### Community 47 - "Usertrophie"
@@ -359,40 +389,40 @@ Cohesion: 0.15
 Nodes (10): NBA.Api.Requests.Authentication, LoginRequestNBA, Password, Username, RefreshRequest, RefreshToken, SignUpRequest, Email (+2 more)
 
 ### Community 51 - "PlayerService"
+Cohesion: 0.20
+Nodes (9): AutomaticRetry, JobDisplayName, CancellationToken, DateTime, IReadOnlyList, List, PagedResult, Task (+1 more)
+
+### Community 52 - "Playermemento"
+Cohesion: 0.12
+Nodes (15): DateTime, Playermemento, Assists, Blocks, Fieldgoalperc, Freethrowperc, Player, Playermemontoid (+7 more)
+
+### Community 53 - "BallDontLieClient"
 Cohesion: 0.23
-Nodes (8): AutomaticRetry, JobDisplayName, DateTime, IReadOnlyList, List, PagedResult, Task, PlayerService
-
-### Community 52 - "LoginDto"
-Cohesion: 0.22
-Nodes (8): List, LoginDto, Leagues, RefreshToken, Teams, Token, Userid, Username
-
-### Community 53 - "ITradeOrchestrator"
-Cohesion: 0.43
-Nodes (4): Guid, List, Task, ITradeOrchestrator
+Nodes (9): CancellationToken, DateOnly, HttpResponseMessage, List, Task, BallDontLieClient, HttpClient, ResiliencePipeline (+1 more)
 
 ### Community 54 - "GameInfoResponse"
-Cohesion: 0.11
-Nodes (18): DateTime, GameInfoResponse, date, datetime, home_team, home_team_score, id, postponed (+10 more)
+Cohesion: 0.15
+Nodes (13): DateTime, GameInfoResponse, date, datetime, home_team, home_team_score, id, postponed (+5 more)
 
-### Community 55 - ".BuildHub"
-Cohesion: 0.27
-Nodes (11): Clients, Accepted, OfferedToLeague, Rejected, Superseded, TradeEvent, Fact, Hub (+3 more)
+### Community 55 - "TradeDto"
+Cohesion: 0.05
+Nodes (44): Clients, Hub, DateTime, Guid, List, TradeDto, Fromteamid, Leagueid (+36 more)
 
-### Community 56 - "TeamDto"
-Cohesion: 0.13
-Nodes (13): List, DraftOrderDto, Round, Teams, TeamDto, Categoryleaguepoints, Competesinleague, Islock (+5 more)
+### Community 56 - "LeagueDto"
+Cohesion: 0.05
+Nodes (34): List, DraftOrderDto, Round, Teams, LeagueDto, Autostart, Commissioner, CommissionersTeam (+26 more)
 
-### Community 57 - "FreeAgencyPickUpRequest"
-Cohesion: 0.33
-Nodes (5): NBA.Api.Requests.FreeAgency, List, FreeAgencyPickUpRequest, leagueId, playerIds
+### Community 57 - "FreeAgencyEndpoints.cs"
+Cohesion: 0.25
+Nodes (6): NBA.Api.Requests.FreeAgency, FreeAgencyEndpoints, List, FreeAgencyPickUpRequest, leagueId, playerIds
 
 ### Community 58 - ".ToPlayerDb"
-Cohesion: 0.20
-Nodes (7): List, PlayerData, Adapter, Fact, InlineData, Theory, AdapterTests
+Cohesion: 0.26
+Nodes (5): List, PlayerData, Adapter, Fact, AdapterTests
 
-### Community 59 - ".PerformCalculations"
-Cohesion: 0.40
-Nodes (4): Dictionary, List, Task, BoxScoreCalculationService
+### Community 59 - "AuthTokenIssuer"
+Cohesion: 0.29
+Nodes (7): DateTime, IOptions, Task, AuthTokenIssuer, TokenPair, IEndpointRouteBuilder, AuthenticationEndpoints
 
 ### Community 60 - "Trade"
 Cohesion: 0.12
@@ -406,17 +436,33 @@ Nodes (12): List, UserTeamDto, Categoryleaguepoints, Islock, Lastweekpoints, Lea
 Cohesion: 0.17
 Nodes (12): NBA.Tests, net10.0, Microsoft.NET.Sdk, coverlet.collector (6.0.2), Microsoft.AspNetCore.SignalR.Client (10.0.0), Microsoft.AspNetCore.TestHost (10.0.0), Microsoft.EntityFrameworkCore.InMemory (10.0.0), Microsoft.NET.Test.Sdk (17.12.0) (+4 more)
 
-### Community 64 - "TradeDto"
-Cohesion: 0.15
-Nodes (12): DateTime, Guid, List, TradeDto, Fromteamid, Leagueid, Playerids, Status (+4 more)
+### Community 63 - ".GetUserTeamsWithPlayersAsync"
+Cohesion: 0.29
+Nodes (7): IEndpointRouteBuilder, TeamEndpoints, Dictionary, List, Task, TeamData, TeamService
+
+### Community 64 - "ScheduledGames"
+Cohesion: 0.24
+Nodes (9): List, ScheduledGames, RestOfWeek, Today, Tomorrow, DateOnly, Task, TimeSpan (+1 more)
+
+### Community 65 - ".DraftOrder"
+Cohesion: 0.25
+Nodes (5): IEndpointRouteBuilder, TestingEndpoints, Dictionary, Queue, Task
 
 ### Community 66 - "EntityMappings"
-Cohesion: 0.22
+Cohesion: 0.24
 Nodes (3): List, Team, EntityMappings
 
 ### Community 67 - "NBA.Api Package References"
 Cohesion: 0.18
 Nodes (10): net10.0, Aspire.StackExchange.Redis (13.1.2), Microsoft.Extensions.Http.Resilience (10.1.0), Aspire.Npgsql.EntityFrameworkCore.PostgreSQL (13.1.0), Microsoft.AspNetCore.Authentication.JwtBearer (10.0.0), Microsoft.AspNetCore.OpenApi (10.0.0), Microsoft.AspNetCore.SignalR.StackExchangeRedis (10.0.5), Microsoft.OpenApi (2.7.5) (+2 more)
+
+### Community 68 - ".LoginAsync"
+Cohesion: 0.33
+Nodes (5): IPasswordHasher, List, Task, AuthService, LoginResult
+
+### Community 69 - ".AddProposedTrade"
+Cohesion: 0.29
+Nodes (5): Created, DateTime, TradeData, Superseded, Trade
 
 ### Community 70 - "PlayerManager"
 Cohesion: 0.31
@@ -439,16 +485,16 @@ Cohesion: 0.20
 Nodes (10): POSTGRES_HOST_AUTH_METHOD, POSTGRES_INITDB_ARGS, POSTGRES_PASSWORD, POSTGRES_USER, bindMounts, connectionString, env, image (+2 more)
 
 ### Community 75 - "DraftService"
-Cohesion: 0.14
-Nodes (15): DraftOptions, DraftPickTime, Rounds, ShowTeamDraftBoardCount, IHubContext, IOptions, DraftTimerProcessor, Task (+7 more)
+Cohesion: 0.18
+Nodes (13): DraftOptions, DraftPickTime, Rounds, ShowTeamDraftBoardCount, IHubContext, IOptions, DraftTimerProcessor, IOptions (+5 more)
 
 ### Community 76 - "ServiceDefaults Extensions"
 Cohesion: 0.22
 Nodes (3): Microsoft.Extensions.Hosting, Extensions, WebApplication
 
-### Community 77 - "ScheduledGames"
-Cohesion: 0.19
-Nodes (10): List, ScheduledGames, RestOfWeek, Today, Tomorrow, IDatabase, JsonSerializerOptions, Task (+2 more)
+### Community 77 - "GameRedisOperations"
+Cohesion: 0.32
+Nodes (5): IDatabase, JsonSerializerOptions, Task, TimeSpan, GameRedisOperations
 
 ### Community 78 - "DraftType"
 Cohesion: 0.29
@@ -467,12 +513,12 @@ Cohesion: 0.17
 Nodes (12): List, GetAllTeamsResponse, data, meta, TeamInfoResponse, abbreviation, city, conference (+4 more)
 
 ### Community 82 - "DraftState"
-Cohesion: 0.20
-Nodes (10): DateTime, Dictionary, List, DraftState, DraftBoardTeams, DraftedPlayersPerTeam, DraftPlayers, DraftStatus (+2 more)
+Cohesion: 0.15
+Nodes (12): Task, IDraftHubClient, DateTime, Dictionary, List, DraftState, DraftBoardTeams, DraftedPlayersPerTeam (+4 more)
 
-### Community 84 - ".ToggleFreeAgencyStatus"
-Cohesion: 0.21
-Nodes (7): IEndpointRouteBuilder, FreeAgencyEndpoints, IServiceCollection, FreeAgencyExtention, List, Task, FreeAgencyService
+### Community 84 - ".MapFreeAgencyEndpoints"
+Cohesion: 0.39
+Nodes (5): IEndpointRouteBuilder, List, Task, FreeAgencyService, PlayerData
 
 ### Community 85 - "Aspire HTTPS Bindings"
 Cohesion: 0.25
@@ -480,19 +526,23 @@ Nodes (8): https, protocol, scheme, transport, bindings, path, type, nba-api
 
 ### Community 86 - "ApplicationHostedService"
 Cohesion: 0.07
-Nodes (27): ErrorResponse, ErrorCode, ErrorMessage, Log, message, request, response, BallDontLieClientOptions (+19 more)
+Nodes (26): ErrorResponse, ErrorCode, ErrorMessage, Log, message, request, response, HttpContext (+18 more)
+
+### Community 87 - "NBA.Service.FreeAgency"
+Cohesion: 0.29
+Nodes (3): NBA.Service.FreeAgency, IServiceCollection, FreeAgencyExtention
 
 ### Community 88 - "NBA.Data.Entities"
-Cohesion: 0.12
-Nodes (10): NBA.Data.Entities, NBA.Api.DTOs, NBA.Service.FreeAgency, NBA.Service.Authentication, NBA.Api.Mappings, NBA.Api.Authentication, NBA.Tests, NBA.Service (+2 more)
+Cohesion: 0.14
+Nodes (10): NBA.Service.League, NBA.Data.Entities, NBA.Api.DTOs, NBA.Service.Authentication, NBA.Api.Mappings, NBA.Api.Authentication, NBA.Tests, NBA.Service (+2 more)
 
 ### Community 89 - "Draft Status Enum"
 Cohesion: 0.29
 Nodes (6): DraftStatus, DraftCompleted, DraftEnded, DraftStarted, Initial, Paused
 
-### Community 90 - "TradeOutcome"
-Cohesion: 0.33
-Nodes (6): IReadOnlyList, TradeOutcome, Guid, List, TradeData, FakeTradeOrchestrator
+### Community 90 - ".Generate"
+Cohesion: 0.38
+Nodes (3): RefreshTokenGenerator, Fact, RefreshTokenGeneratorTests
 
 ### Community 91 - "PlayerPositionEnum"
 Cohesion: 0.22
@@ -502,17 +552,13 @@ Nodes (8): PlayerPositionEnum, C, CF, F, FG, G, GF, UNKOWN
 Cohesion: 0.29
 Nodes (7): NBA.Service, net10.0, Aspire.Hosting.Redis (13.1.2), Microsoft.Extensions.Options (10.0.3), Microsoft.NET.Sdk, Isopoh.Cryptography.Argon2 (1.1.10), Microsoft.Extensions.Identity.Core (10.0.0)
 
-### Community 93 - "ApplicationDefaults.Exceptions"
-Cohesion: 0.13
-Nodes (11): ErrorCodes, NBA.Api.Draft, NBA.Service.League, NBA.Api.HostedService, ApplicationDefaults.Exceptions, NBA.Api.Requests.Team, NBA.Api.SignalR, NBA.Service.LeaguePlayer (+3 more)
+### Community 93 - "TeamEndpoints.cs"
+Cohesion: 0.29
+Nodes (4): NBA.Api.Requests.Team, NBA.Service.Team, TeamRequest, teamName
 
 ### Community 94 - "Aspire Server Bindings"
 Cohesion: 0.29
 Nodes (7): tcp, bindings, port, protocol, scheme, targetPort, transport
-
-### Community 95 - "Argon2idPasswordHasher"
-Cohesion: 0.16
-Nodes (10): Argon2Options, DegreeOfParallelism, Iterations, MemoryKib, IPasswordHasher, IOptions, Argon2idPasswordHasher, Fact (+2 more)
 
 ### Community 96 - "LeaguePlayerSeedTests"
 Cohesion: 0.42
@@ -535,60 +581,84 @@ Cohesion: 0.40
 Nodes (4): NBA.Api.Requests.Draft, DraftRequest, LeagueId, StartDraft
 
 ### Community 101 - "DraftLifecycleService"
-Cohesion: 0.12
-Nodes (18): List, DraftBoardTeams, CurrentRound, DraftOrder, onTheClockTeam, TeamDraftBoard, Pick, TeamId (+10 more)
+Cohesion: 0.20
+Nodes (10): DraftBoardTeams, DraftOptions, DraftSnapshotService, IOptions, List, Task, DraftLifecycleService, NbaFantasyRedis (+2 more)
 
 ### Community 102 - "Chat Schema DDL"
 Cohesion: 0.70
 Nodes (4): chat.conversationparticipants, chat.messages, chat.rooms, nba.applicationuser
 
 ### Community 103 - "NbaFantasyRedis"
-Cohesion: 0.14
-Nodes (14): Lazy, IDatabase, NbaFantasyRedis, Auth, Draft, Game, Lock, Player (+6 more)
+Cohesion: 0.22
+Nodes (9): Lazy, IDatabase, NbaFantasyRedis, Auth, Draft, Game, Lock, Player (+1 more)
 
 ### Community 104 - "Aspire HTTP Bindings"
 Cohesion: 0.50
 Nodes (4): http, protocol, scheme, transport
 
-### Community 105 - "PagedResult"
-Cohesion: 0.25
-Nodes (5): IEndpointRouteBuilder, PlayerEndpoints, IReadOnlyList, PagedResult, TotalPages
+### Community 105 - "League"
+Cohesion: 0.15
+Nodes (14): IEndpointRouteBuilder, LeagueEndpoints, League, PagedResult, Task, TeamData, CreateLeagueInput, JoinLeagueInput (+6 more)
 
-### Community 116 - "ChatHub"
-Cohesion: 0.25
-Nodes (5): Hub, Task, IChatHubClient, Task, ChatHub
+### Community 116 - "Teamplayer"
+Cohesion: 0.29
+Nodes (6): Teamplayer, Player, Playerid, Team, Teamid, Teamplayerid
+
+### Community 117 - "Userleague"
+Cohesion: 0.29
+Nodes (6): Userleague, League, Leagueid, User, Userid, Userleagueid
+
+### Community 118 - "Team"
+Cohesion: 0.33
+Nodes (5): Team, abbreviation, city, full_name, id
+
+### Community 119 - "ScheduledGamesDto"
+Cohesion: 0.33
+Nodes (5): List, ScheduledGamesDto, RestOfWeek, Today, Tomorrow
+
+### Community 120 - "Argon2Options"
+Cohesion: 0.40
+Nodes (4): Argon2Options, DegreeOfParallelism, Iterations, MemoryKib
 
 ### Community 121 - "LockRedisOperations"
 Cohesion: 0.33
 Nodes (4): IDatabase, Task, TimeSpan, LockRedisOperations
 
-### Community 123 - ".OnModelCreating"
-Cohesion: 0.11
-Nodes (15): ModelBuilder, Player, Trade, DateTime, Draftsnapshot, Draftstate, Draftteams, Leagueid (+7 more)
+### Community 122 - ".CreateToken"
+Cohesion: 0.50
+Nodes (3): DateTime, AuthToken, ITokenService
+
+### Community 123 - "Draftsnapshot"
+Cohesion: 0.29
+Nodes (6): DateTime, Draftsnapshot, Draftstate, Draftteams, Leagueid, Tsupdated
+
+### Community 124 - "NBA.Data.Redis"
+Cohesion: 0.50
+Nodes (3): NBA.Data.Redis, JsonSerializerOptions, RedisSerializer
 
 ### Community 125 - "Q: Tell me how individual players are stored in redis"
 Cohesion: 0.40
 Nodes (4): Answer, Outcome, Q: Tell me how individual players are stored in redis, Source Nodes
 
 ## Knowledge Gaps
-- **701 isolated node(s):** `net10.0`, `Microsoft.NET.Sdk`, `ErrorCodes`, `ErrorMessage`, `ErrorCode` (+696 more)
+- **703 isolated node(s):** `leagueId`, `playerIds`, `TradeStatuses`, `BoxScoreEvaluation`, `ErrorCodes` (+698 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **20 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `NbaFantasyContext` connect `NbaFantasyContext` to `JwtOptions`, `Player`, `DraftSnapshotService`, `NBAException`, `Leagueplayer`, `TradeHubFixture`, `Applicationuser`, `Team`, `DraftEndDraftTests`, `NBA.Data.Context`, `Playoff`, `Transaction`, `.InitializeAsync`, `Usertrophie`, `PlayerService`, `.PerformCalculations`, `PlayerManager`, `DraftService`, `.ToggleFreeAgencyStatus`, `ApplicationHostedService`, `LeaguePlayerSeedTests`, `DraftLifecycleService`, `.OnModelCreating`?**
-  _High betweenness centrality (0.176) - this node is a cross-community bridge._
-- **Why does `NBAException` connect `NBAException` to `JwtOptions`, `LeaguePlayerSeedTests`, `.ProposeAsync`, `DraftLifecycleService`, `.CreateClient`, `MetaData`, `.League`, `DraftSnapshotService`, `BallDontLieClientWireMockTests`, `Leagueplayer`, `Applicationuser`, `.ToggleFreeAgencyStatus`, `Team`, `PlayerService`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
-- **Why does `NbaFantasyRedis` connect `NbaFantasyRedis` to `JwtOptions`, `DraftRedisOperations`, `.ProposeAsync`, `PlayerShort`, `.League`, `DraftSnapshotService`, `TradeBetweenTeams`, `TradeHubFixture`, `DraftTimerHostedService`, `NBA.Data.Enumerations`, `GameService`, `.InitializeAsync`, `PlayerService`, `PlayerManager`, `DraftService`, `ScheduledGames`, `ApplicationHostedService`, `DraftLifecycleService`, `LockRedisOperations`?**
-  _High betweenness centrality (0.089) - this node is a cross-community bridge._
+- **Why does `NbaFantasyContext` connect `NbaFantasyContext` to `.EnsureRehydratedAsync`, `NBAException`, `LeaguePlayerService`, `TradeHubFixture`, `Applicationuser`, `Team`, `League`, `Playoff`, `Transaction`, `.InitializeAsync`, `PlayerStatsResponse`, `Usertrophie`, `PlayerService`, `Playermemento`, `AuthTokenIssuer`, `.GetUserTeamsWithPlayersAsync`, `.LoginAsync`, `PlayerManager`, `DraftService`, `ApplicationHostedService`, `NBA.Data.Entities`, `LeaguePlayerSeedTests`, `League`, `Teamplayer`, `Userleague`, `Draftsnapshot`?**
+  _High betweenness centrality (0.109) - this node is a cross-community bridge._
+- **Why does `NBAException` connect `NBAException` to `LeaguePlayerSeedTests`, `.DraftOrder`, `.ProposeAsync`, `.LoginAsync`, `DraftLifecycleService`, `.AddProposedTrade`, `.CreateClient`, `.League`, `.EnsureRehydratedAsync`, `League`, `.InitializeAsync`, `BallDontLieClientWireMockTests`, `PlayerService`, `.MapFreeAgencyEndpoints`, `BallDontLieClient`, `NbaFantasyContext`, `AuthTokenIssuer`, `.GetUserTeamsWithPlayersAsync`?**
+  _High betweenness centrality (0.101) - this node is a cross-community bridge._
+- **Why does `NbaFantasyRedis` connect `NbaFantasyRedis` to `ScheduledGames`, `DraftRedisOperations`, `.ProposeAsync`, `PlayerShort`, `PlayerManager`, `.League`, `AuthTokenIssuer`, `.EnsureRehydratedAsync`, `DraftService`, `.InitializeAsync`, `GameRedisOperations`, `TradeBetweenTeams`, `TradeHubFixture`, `PlayerService`, `ApplicationHostedService`, `LockRedisOperations`, `DraftTimerHostedService`, `NBA.Data.Redis.Entities`?**
+  _High betweenness centrality (0.095) - this node is a cross-community bridge._
 - **Are the 34 inferred relationships involving `NBAException` (e.g. with `.GetAsync()` and `.RefreshAsync()`) actually correct?**
   _`NBAException` has 34 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `net10.0`, `Microsoft.NET.Sdk`, `ErrorCodes` to the rest of the system?**
-  _701 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `JwtOptions` be split into smaller, more focused modules?**
-  _Cohesion score 0.05202661826981246 - nodes in this community are weakly interconnected._
+- **What connects `leagueId`, `playerIds`, `TradeStatuses` to the rest of the system?**
+  _703 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `DraftRedisOperations` be split into smaller, more focused modules?**
-  _Cohesion score 0.08816326530612245 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06299603174603174 - nodes in this community are weakly interconnected._
+- **Should `PlayerShort` be split into smaller, more focused modules?**
+  _Cohesion score 0.06153846153846154 - nodes in this community are weakly interconnected._

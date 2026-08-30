@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T14:55:46.659796+00:00",
+  "generated_at": "2026-08-30T15:35:43.745104+00:00",
   "nodes": {
     "nba_data_redis_dtos_playershortdto_nba_data_redis_dtos_playershortdto": {
       "code_fingerprint": "e779be2af90793d29ce9503f80cdeb264564c0ae6dd8bc95f2aa8e167f92a017",
@@ -12,8 +12,24 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99861325,
+      "score": 0.997973321,
       "source_file": "NBA.Data/Redis/Dtos/PlayerShortDto.cs",
+      "status": "tentative",
+      "uses": 1
+    },
+    "nba_data_redis_entities_playershort_nba_data_redis_entities_playershort": {
+      "code_fingerprint": "9fba4776164543fc94431ad2de89c0fb4c1937dc742849c12bcd2d39866e642a",
+      "label": "PlayerShort",
+      "last": "2026-08-30T13:29:17.358354+00:00",
+      "provenance": [
+        {
+          "date": "2026-08-30T13:29:17.358354+00:00",
+          "outcome": "useful",
+          "q": "Tell me how individual players are stored in redis"
+        }
+      ],
+      "score": 0.997973321,
+      "source_file": "NBA.Data/Redis/Entities/PlayerShort.cs",
       "status": "tentative",
       "uses": 1
     },
@@ -28,7 +44,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99861325,
+      "score": 0.997973321,
       "source_file": "NBA.Data/Redis/Operations/PlayerRedisOperations.cs",
       "status": "tentative",
       "uses": 1
@@ -44,7 +60,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99861325,
+      "score": 0.997973321,
       "source_file": "NBA.Data/Redis/RedisSerializer.cs",
       "status": "tentative",
       "uses": 1
@@ -60,7 +76,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99861325,
+      "score": 0.997973321,
       "source_file": "NBA.Data/Redis/Scopes/LeaguePlayers.cs",
       "status": "tentative",
       "uses": 1
