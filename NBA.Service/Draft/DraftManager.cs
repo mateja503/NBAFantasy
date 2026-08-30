@@ -19,8 +19,9 @@ namespace NBA.Service.Draft
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftSnapshotService _snapshot = snapshot;
-        // The draft operations shared with DraftService, plus the league/team lookups this type used
-        // to run against the DbContext itself.
+        // The draft-board projection plus the league/team lookups this type used to run against the
+        // DbContext itself. Ending a draft is no longer routed through here — callers invoke
+        // DraftLifecycleService.EndDraft directly.
         private readonly DraftLifecycleService _lifecycle = lifecycle;
 
         public async Task<DraftState> CreateDraftState(long leagueId)
@@ -68,28 +69,6 @@ namespace NBA.Service.Draft
             state.PickEndTime = DateTime.UtcNow.AddSeconds(Math.Max(1, _draftOptions.DraftPickTime));
             await draft.SetState(state);
             return state;
-        }
-
-        public async Task EndDraft(long leagueId)
-        {
-            var league = _redis.League(leagueId);
-
-            // Remove any pending pick deadline from the timer sorted set.
-            await league.Draft.CancelTimer();
-
-            // Writes the drafted rosters into Postgres — it reads DraftedPlayersPerTeam off draft:state,
-            // so it has to run before the Redis clean-up below.
-            await _lifecycle.EndDraft(leagueId);
-
-            // The draft board, the available player pool and the per-team roster sets are draft-time
-            // scratch data; once the rosters are in Teamplayer there is nothing left to draft from.
-            var teamIds = await _lifecycle.GetLeagueTeamIds(leagueId);
-
-            await league.Players.DeleteDraftPlayers(teamIds);
-
-            _ = await league.Draft.DeleteState();
-            await league.Draft.DeleteTeams();
-            await _snapshot.DeleteAsync(leagueId);
         }
 
         // Strips a state down to the single shape clients get once a draft is over: status DraftEnded,

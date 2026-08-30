@@ -20,8 +20,7 @@ namespace NBA.Service.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,
-        DraftOrderManager draftOrder, DraftSnapshotService snapshot, RosterValidator rosterValidator,
-        DraftLifecycleService lifecycle)
+        DraftOrderManager draftOrder, DraftSnapshotService snapshot, RosterValidator rosterValidator)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
@@ -30,7 +29,6 @@ namespace NBA.Service.Draft
         private readonly DraftOrderManager _draftOrder = draftOrder;
         private readonly DraftSnapshotService _snapshot = snapshot;
         private readonly RosterValidator _rosterValidator = rosterValidator;
-        private readonly DraftLifecycleService _lifecycle = lifecycle;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
 
         public async Task<Dictionary<long, Queue<TeamDraftBoard>>> DraftOrder(long leagueId)
@@ -107,11 +105,6 @@ namespace NBA.Service.Draft
             }
         }
 
-        // Moved to DraftLifecycleService (shared with DraftManager); kept here as a pass-through so
-        // the hub and the timer processor keep calling it through DraftService.
-        public DraftBoardTeams? PrepareDraftBoard(Dictionary<long, Queue<TeamDraftBoard>> teams)
-            => _lifecycle.PrepareDraftBoard(teams);
-
         public async Task<PlayerData> DraftPlayer(long teamId, long playerId)
         {
             var team = await _context.GetAllTeamPlayer()
@@ -138,11 +131,6 @@ namespace NBA.Service.Draft
             _ = await _context.AddTeamPlayer(new Teamplayer { Playerid = playerId, Teamid = teamId });
             return player;
         }
-
-
-        // Moved to DraftLifecycleService (shared with DraftManager); kept here as a pass-through so
-        // existing callers of DraftService.EndDraft are unaffected.
-        public Task EndDraft(long leagueId) => _lifecycle.EndDraft(leagueId);
 
 
         public async Task<bool> CheckDraftCompleted(long leagueId)

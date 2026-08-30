@@ -1,5 +1,4 @@
 ﻿using ApplicationDefaults.Options;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Options;
@@ -8,16 +7,18 @@ using NBA.Data.Entities;
 using NBA.Data.Enumerations;
 using NBA.Data.Redis.Dtos;
 using NBA.Data.Redis.Entities;
+using NBA.Data.Redis.Keys;
 using NBA.Service.Draft;
-using NBA.Service.Roster;
 using Xunit;
 
 namespace NBA.Tests.Integration
 {
-    // Verifies the draft-end flush to Postgres: DraftService.EndDraft reads each team's drafted players
-    // from the (real) Redis container and bulk-inserts them into the (InMemory) Postgres stand-in, then
-    // marks the league completed. Reuses the shared Redis container from TradeHubFixture; the EF context
-    // is built per test against an isolated InMemory store so EndDraft's transaction runs in isolation.
+    // Verifies the draft-end flush to Postgres: DraftLifecycleService.EndDraft reads each team's drafted
+    // players from the (real) Redis container and bulk-inserts them into the (InMemory) Postgres stand-in,
+    // then marks the league completed. Reuses the shared Redis container from TradeHubFixture; the EF
+    // context is built per test against an isolated InMemory store so EndDraft's transaction runs in
+    // isolation. EndDraft also tears down the league's draft-time Redis keys and its snapshot row; both
+    // tests use their own leagueId, so that clean-up cannot leak across them.
     [Collection("Trade integration")]
     public class DraftEndDraftTests
     {
@@ -32,22 +33,97 @@ namespace NBA.Tests.Integration
                 .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
                 .Options);
 
-        // EndDraft only touches the context + Redis; the other deps are required by the ctor but unused here.
-        private DraftService BuildService(NbaFantasyContext context)
+        // DraftLifecycleService owns EndDraft outright now — DraftService no longer wraps it — so the
+        // test builds it directly. It needs only the context, the Redis facade and the snapshot service.
+        private DraftLifecycleService BuildService(NbaFantasyContext context)
         {
             var draftOptions = Options.Create(new DraftOptions { Rounds = 1, DraftPickTime = 60, ShowTeamDraftBoardCount = 1 });
-            var appOptions = Options.Create(new ApplicationOptions { MaxPlayersPerTeam = 13, CenterLimit = 4 });
-            var jsonOptions = Options.Create(new JsonOptions());
+            // EndDraft deletes the league's snapshot row as its last step, so this dependency is
+            // exercised here rather than merely satisfied.
             var snapshot = new DraftSnapshotService(context, _fixture.Redis, draftOptions);
-            var rosterValidator = new RosterValidator(appOptions);
-            // EndDraft now lives on DraftLifecycleService; DraftService delegates to it, so this test
-            // still exercises the same write path through the same entry point.
-            var lifecycle = new DraftLifecycleService(context, draftOptions, _fixture.Redis);
-            // DraftService reaches the draft-order Redis key through DraftOrderManager now; EndDraft
-            // does not use it, but the ctor requires it.
-            var draftOrder = new DraftOrderManager(_fixture.Redis);
 
-            return new DraftService(context, draftOptions, appOptions, jsonOptions, draftOrder, snapshot, rosterValidator, lifecycle);
+            return new DraftLifecycleService(context, draftOptions, _fixture.Redis, snapshot);
+        }
+
+        private static void SeedLeague(NbaFantasyContext context, long leagueId, string name, bool draftCompleted, params long[] teamIds)
+        {
+            context.Leagues.Add(new League
+            {
+                Leagueid = leagueId,
+                Name = name,
+                Commissioner = 1,
+                Seasonyear = "2026",
+                Draftcompleted = draftCompleted,
+            });
+
+            // GetLeagueTeamIds reads these rows to scope the per-team Redis clean-up, so a purge test
+            // that seeded no teams would assert nothing about the per-team roster keys.
+            foreach (var teamId in teamIds)
+                context.Teams.Add(new Team { Teamid = teamId, Leagueid = leagueId, Name = $"Team {teamId}", Approved = true });
+        }
+
+        // Puts a league into the state a live draft leaves behind: draft state (carrying the rosters
+        // EndDraft flushes), the remaining pick order, the available pool, the league's pick-ordered
+        // drafted set, one roster set per team, an armed pick deadline and a durable snapshot row.
+        private async Task SeedLiveDraftAsync(NbaFantasyContext context, long leagueId, string leagueName, IReadOnlyList<long> teamIds)
+        {
+            var league = _fixture.Redis.League(leagueId);
+
+            await league.Draft.SetState(new DraftState
+            {
+                LeagueName = leagueName,
+                DraftedPlayersPerTeam = teamIds
+                    .Select((teamId, i) => (teamId, playerId: (long)(900 + i)))
+                    .ToDictionary(t => t.teamId, t => new List<PlayerShortDto>
+                    {
+                        new() { PlayerId = t.playerId, Position = nameof(PlayerPositionEnum.G) },
+                    }),
+            });
+
+            await league.Draft.SetTeams(new Dictionary<long, Queue<TeamDraftBoard>>
+            {
+                [1] = new(teamIds.Select(id => new TeamDraftBoard { TeamId = id, TeamName = $"Team {id}", Pick = 1 })),
+            });
+
+            await league.Players.AddAvailableDraftPlayers(
+                [new PlayerShort { PlayerId = 999, FullName = "Undrafted Guy", Position = (int)PlayerPositionEnum.F }]);
+
+            for (var i = 0; i < teamIds.Count; i++)
+            {
+                await league.Players.AddDraftedPlayer(900 + i, i + 1);
+                await _fixture.Redis.Player.AddTeamsDrafterPlayer(teamIds[i], 900 + i);
+            }
+
+            await league.Draft.ScheduleTimer(DateTimeOffset.UtcNow.AddSeconds(60));
+
+            await context.UpsertDraftSnapshot(new Draftsnapshot
+            {
+                Leagueid = leagueId,
+                Draftstate = "{}",
+                Draftteams = "{}",
+                Tsupdated = DateTime.UtcNow,
+            });
+        }
+
+        // Every draft-time key for the league, plus the armed deadline and the snapshot row, is gone.
+        private async Task AssertDraftDataPurgedAsync(NbaFantasyContext context, long leagueId, IReadOnlyList<long> teamIds)
+        {
+            var league = _fixture.Redis.League(leagueId);
+
+            Assert.False(await league.Draft.StateExists());
+            Assert.False(await league.Draft.TeamsExist());
+            Assert.False(await league.Draft.IsTimerScheduled());
+
+            // The available pool comes back null (not empty) once its key is gone.
+            Assert.Null(await league.Players.GetAvailableDraftPlayers());
+            Assert.Empty(await league.Players.GetDraftedPlayers() ?? []);
+
+            // Asserted on the raw key: GetTeamsDraftedPlayers projects through the player cache, so an
+            // empty list from it would not prove the set itself was deleted.
+            foreach (var teamId in teamIds)
+                Assert.False(await _fixture.Database.KeyExistsAsync(RedisKeys.GetTeamsDraftedPlayersKey(teamId)));
+
+            Assert.Null(await context.GetDraftSnapshot(leagueId));
         }
 
         [Fact]
@@ -121,8 +197,82 @@ namespace NBA.Tests.Integration
 
             await service.EndDraft(leagueId);
 
-            // Early-out on Draftcompleted == true means nothing is inserted.
+            // The Draftcompleted == true guard skips the flush, so nothing is inserted — the Redis and
+            // snapshot clean-up that follows it writes nothing to Postgres either.
             Assert.Empty(await context.Teamplayers.ToListAsync());
+        }
+
+        [Fact]
+        public async Task EndDraft_purges_every_draft_time_redis_key_and_the_snapshot()
+        {
+            const long leagueId = 103;
+            long[] teamIds = [1030, 1031];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Purge League", draftCompleted: false, teamIds);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Purge League", teamIds);
+
+            await BuildService(context).EndDraft(leagueId);
+
+            // The flush ran first - the rosters are safely in Postgres before anything is deleted.
+            Assert.Equal(2, (await context.Teamplayers.ToListAsync()).Count);
+            Assert.True((await context.Leagues.SingleAsync(l => l.Leagueid == leagueId)).Draftcompleted);
+
+            await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
+        }
+
+        [Fact]
+        public async Task EndDraft_still_purges_redis_when_the_league_draft_is_already_completed()
+        {
+            const long leagueId = 104;
+            long[] teamIds = [1040, 1041];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Already Done Purge League", draftCompleted: true, teamIds);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Already Done Purge League", teamIds);
+
+            await BuildService(context).EndDraft(leagueId);
+
+            // Draftcompleted == true means the rosters were flushed by an earlier call, so re-inserting
+            // them would duplicate the Teamplayer rows - nba.teamplayer is a many-to-many join with no
+            // unique constraint to reject them, which is exactly why the guard exists.
+            Assert.Empty(await context.Teamplayers.ToListAsync());
+
+            // ...but the clean-up is deliberately NOT behind that guard. This is the crash-recovery
+            // path: if an earlier run committed the flush and died before the deletes, re-running
+            // end-draft is the only way to clear these keys, and an early return would strand them.
+            await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
+        }
+
+        [Fact]
+        public async Task EndDraft_called_twice_does_not_duplicate_the_teamplayer_rows()
+        {
+            const long leagueId = 105;
+            long[] teamIds = [1050, 1051];
+            using var context = NewContext();
+
+            SeedLeague(context, leagueId, "Twice League", draftCompleted: false, teamIds);
+            await context.SaveChangesAsync();
+
+            await SeedLiveDraftAsync(context, leagueId, "Twice League", teamIds);
+
+            var service = BuildService(context);
+
+            await service.EndDraft(leagueId);
+            // The second call finds Draftcompleted == true and must not flush again. Nothing else in
+            // the codebase writes that flag, so it is the only thing standing between a repeated
+            // end-draft request and a doubled roster.
+            await service.EndDraft(leagueId);
+
+            var rows = await context.Teamplayers.ToListAsync();
+            Assert.Equal(2, rows.Count);
+            Assert.Equal(2, rows.Select(r => (r.Teamid, r.Playerid)).Distinct().Count());
+
+            await AssertDraftDataPurgedAsync(context, leagueId, teamIds);
         }
     }
 }

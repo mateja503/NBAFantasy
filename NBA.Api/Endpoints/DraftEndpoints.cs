@@ -33,7 +33,7 @@ namespace NBA.Api.Endpoints
                 await timerProcessor.StartDraftAsync(request.LeagueId.Value);
             });
 
-            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, DraftService draftService, IHubContext<DraftHub,IDraftHubClient> draftHub) => 
+            draft.MapPost("end-draft", async ([FromBody] DraftRequest request, DraftManager draftManager, DraftLifecycleService lifecycle, IHubContext<DraftHub,IDraftHubClient> draftHub) => 
             {
                 if (!request.LeagueId.HasValue)
                     throw new NBAException($"Missing value for leagueId", ErrorCodes.MissingValue);
@@ -42,7 +42,7 @@ namespace NBA.Api.Endpoints
                 // name and the drafted rosters instead of receiving an empty shell.
                 var state = await draftManager.BuildEndedState(request.LeagueId.Value);
 
-                await draftManager.EndDraft(request.LeagueId.Value);
+                await lifecycle.EndDraft(request.LeagueId.Value);
 
                 await draftHub.Clients.Group(request.LeagueId.Value.ToString()).UpdateDraftState(state);
 
