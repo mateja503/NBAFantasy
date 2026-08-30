@@ -1,4 +1,4 @@
-using ApplicationDefaults.Options;
+﻿using ApplicationDefaults.Options;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 using NBA.Api.SignalR.Clients;
@@ -17,12 +17,16 @@ namespace NBA.Api.Draft
         IHubContext<DraftHub, IDraftHubClient> hubContext,
         DraftManager draftManager,
         DraftService draftService,
+        DraftLifecycleService lifecycle,
         NbaFantasyRedis redis,
         IOptions<DraftOptions> draftOptions)
     {
         private readonly IHubContext<DraftHub, IDraftHubClient> _hubContext = hubContext;
         private readonly DraftManager _draftManager = draftManager;
         private readonly DraftService _draftService = draftService;
+        // DraftService is still needed for CheckDraftCompleted/DraftOrder; the board projection and
+        // the end-of-draft sequence come straight off DraftLifecycleService.
+        private readonly DraftLifecycleService _lifecycle = lifecycle;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
 
@@ -46,7 +50,7 @@ namespace NBA.Api.Draft
             // Ensure the draft order (and the derived board) exist before the first auto-advance,
             // which reads them — otherwise NextPick would hit a null teams collection.
             var draft = await _draftService.DraftOrder(leagueId);
-            state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+            state.DraftBoardTeams = _lifecycle.PrepareDraftBoard(draft);
             state.DraftStatus = (int)DraftStatus.DraftStarted;
             await _draftManager.UpdaterDraftState(leagueId, state);
 
@@ -76,7 +80,7 @@ namespace NBA.Api.Draft
                     {
                         // EndDraft also cancels the pending deadline. Tell the clients before returning —
                         // this used to bail out silently, so the UI never learned the draft was over.
-                        await _draftManager.EndDraft(leagueId);
+                        await _lifecycle.EndDraft(leagueId);
                         //clear it here because the drafted players are saved to postgress in EndDraft.
                         state.DraftedPlayersPerTeam = null;
                         await _hubContext.Clients.Group(leagueId.ToString()).UpdateDraftState(state);

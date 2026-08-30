@@ -17,11 +17,14 @@ namespace NBA.Service.Draft
     // Postgres; PrepareDraftBoard is a pure projection over the in-memory draft order and touches
     // neither store.
     public class DraftLifecycleService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
-        NbaFantasyRedis redis)
+        NbaFantasyRedis redis, DraftSnapshotService snapshot)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly NbaFantasyRedis _redis = redis;
+        // The durable mirror of the live draft. EndDraft is the one place that drops it: once the
+        // rosters are in Postgres there is nothing left to recover.
+        private readonly DraftSnapshotService _snapshot = snapshot;
 
         // League name for the draft state. Returns null when the league is missing; the caller owns
         // the display fallback ("NO LEAGUE"), which is what DraftManager did before this moved here.
@@ -48,40 +51,70 @@ namespace NBA.Service.Draft
             };
         }
 
+        // The whole end-of-draft sequence, in a load-bearing order: cancel the clock, flush the
+        // rosters to Postgres, then tear the draft-time Redis/snapshot data down. This used to be
+        // split across DraftManager.EndDraft (Redis clean-up) and this method (the Postgres flush);
+        // both halves live here now so no caller can run one without the other.
         public async Task EndDraft(long leagueId)
         {
             var league = await _context.GetAllLeagues().SingleOrDefaultAsync(l => leagueId == l.Leagueid)
                     ?? throw new NBAException($"Missing league with leagueId {leagueId}", ErrorCodes.DataBaseRecordNotFound);
 
-            if (league.Draftcompleted == true) return;
+            var leagueRedis = _redis.League(leagueId);
 
-            var draftedPerTeam = await _redis.League(leagueId).Draft.GetAllTeamsDraftedPlayers();
-            var teamPlayers = draftedPerTeam
-                .SelectMany(kvp => kvp.Value.Select(p => new Teamplayer { Teamid = kvp.Key, Playerid = p.PlayerId ?? 0 }))
-                .ToList();
+            // (a) Remove any pending pick deadline from the timer sorted set.
+            await leagueRedis.Draft.CancelTimer();
 
-
-            var strategy = _context.Database.CreateExecutionStrategy();
-
-            await strategy.ExecuteAsync(async () =>
+            // (b) Write the drafted rosters into Postgres — this reads DraftedPlayersPerTeam off
+            // draft:state, so it has to run before the Redis clean-up below.
+            //
+            // The Draftcompleted guard deliberately skips only this flush, not the clean-up that
+            // follows: re-inserting the Teamplayer rows would duplicate them, but the draft-time
+            // Redis keys still have to go. This matches what the old split did — DraftManager.EndDraft
+            // ran CancelTimer and the whole clean-up unconditionally and only the flush early-returned.
+            if (league.Draftcompleted != true)
             {
-                await using var tx = await _context.Database.BeginTransactionAsync();
-                try
-                {
-                    if (teamPlayers.Count > 0)
-                        await _context.AddTeamPlayerRange(teamPlayers);
+                var draftedPerTeam = await leagueRedis.Draft.GetAllTeamsDraftedPlayers();
+                var teamPlayers = draftedPerTeam?
+                    .SelectMany(kvp => kvp.Value?.Select(p => new Teamplayer { Teamid = kvp.Key, Playerid = p.PlayerId ?? 0 }) ?? [])
+                    .ToList() ?? [];
 
-                    league.Draftcompleted = true;
-                    await _context.UpdateLeague(league);
+                var strategy = _context.Database.CreateExecutionStrategy();
 
-                    await tx.CommitAsync();
-                }
-                catch
+                await strategy.ExecuteAsync(async () =>
                 {
-                    await tx.RollbackAsync();
-                    throw;
-                }
-            });
+                    await using var tx = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        if (teamPlayers.Count > 0)
+                            await _context.AddTeamPlayerRange(teamPlayers);
+
+                        league.Draftcompleted = true;
+                        await _context.UpdateLeague(league);
+
+                        await tx.CommitAsync();
+                    }
+                    catch
+                    {
+                        await tx.RollbackAsync();
+                        throw;
+                    }
+                });
+            }
+
+            // (c) The draft board, the available player pool and the per-team roster sets are
+            // draft-time scratch data; once the rosters are in Teamplayer there is nothing left to
+            // draft from.
+            var teamIds = await GetLeagueTeamIds(leagueId);
+
+            await leagueRedis.Players.DeleteDraftPlayers(teamIds ?? []);
+
+            // (d) Drop the live draft itself.
+            _ = await leagueRedis.Draft.DeleteState();
+            await leagueRedis.Draft.DeleteTeams();
+
+            // (e) And finally the durable snapshot — nothing may rehydrate a finished draft.
+            await _snapshot.DeleteAsync(leagueId);
         }
     }
 }

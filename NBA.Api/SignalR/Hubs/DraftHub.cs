@@ -14,11 +14,15 @@ namespace NBA.Api.SignalR.Hubs
     [Authorize]
     public class DraftHub(DraftManager draftManager, NbaFantasyRedis redis,
         PlayerManager playerManager,
-        DraftService draftService, IOptions<DraftOptions> draftOptions) : Hub<IDraftHubClient>
+        DraftService draftService, DraftLifecycleService lifecycle,
+        IOptions<DraftOptions> draftOptions) : Hub<IDraftHubClient>
     {
         private readonly DraftManager _draftManager = draftManager;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly DraftService _draftService = draftService;
+        // DraftService is still needed for CheckDraftCompleted/DraftOrder; the board projection and
+        // the end-of-draft sequence come straight off DraftLifecycleService.
+        private readonly DraftLifecycleService _lifecycle = lifecycle;
         private readonly PlayerManager _playerManager = playerManager;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
 
@@ -51,7 +55,7 @@ namespace NBA.Api.SignalR.Hubs
             var state = await _draftManager.GetDraftState(leagueId) ?? await _draftManager.CreateDraftState(leagueId);
 
             var draft = await _draftService.DraftOrder(leagueId);
-            state.DraftBoardTeams = _draftService.PrepareDraftBoard(draft);
+            state.DraftBoardTeams = _lifecycle.PrepareDraftBoard(draft);
 
             state.DraftPlayers = await _playerManager.GetPlayersOnDraftBoard(leagueId);
 
@@ -91,7 +95,7 @@ namespace NBA.Api.SignalR.Hubs
             // and GetPlayersOnDraftBoard would rebuild the very Redis key EndDraft is about to delete.
             if (state.DraftStatus == (int)DraftStatus.DraftEnded)
             {
-                await _draftManager.EndDraft(leagueId);
+                await _lifecycle.EndDraft(leagueId);
                 //has to be cleared after the end draft because this drafted players per team has to be saved in postrgres
                 state.DraftedPlayersPerTeam = null;
                 await Clients.Group(leagueId.ToString()).UpdateDraftState(state);

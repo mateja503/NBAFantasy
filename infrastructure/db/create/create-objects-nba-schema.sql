@@ -147,7 +147,8 @@ CREATE TABLE nba.teamplayer (
     playerid BIGINT NOT NULL,
     teamid BIGINT NOT NULL,
     CONSTRAINT fk_teamplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
-    CONSTRAINT fk_teamplayer_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid)
+    CONSTRAINT fk_teamplayer_team FOREIGN KEY (teamid) REFERENCES nba.team(teamid),
+    CONSTRAINT uq_teamplayer_team_player UNIQUE (teamid, playerid)
 );
 
 
@@ -221,8 +222,7 @@ CREATE INDEX IF NOT EXISTS idx_team_userid ON nba.team(userid);
 CREATE INDEX IF NOT EXISTS idx_applicationuser_username ON nba.applicationuser(username);
 -- joins / league rosters: team.leagueid
 CREATE INDEX IF NOT EXISTS idx_team_leagueid ON nba.team(leagueid);
--- draft / trade: teamplayer by team and by player
-CREATE INDEX IF NOT EXISTS idx_teamplayer_teamid ON nba.teamplayer(teamid);
+-- draft / trade: teamplayer by player
 CREATE INDEX IF NOT EXISTS idx_teamplayer_playerid ON nba.teamplayer(playerid);
 -- free agency / league rosters: leagueplayer by league and by player
 CREATE INDEX IF NOT EXISTS idx_leagueplayer_leagueid ON nba.leagueplayer(leagueid);

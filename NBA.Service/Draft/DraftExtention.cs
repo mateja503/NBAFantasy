@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace NBA.Service.Draft
 {
@@ -14,8 +14,8 @@ namespace NBA.Service.Draft
             // Redis-only coordinators (rule 4).
             services.AddScoped<DraftManager>();
             services.AddScoped<DraftOrderManager>();
-            // Shared by DraftManager and DraftService: the draft-board projection, the end-of-draft
-            // flush to Postgres and the league/team lookups.
+            // Owns the end-of-draft sequence outright (Postgres flush + Redis/snapshot tear-down) and
+            // the draft-board projection; DraftManager and the API callers take it as a dependency.
             services.AddScoped<DraftLifecycleService>();
             // Postgres durability mirror for the live Redis draft.
             services.AddScoped<DraftSnapshotService>();
