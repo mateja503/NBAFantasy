@@ -47,16 +47,6 @@ These are mandatory conventions for this repository.
   Postgres (in containers) and launches the API. It also serves the Aspire dashboard. Docker must be running.
 - **Build:** `dotnet build NBAFantasy.slnx`
 - **Test (all):** `dotnet test NBA.Tests/NBA.Tests.csproj`
-- **Test (single):** `dotnet test NBA.Tests/NBA.Tests.csproj --filter "FullyQualifiedName~ClassName.MethodName"`
-
-### First-time secret setup
-The AppHost reads secrets as Aspire parameters from user-secrets (on the `NBAFantasy` project). Run once:
-```
-cd NBAFantasy
-dotnet user-secrets set "Parameters:postgress-password" "<value>"
-dotnet user-secrets set "Parameters:balldontlie-apikey" "<value>"
-dotnet user-secrets set "Parameters:jwt-signing-key" "<value>"
-```
 
 ## Architecture
 
@@ -110,30 +100,11 @@ Project layering (depend downward):
 
 ## Configuration
 
-`appsettings.json` sections bind to Options POCOs (`ApplicationDefaults/Options`, wired in `Program.cs`):
-
-| Section | Options class | Key settings |
-| --- | --- | --- |
-| `ExternalClients:BallDontLie` | `BallDontLieClientOptions` | `BaseUrl`, `ApiKey`, `Per_Page` |
-| `ApplicationSettings:Draft` | `DraftOptions` | `Rounds`, `DraftPickTime` (seconds), `ShowTeamDraftBoardCount` |
-| `ApplicationSettings` | `ApplicationOptions` | `CenterLimit`, `MaxPlayersPerTeam` |
-| `Jwt` | `JwtOptions` | `Issuer`, `Audience`, `SigningKey`, `AccessTokenMinutes`, `RefreshTokenDays` |
-| `Argon2` | `Argon2Options` | `MemoryKib`, `Iterations`, `DegreeOfParallelism` |
+`appsettings.json` sections bind to Options POCOs in `ApplicationDefaults/Options`, wired up in `Program.cs`.
 
 `ApiKey`, `Jwt:SigningKey`, and the Postgres password are blank in `appsettings.json` — supplied from
 user-secrets in dev and injected by the AppHost as env vars (`ExternalClients__BallDontLie__ApiKey`,
 `Jwt__SigningKey`). `Cors:AllowedOrigins` is bound explicitly (credentials are allowed, so no wildcard).
-
-## Adding an HTTP endpoint
-
-1. Create `NBA.Api/Endpoints/XEndpoints.cs` with a `MapXEndpoints(this IEndpointRouteBuilder)` extension
-   that opens a group: `builder.MapGroup("x").WithTags("x").RequireAuthorization()` (rule 3).
-2. Map routes on that group; take services as DI parameters; map results through `EntityMappings` (rule 5).
-3. Register it under `v1` in `Program.cs` (`v1.MapXEndpoints();`).
-
-Signal failures by throwing `NBAException(message, ErrorCodes.X)` (rule 7). `GlobalExceptionHandler`
-serializes an `NBAException` to `{ ErrorMessage, ErrorCode }`; any other exception becomes a 500
-`ProblemDetails`.
 
 ## Draft runtime flow
 
