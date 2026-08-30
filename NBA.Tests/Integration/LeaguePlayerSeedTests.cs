@@ -1,10 +1,9 @@
-using ApplicationDefaults.Exceptions;
+﻿using ApplicationDefaults.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using NBA.Data.Context;
 using NBA.Data.Entities;
 using NBA.Data.Redis.Keys;
-using NBA.Service.CalculateBoxScore;
 using NBA.Service.League;
 using NBA.Service.LeaguePlayer;
 using NBA.Service.Player;
@@ -68,13 +67,13 @@ namespace NBA.Tests.Integration
                 context.Players.Add(new Player { Playerid = playerId, Name = $"Player {playerId}", Surname = "Test" });
         }
 
-        // IBallDontLieClient is passed as null: ResolvePlayerPoolIds is the only PlayerService member
-        // exercised here and it touches neither the external client nor the box-score calculator.
-        private PlayerService BuildPlayerService(NbaFantasyContext context) =>
-            new(null!, context, new BoxScoreCalculationService(context), _fixture.Redis);
+        // ResolvePlayerPoolIds is all these tests exercise, and it lives on PlayerCoordinator -
+        // which takes only the two stores it reads, so nothing has to be stubbed out here.
+        private PlayerCoordinator BuildPlayerCoordinator(NbaFantasyContext context) =>
+            new(_fixture.Redis, context);
 
         private LeagueService BuildLeagueService(NbaFantasyContext context) =>
-            new(context, BuildPlayerService(context), new LeaguePlayerService(context));
+            new(context, BuildPlayerCoordinator(context), new LeaguePlayerService(context));
 
         private Task<League> CreateLeagueWithPoolAsync(NbaFantasyContext context, string leagueName) =>
             BuildLeagueService(context).CreateAsync(NewLeagueInput(leagueName));

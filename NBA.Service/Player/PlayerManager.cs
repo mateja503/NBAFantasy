@@ -17,10 +17,9 @@ using PlayerData = NBA.Data.Entities.Player;
 
 namespace NBA.Service.Player
 {
-    public class PlayerManager(NbaFantasyContext context, IOptions<JsonOptions> jsonOptions,
+    public class PlayerManager(IOptions<JsonOptions> jsonOptions,
         NbaFantasyRedis redis, PlayerService playerService)
     {
-        private readonly NbaFantasyContext _context = context;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.SerializerOptions;
         private readonly NbaFantasyRedis _redis = redis;
         private readonly PlayerService _playerService = playerService;
