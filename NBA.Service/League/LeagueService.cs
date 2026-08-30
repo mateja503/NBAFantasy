@@ -1,7 +1,9 @@
-using ApplicationDefaults.Exceptions;
+﻿using ApplicationDefaults.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using NBA.Data.Context;
 using NBA.Data.Entities;
+using NBA.Service.LeaguePlayer;
+using NBA.Service.Player;
 using TeamData = NBA.Data.Entities.Team;
 
 namespace NBA.Service.League
@@ -29,9 +31,16 @@ namespace NBA.Service.League
 
     public record JoinLeagueResult(TeamData Team, NBA.Data.Entities.League League);
 
-    public class LeagueService(NbaFantasyContext context)
+    // PlayerService and LeaguePlayerService are collaborators, not layers: both live in NBA.Service,
+    // so this is a sideways dependency and the Api -> Service -> Data direction still holds. Taking
+    // them here is what lets CreateAsync own the whole invariant - a league is a league plus its
+    // player pool - instead of leaving each caller to remember the second half.
+    public class LeagueService(NbaFantasyContext context, PlayerService playerService,
+        LeaguePlayerService leaguePlayerService)
     {
         private readonly NbaFantasyContext _context = context;
+        private readonly PlayerService _playerService = playerService;
+        private readonly LeaguePlayerService _leaguePlayerService = leaguePlayerService;
 
         private const int MaxPageSize = 100;
 
@@ -74,55 +83,143 @@ namespace NBA.Service.League
                 throw new NBAException($"Missing parametar {nameof(input.Autostart)} for league", ErrorCodes.MissingValue);
 
             var sv = input.StatsValue;
-            var newStatsValue = new Statsvalue
-            {
-                Pointsvalue = sv?.Points ?? (double)BoxScoreEvaluation.Points,
-                Assistsvalue = sv?.Assists ?? (double)BoxScoreEvaluation.Assists,
-                Reboundsvalue = sv?.Rebounds ?? (double)BoxScoreEvaluation.Rebounds,
-                Blocksvalue = sv?.Blocks ?? (double)BoxScoreEvaluation.Blocks,
-                Threepointsvaluemade = sv?.ThreePointersMade ?? (double)BoxScoreEvaluation.ThreePointsMade,
-                Threepointsvaluemissed = sv?.ThreePointersMissed ?? (double)BoxScoreEvaluation.ThreePointsMissed,
-                Fieldgoalvaluemade = sv?.FGMade ?? (double)BoxScoreEvaluation.FieldGoalMade,
-                Fieldgoalvaluemissed = sv?.FGMissed ?? (double)BoxScoreEvaluation.FieldGoalMissed,
-                Freethrowvaluemade = sv?.FTMade ?? (double)BoxScoreEvaluation.FreeThrowMade,
-                Freethrowvaluemissed = sv?.FTMissed ?? (double)BoxScoreEvaluation.FreeThrowMissed,
-                Turnoversvalue = sv?.Turnovers ?? (double)BoxScoreEvaluation.Turnovers,
-            };
 
             var year = DateTime.UtcNow.Year;
             var seasonYear = $"{year}/{year + 1}";
 
+            // Every league starts with the whole player pool available as free agents.
+            //
+            // Resolved before the first write, on purpose: an empty pool (nothing in Redis and nothing
+            // in nba.player) is the one failure this flow actually expects, and doing the read first
+            // means it throws before a league row exists rather than after one has to be undone. It is
+            // also a pure read, so it does not belong inside the transaction.
+            var playerIds = await _playerService.ResolvePlayerPoolIds();
+
             // The statsvalue and league are two separate SaveChanges calls; wrap them so a failed
             // league insert can't leave an orphaned statsvalue row behind.
-            await using var transaction = await _context.Database.BeginTransactionAsync();
-            try
-            {
-                newStatsValue = await _context.AddStatsValue(newStatsValue);
+            //
+            // Aspire's AddNpgsqlDbContext enables EnableRetryOnFailure, and a retrying execution
+            // strategy refuses a user-initiated transaction unless the whole unit runs through it:
+            // it can replay one operation, but not the others a hand-rolled transaction had already
+            // grouped with it. Without this wrapper BeginTransactionAsync throws
+            // InvalidOperationException ("...does not support user-initiated transactions"). Same
+            // shape as TradeService.ProposeAsync and DraftLifecycleService.EndDraft.
+            var strategy = _context.Database.CreateExecutionStrategy();
 
-                var newLeague = new NBA.Data.Entities.League
+            return await strategy.ExecuteAsync(async () =>
+            {
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    Name = input.LeagueName,
-                    Commissioner = input.CommissionerUserId,
-                    Seasonyear = seasonYear,
-                    Weeksforseason = input.WeeksForSeason,
-                    Transactionlimit = input.TransactionLimit,
-                    Autostart = input.Autostart,
-                    Typetransactionlimits = input.TypeTransactionLimits,
-                    Typeleague = input.LeagueType,
-                    Draftstyle = input.DraftStyle,
-                    Statsvalueid = newStatsValue.Statsvalueid
-                };
+                    // Both entities are built inside the delegate: a retry replays this whole block,
+                    // and instances the context already tracks from the failed attempt would be
+                    // re-added on the second pass.
+                    var newStatsValue = await _context.AddStatsValue(new Statsvalue
+                    {
+                        Pointsvalue = sv?.Points ?? (double)BoxScoreEvaluation.Points,
+                        Assistsvalue = sv?.Assists ?? (double)BoxScoreEvaluation.Assists,
+                        Reboundsvalue = sv?.Rebounds ?? (double)BoxScoreEvaluation.Rebounds,
+                        Blocksvalue = sv?.Blocks ?? (double)BoxScoreEvaluation.Blocks,
+                        Threepointsvaluemade = sv?.ThreePointersMade ?? (double)BoxScoreEvaluation.ThreePointsMade,
+                        Threepointsvaluemissed = sv?.ThreePointersMissed ?? (double)BoxScoreEvaluation.ThreePointsMissed,
+                        Fieldgoalvaluemade = sv?.FGMade ?? (double)BoxScoreEvaluation.FieldGoalMade,
+                        Fieldgoalvaluemissed = sv?.FGMissed ?? (double)BoxScoreEvaluation.FieldGoalMissed,
+                        Freethrowvaluemade = sv?.FTMade ?? (double)BoxScoreEvaluation.FreeThrowMade,
+                        Freethrowvaluemissed = sv?.FTMissed ?? (double)BoxScoreEvaluation.FreeThrowMissed,
+                        Turnoversvalue = sv?.Turnovers ?? (double)BoxScoreEvaluation.Turnovers,
+                    });
 
-                var created = await _context.AddLeague(newLeague);
+                    var created = await _context.AddLeague(new NBA.Data.Entities.League
+                    {
+                        Name = input.LeagueName,
+                        Commissioner = input.CommissionerUserId,
+                        Seasonyear = seasonYear,
+                        Weeksforseason = input.WeeksForSeason,
+                        Transactionlimit = input.TransactionLimit,
+                        Autostart = input.Autostart,
+                        Typetransactionlimits = input.TypeTransactionLimits,
+                        Typeleague = input.LeagueType,
+                        Draftstyle = input.DraftStyle,
+                        Statsvalueid = newStatsValue.Statsvalueid
+                    });
 
-                await transaction.CommitAsync();
-                return created;
-            }
-            catch
+                    // Seeded inside the same transaction as the league itself: a committed league with
+                    // no leagueplayer rows is unusable and ToggleFreeAgencyStatus can never repair it,
+                    // so the fan-out commits with the league or rolls back with it. This is why the
+                    // caller no longer needs a compensating delete.
+                    _ = await _leaguePlayerService.SeedLeaguePool(created.Leagueid, playerIds);
+
+                    await transaction.CommitAsync();
+                    return created;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
+        }
+
+        // Deletes a league and everything that only exists because of it. CreateAsync is atomic now,
+        // so this is no longer a compensating step on that path - it is the ordinary teardown, and the
+        // safety net for a league that was left behind before the seed moved into the transaction.
+        //
+        // Order matters: leagueplayer rows reference the league and the league references the
+        // statsvalue, so the children go first or the foreign keys reject the delete. Wrapped in a
+        // transaction because it is three SaveChanges calls and a partial undo is worse than none.
+        public async Task DeleteAsync(long leagueId)
+        {
+            // Same reason as CreateAsync: the retrying Npgsql strategy rejects a hand-rolled
+            // transaction unless the whole unit is handed to it.
+            var strategy = _context.Database.CreateExecutionStrategy();
+
+            await strategy.ExecuteAsync(async () =>
             {
-                await transaction.RollbackAsync();
-                throw;
-            }
+                // Read inside the delegate: a retry replays this whole block, and rows fetched
+                // before the first attempt would be stale - or already removed by it.
+                var league = await _context.GetAllLeagues()
+                    .Where(l => l.Leagueid == leagueId)
+                    .SingleOrDefaultAsync();
+
+                // Already gone - nothing to undo, and the caller is on an error path either way.
+                if (league is null)
+                    return;
+
+                await using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // Whatever the failed seed managed to insert before it threw.
+                    var leaguePlayers = await _context.GetAllLeaguePlayers()
+                        .Where(lp => lp.Leagueid == leagueId)
+                        .ToListAsync();
+
+                    if (leaguePlayers.Count > 0)
+                        _ = await _context.DeleteLeaguePlayersRange(leaguePlayers);
+
+                    var statsValueId = league.Statsvalueid;
+
+                    _ = await _context.DeleteLeague(league);
+
+                    // The statsvalue is owned by the league (one-to-one, created alongside it), so it
+                    // would be orphaned if left behind.
+                    if (statsValueId.HasValue)
+                    {
+                        var statsValue = await _context.GetAllStatsValues()
+                            .Where(sv => sv.Statsvalueid == statsValueId.Value)
+                            .SingleOrDefaultAsync();
+
+                        if (statsValue is not null)
+                            _ = await _context.DeleteStatsValue(statsValue);
+                    }
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            });
         }
 
         public async Task<JoinLeagueResult> JoinAsync(JoinLeagueInput input)

@@ -30,7 +30,8 @@ namespace ApplicationDefaults.Exceptions
         public const string UsernameAlreadyExists = "5656-USERNAMEALREADYEXISTS";
         public const string DraftAlreadyStarted = "5656-DRAFTALREADYSTARTED";
         public const string DraftNotStarted = "5656-DRAFTNOTSTARTED";
-        public const string DraftCompleted = "5656-DRAFTCOMPLETED";  
+        public const string DraftCompleted = "5656-DRAFTCOMPLETED";
+        public const string PlayerPoolEmpty = "5656-PLAYERPOOLEMPTY";  
 
 
         #endregion

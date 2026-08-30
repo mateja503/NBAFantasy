@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using NBA.Api.Authentication;
 using NBA.Api.DTOs;
@@ -29,7 +29,10 @@ namespace NBA.Api.Endpoints
                 return Results.Ok(result);
             });
 
-            league.MapPost("/add", async (LeagueRequest? request, ClaimsPrincipal user, LeagueService leagueService) =>
+            // Creating the league also seeds its player pool; both live inside LeagueService.CreateAsync
+            // and share one transaction, so there is nothing for the handler to sequence or undo.
+            league.MapPost("/add", async (LeagueRequest? request, ClaimsPrincipal user,
+                LeagueService leagueService) =>
             {
                 var input = new CreateLeagueInput(
                     user.GetUserId(),
@@ -54,6 +57,7 @@ namespace NBA.Api.Endpoints
                         request.StatsValue.Turnovers));
 
                 var created = await leagueService.CreateAsync(input);
+
                 return Results.Ok(created.ToLeagueDto());
             });
 

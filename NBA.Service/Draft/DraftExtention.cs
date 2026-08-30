@@ -13,7 +13,7 @@ namespace NBA.Service.Draft
             services.AddScoped<DraftService>();
             // Redis-only coordinators (rule 4).
             services.AddScoped<DraftManager>();
-            services.AddScoped<DraftOrderManager>();
+         
             // Owns the end-of-draft sequence outright (Postgres flush + Redis/snapshot tear-down) and
             // the draft-board projection; DraftManager and the API callers take it as a dependency.
             services.AddScoped<DraftLifecycleService>();

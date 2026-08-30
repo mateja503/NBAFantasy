@@ -138,6 +138,8 @@ public partial class NbaFantasyContext : DbContext
 
             entity.HasIndex(e => e.Playerid, "idx_leagueplayer_playerid");
 
+            entity.HasIndex(e => new { e.Leagueid, e.Playerid }, "uq_leagueplayer_league_player").IsUnique();
+
             entity.Property(e => e.Leagueplayerid)
                 .UseIdentityAlwaysColumn()
                 .HasColumnName("leagueplayerid");
@@ -375,7 +377,7 @@ public partial class NbaFantasyContext : DbContext
 
             entity.HasIndex(e => e.Playerid, "idx_teamplayer_playerid");
 
-            entity.HasIndex(e => e.Teamid, "idx_teamplayer_teamid");
+            entity.HasIndex(e => new { e.Teamid, e.Playerid }, "uq_teamplayer_team_player").IsUnique();
 
             entity.Property(e => e.Teamplayerid)
                 .UseIdentityAlwaysColumn()

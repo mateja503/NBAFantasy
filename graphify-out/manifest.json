@@ -6,10 +6,10 @@
     "semantic_hash": "46b0780bd56312ea2d1bab391f179e89"
   },
   "ApplicationDefaults/Exceptions/ErrorCodes.cs": {
-    "mtime": 1787921559.2263722,
-    "seen": 1788002034.0806866,
-    "ast_hash": "a1d71f8991e5054c610170ef53526078",
-    "semantic_hash": "a1d71f8991e5054c610170ef53526078"
+    "mtime": 1788098024.872371,
+    "seen": 1788098231.2749453,
+    "ast_hash": "e051128c9d8de34841d75def698c3c4e",
+    "semantic_hash": ""
   },
   "ApplicationDefaults/Exceptions/ErrorResponse.cs": {
     "mtime": 1785772892.2870612,
@@ -240,10 +240,10 @@
     "semantic_hash": "36074dfb6ecb8919ac5a3826012ee256"
   },
   "NBA.Api/Endpoints/LeagueEndpoints.cs": {
-    "mtime": 1785761854.949947,
-    "seen": 1788002034.0807328,
-    "ast_hash": "ce7ecd14fc45101c5875448de7cc223f",
-    "semantic_hash": "ce7ecd14fc45101c5875448de7cc223f"
+    "mtime": 1788101629.7908645,
+    "seen": 1788101746.4883296,
+    "ast_hash": "befb5c18f3e9d83bc82e3b2d0522888a",
+    "semantic_hash": ""
   },
   "NBA.Api/Endpoints/PlayerEndpoints.cs": {
     "mtime": 1785759912.1453524,
@@ -318,9 +318,9 @@
     "semantic_hash": "7957d16c3a788f929a3e70266683cc2d"
   },
   "NBA.Api/Program.cs": {
-    "mtime": 1788020236.9989612,
-    "seen": 1788091767.379088,
-    "ast_hash": "5d59856368a1e031a62c9bbc1a995d46",
+    "mtime": 1788103134.2109654,
+    "seen": 1788103153.0260174,
+    "ast_hash": "f07ea9d593aa5faf0fa20c4c9615aba9",
     "semantic_hash": ""
   },
   "NBA.Api/Properties/launchSettings.json": {
@@ -462,16 +462,16 @@
     "semantic_hash": "834005bfe6ccc9ac06f7a60380674a67"
   },
   "NBA.Data/Context/NbaFantasyContext.cs": {
-    "mtime": 1787921559.240905,
-    "seen": 1788002034.0807743,
-    "ast_hash": "cbb877631445523c942e23fcf2f4d3d1",
-    "semantic_hash": "cbb877631445523c942e23fcf2f4d3d1"
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.306711,
+    "ast_hash": "4181b677fd8b74d8d24f3e0c5bf7f9fa",
+    "semantic_hash": ""
   },
   "NBA.Data/Context/NbaFantasyContextExt.cs": {
-    "mtime": 1786817489.6026278,
-    "seen": 1788002034.0807757,
-    "ast_hash": "a5e3bb1b20b292082c6b2147dd493491",
-    "semantic_hash": "a5e3bb1b20b292082c6b2147dd493491"
+    "mtime": 1788102272.1872196,
+    "seen": 1788102321.434544,
+    "ast_hash": "170d907577049fd6f64553dd8419b32b",
+    "semantic_hash": ""
   },
   "NBA.Data/Context/NbaFantasyRedis.cs": {
     "mtime": 1786817489.6026278,
@@ -480,104 +480,104 @@
     "semantic_hash": "d2555e709fea1febd900569ced598e39"
   },
   "NBA.Data/Entities/Applicationuser.cs": {
-    "mtime": 1787497738.955263,
-    "seen": 1788002034.080778,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.3067176,
     "ast_hash": "cf23c1eedd23cb603304c2813c71803f",
     "semantic_hash": "cf23c1eedd23cb603304c2813c71803f"
   },
   "NBA.Data/Entities/Draftsnapshot.cs": {
-    "mtime": 1787497738.958673,
-    "seen": 1788002034.080779,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.3067198,
     "ast_hash": "2adb0cc3939c96803ed91ae878d91795",
     "semantic_hash": "2adb0cc3939c96803ed91ae878d91795"
   },
   "NBA.Data/Entities/League.cs": {
-    "mtime": 1787497738.9615793,
-    "seen": 1788002034.08078,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.3067212,
     "ast_hash": "80bd4cdd1ec846bb40eeeb9b33897091",
     "semantic_hash": "80bd4cdd1ec846bb40eeeb9b33897091"
   },
   "NBA.Data/Entities/Leagueplayer.cs": {
-    "mtime": 1787497738.9639778,
-    "seen": 1788002034.0807812,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.306723,
     "ast_hash": "cef75bf9f90b910d48be1fc1abe3c1c7",
     "semantic_hash": "cef75bf9f90b910d48be1fc1abe3c1c7"
   },
   "NBA.Data/Entities/Player.cs": {
-    "mtime": 1787497738.9675517,
-    "seen": 1788002034.0807822,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.3067245,
     "ast_hash": "337b7e5137ccbceffebeaf4c166f4e98",
     "semantic_hash": "337b7e5137ccbceffebeaf4c166f4e98"
   },
   "NBA.Data/Entities/Playermemento.cs": {
-    "mtime": 1787497738.9688861,
-    "seen": 1788002034.0807848,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.306726,
     "ast_hash": "b1477a0a014ac6d51382dd3d22503aa0",
     "semantic_hash": "b1477a0a014ac6d51382dd3d22503aa0"
   },
   "NBA.Data/Entities/Playoff.cs": {
-    "mtime": 1787497738.9719193,
-    "seen": 1788002034.080786,
+    "mtime": 1788098370.356643,
+    "seen": 1788098660.3067272,
     "ast_hash": "6ecaf07a1e774b92545cbf40bc2c5a72",
     "semantic_hash": "6ecaf07a1e774b92545cbf40bc2c5a72"
   },
   "NBA.Data/Entities/Playoffbracket.cs": {
-    "mtime": 1787497738.9731283,
-    "seen": 1788002034.080787,
+    "mtime": 1788098370.3647313,
+    "seen": 1788098660.3067284,
     "ast_hash": "dfabfbf789335a92bc5ffc0a0fa2cf0c",
     "semantic_hash": "dfabfbf789335a92bc5ffc0a0fa2cf0c"
   },
   "NBA.Data/Entities/Statsvalue.cs": {
-    "mtime": 1787497738.9882572,
-    "seen": 1788002034.080788,
+    "mtime": 1788098370.3647313,
+    "seen": 1788098660.3067298,
     "ast_hash": "a6740089cf91593d2db81c08e1f166cc",
     "semantic_hash": "a6740089cf91593d2db81c08e1f166cc"
   },
   "NBA.Data/Entities/Team.cs": {
-    "mtime": 1787497738.990134,
-    "seen": 1788002034.080789,
+    "mtime": 1788098370.3647313,
+    "seen": 1788098660.3067312,
     "ast_hash": "b667e86fe10d0b6c9eb499c00573cb55",
     "semantic_hash": "b667e86fe10d0b6c9eb499c00573cb55"
   },
   "NBA.Data/Entities/Teamplayer.cs": {
-    "mtime": 1787497738.9912643,
-    "seen": 1788002034.0807903,
+    "mtime": 1788098370.3647313,
+    "seen": 1788098660.3067327,
     "ast_hash": "057cb4c82867b9df68021f8d904dba36",
     "semantic_hash": "057cb4c82867b9df68021f8d904dba36"
   },
   "NBA.Data/Entities/Trade.cs": {
-    "mtime": 1787921559.2438667,
-    "seen": 1788002034.0807912,
+    "mtime": 1788098370.3647313,
+    "seen": 1788098660.3067338,
     "ast_hash": "37276b5362d7941a8d87bb3bac0a23df",
     "semantic_hash": "37276b5362d7941a8d87bb3bac0a23df"
   },
   "NBA.Data/Entities/Transaction.cs": {
-    "mtime": 1787497738.9940858,
-    "seen": 1788002034.0807924,
+    "mtime": 1788098370.3667984,
+    "seen": 1788098660.306735,
     "ast_hash": "a3c29151f16117e8b2c57efe297e71a9",
     "semantic_hash": "a3c29151f16117e8b2c57efe297e71a9"
   },
   "NBA.Data/Entities/Transactionleague.cs": {
-    "mtime": 1787497738.996616,
-    "seen": 1788002034.0807934,
+    "mtime": 1788098370.3667984,
+    "seen": 1788098660.3067365,
     "ast_hash": "d6579fffbf60680cb16459b33889ba30",
     "semantic_hash": "d6579fffbf60680cb16459b33889ba30"
   },
   "NBA.Data/Entities/Trophie.cs": {
-    "mtime": 1787497738.997998,
-    "seen": 1788002034.0807943,
+    "mtime": 1788098370.3667984,
+    "seen": 1788098660.306738,
     "ast_hash": "dc2cdd53d27443a847cb287274a84824",
     "semantic_hash": "dc2cdd53d27443a847cb287274a84824"
   },
   "NBA.Data/Entities/Userleague.cs": {
-    "mtime": 1787497739.0069025,
-    "seen": 1788002034.0807953,
+    "mtime": 1788098370.3675961,
+    "seen": 1788098660.306739,
     "ast_hash": "cc29790dbb698baea769378d25b5b150",
     "semantic_hash": "cc29790dbb698baea769378d25b5b150"
   },
   "NBA.Data/Entities/Usertrophie.cs": {
-    "mtime": 1787497739.010723,
-    "seen": 1788002034.0807967,
+    "mtime": 1788098370.3675961,
+    "seen": 1788098660.3067405,
     "ast_hash": "d90e96ab51be706d24c0f87a425e7322",
     "semantic_hash": "d90e96ab51be706d24c0f87a425e7322"
   },
@@ -678,10 +678,10 @@
     "semantic_hash": "d210772237d4e88a199bbabb512f37d7"
   },
   "NBA.Data/Redis/Operations/PlayerRedisOperations.cs": {
-    "mtime": 1787925441.9904454,
-    "seen": 1788002034.0808148,
-    "ast_hash": "2bb3e19a125eb9aacc1d763f4c879f6b",
-    "semantic_hash": "2bb3e19a125eb9aacc1d763f4c879f6b"
+    "mtime": 1788098019.399817,
+    "seen": 1788098231.275194,
+    "ast_hash": "69a702603c7b451d99f9cd21ef3d3737",
+    "semantic_hash": ""
   },
   "NBA.Data/Redis/Operations/TradeRedisOperations.cs": {
     "mtime": 1788020237.0022845,
@@ -774,9 +774,9 @@
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftService.cs": {
-    "mtime": 1788093855.4990587,
-    "seen": 1788095562.3173854,
-    "ast_hash": "3db7d220249e7c8e5e9ee665b718f2fa",
+    "mtime": 1788100967.0290804,
+    "seen": 1788101152.523517,
+    "ast_hash": "3bb919134c3c94addc559a2dcf30b25e",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftSnapshotService.cs": {
@@ -786,10 +786,10 @@
     "semantic_hash": "0696c2848261c8f87d06c24d586b872c"
   },
   "NBA.Service/FreeAgency/FreeAgencyService.cs": {
-    "mtime": 1788019656.8155384,
-    "seen": 1788091767.379176,
-    "ast_hash": "4ed47d8a939216ad31b97f2d8ce2c426",
-    "semantic_hash": "4ed47d8a939216ad31b97f2d8ce2c426"
+    "mtime": 1788103517.533388,
+    "seen": 1788104143.6360958,
+    "ast_hash": "f581e5f582290f5b82a59f28ba3f4613",
+    "semantic_hash": ""
   },
   "NBA.Service/Game/GameManager.cs": {
     "mtime": 1786281964.1855319,
@@ -804,10 +804,10 @@
     "semantic_hash": "c3fad262dbfc1b2301273f3938972ba4"
   },
   "NBA.Service/League/LeagueService.cs": {
-    "mtime": 1788000801.7826676,
-    "seen": 1788002034.0808377,
-    "ast_hash": "e01fc55f18aa1dd5ba6bd8921cde48a1",
-    "semantic_hash": "e01fc55f18aa1dd5ba6bd8921cde48a1"
+    "mtime": 1788101610.413731,
+    "seen": 1788101746.4884458,
+    "ast_hash": "26b7e51dd7ac2bb35e783944fdcf104c",
+    "semantic_hash": ""
   },
   "NBA.Service/NBA.Service.csproj": {
     "mtime": 1788000639.6925285,
@@ -834,10 +834,10 @@
     "semantic_hash": "ab1ff9fc1aa919e11c42a89627af7561"
   },
   "NBA.Service/Player/PlayerService.cs": {
-    "mtime": 1788010391.4305856,
-    "seen": 1788012671.5000165,
-    "ast_hash": "836fb8f2fbb4fa203507048506beef17",
-    "semantic_hash": "836fb8f2fbb4fa203507048506beef17"
+    "mtime": 1788098547.5323484,
+    "seen": 1788098660.30681,
+    "ast_hash": "c1b0cda3256a9a47150613d2685bff3d",
+    "semantic_hash": ""
   },
   "NBA.Service/Roster/RosterValidator.cs": {
     "mtime": 1788000614.133129,
@@ -912,9 +912,9 @@
     "semantic_hash": "4a4b2539f7d9e6d21d1967ea17072219"
   },
   "NBA.Tests/Integration/DraftEndDraftTests.cs": {
-    "mtime": 1788093855.5030947,
-    "seen": 1788095562.317417,
-    "ast_hash": "0f1e35baac843f88009f82cf27327a42",
+    "mtime": 1788102180.452528,
+    "seen": 1788102321.4346604,
+    "ast_hash": "e8d8c1b319d649d621fee286501da137",
     "semantic_hash": ""
   },
   "NBA.Tests/Integration/TradeHubFixture.cs": {
@@ -996,9 +996,9 @@
     "semantic_hash": "c541fcd64b809709c319c475852cff5d"
   },
   "infrastructure/db/create/create-objects-nba-schema.sql": {
-    "mtime": 1788093855.5607214,
-    "seen": 1788095562.317436,
-    "ast_hash": "11b772bb54e3528f0eec3cc2fcdb8e73",
+    "mtime": 1788098044.4672768,
+    "seen": 1788098231.2753048,
+    "ast_hash": "cfb67ee669f3ce8c7780ee51d43a9d8c",
     "semantic_hash": ""
   },
   "infrastructure/db/seed/seed-applicationusers.sql": {
@@ -1050,21 +1050,15 @@
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftLifecycleService.cs": {
-    "mtime": 1788093855.4877641,
-    "seen": 1788095562.317382,
-    "ast_hash": "ff68b7c7495b69accabe75dc16d15995",
-    "semantic_hash": ""
-  },
-  "NBA.Service/Draft/DraftOrderManager.cs": {
-    "mtime": 1788010110.4124146,
-    "seen": 1788012671.5000038,
-    "ast_hash": "d0872b06859362ca75859f690c4ac314",
+    "mtime": 1788102137.2275212,
+    "seen": 1788102321.434612,
+    "ast_hash": "3f8371e9cda7d0c396e7fbd18b434c55",
     "semantic_hash": ""
   },
   "NBA.Service/Draft/DraftExtention.cs": {
-    "mtime": 1788093855.485706,
-    "seen": 1788095562.3173802,
-    "ast_hash": "403543a2bda3e266723993aa716d5a96",
+    "mtime": 1788101037.0539017,
+    "seen": 1788101152.5235102,
+    "ast_hash": "603908cc7cfacf3546b42d1a85be8177",
     "semantic_hash": ""
   },
   "NBA.Service/Trade/ITradeOrchestrator.cs": {
@@ -1119,6 +1113,48 @@
     "mtime": 1788093955.9728422,
     "seen": 1788095562.3174455,
     "ast_hash": "d565a2684e218efb346decc9fcd7634f",
+    "semantic_hash": ""
+  },
+  "NBA.Tests/Integration/LeaguePlayerSeedTests.cs": {
+    "mtime": 1788101629.8002384,
+    "seen": 1788101746.488474,
+    "ast_hash": "c4938d422a22d310237bf3c563e64c4a",
+    "semantic_hash": ""
+  },
+  "graphify-out/memory/query_20260830_132917_tell_me_how_individual_players_are_stored_in_redis.md": {
+    "mtime": 1788096557.3607821,
+    "seen": 1788098231.2753236,
+    "ast_hash": "2d62f547cfe98a6699c7865227d6ac72",
+    "semantic_hash": ""
+  },
+  "NBA.Service/LeaguePlayer/LeaguePlayerService.cs": {
+    "mtime": 1788098779.5792382,
+    "seen": 1788098868.7644572,
+    "ast_hash": "2156537fc85624f5dd0d96d038edc45a",
+    "semantic_hash": ""
+  },
+  "NBA.Service/LeaguePlayer/LeaguePlayerExtention.cs": {
+    "mtime": 1788098972.3965268,
+    "seen": 1788099036.0169613,
+    "ast_hash": "0720f3fe35732e22f2ff61a09cba9444",
+    "semantic_hash": ""
+  },
+  "NBA.Api/Endpoints/FreeAgencyEndpoints.cs": {
+    "mtime": 1788103000.8208578,
+    "seen": 1788103022.4000225,
+    "ast_hash": "67aa433019cf4768aaa2d2ba962fc019",
+    "semantic_hash": ""
+  },
+  "NBA.Api/Requests/FreeAgency/FreeAgencyPickUpRequest.cs": {
+    "mtime": 1788103000.767382,
+    "seen": 1788103022.4000556,
+    "ast_hash": "243fd348343c4f0dc30c2e21ae9cd874",
+    "semantic_hash": ""
+  },
+  "NBA.Service/FreeAgency/FreeAgencyExtention.cs": {
+    "mtime": 1788103134.1538956,
+    "seen": 1788103153.0262227,
+    "ast_hash": "80e843a5d3e82c85287668d878534d17",
     "semantic_hash": ""
   }
 }

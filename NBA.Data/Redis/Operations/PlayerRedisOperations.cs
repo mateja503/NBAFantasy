@@ -52,6 +52,15 @@ namespace NBA.Data.Redis.Operations
             return players;
         }
 
+        // Ids only - league-pool seeding needs the membership of the master set, not the
+        // player payloads, so this skips the per-player StringGet + deserialize that
+        // GetAllPlayers does.
+        public async Task<List<long>> GetAllPlayerIds()
+        {
+            var members = await _redisDb.SetMembersAsync(RedisKeys.GetMasterPlayerKey());
+            return members.Length == 0 ? [] : members.Select(m => (long)m).ToList();
+        }
+
         public async Task<PlayerShort> SetPlayer(Player player)
         {
             var rediKey = RedisKeys.GetPlayerKey(player.Playerid);

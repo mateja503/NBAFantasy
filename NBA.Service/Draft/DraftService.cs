@@ -20,13 +20,13 @@ namespace NBA.Service.Draft
 {
     public class DraftService(NbaFantasyContext context, IOptions<DraftOptions> draftOptions,
         IOptions<ApplicationOptions> appOptions, IOptions<JsonOptions> jsonOptions,
-        DraftOrderManager draftOrder, DraftSnapshotService snapshot, RosterValidator rosterValidator)
+        DraftLifecycleService draftLifecycle, DraftSnapshotService snapshot, RosterValidator rosterValidator)
     {
         private readonly NbaFantasyContext _context = context;
         private readonly DraftOptions _draftOptions = draftOptions.Value;
         private readonly ApplicationOptions _appOptions = appOptions.Value;
         private readonly JsonSerializerOptions _jsonOptions = jsonOptions.Value.JsonSerializerOptions;
-        private readonly DraftOrderManager _draftOrder = draftOrder;
+        private readonly DraftLifecycleService _draftLifecycle = draftLifecycle;
         private readonly DraftSnapshotService _snapshot = snapshot;
         private readonly RosterValidator _rosterValidator = rosterValidator;
         //private readonly AuctionListener auctionDraftListener = _auctionDraftListener;
@@ -37,7 +37,7 @@ namespace NBA.Service.Draft
             // Without this, a Redis flush mid-draft would fall through and reshuffle the draft order.
             await _snapshot.EnsureRehydratedAsync(leagueId);
 
-            var draftTeams = await _draftOrder.GetTeams(leagueId);
+            var draftTeams = await _draftLifecycle.GetTeams(leagueId);
 
             if (draftTeams is not null)
                 return draftTeams;
@@ -70,20 +70,20 @@ namespace NBA.Service.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await _draftOrder.SetTeams(leagueId, draft);
+                    await _draftLifecycle.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.Auction:
 
                     draft.Add(1, new Queue<TeamDraftBoard>(teams));
-                    await _draftOrder.SetTeams(leagueId, draft);
+                    await _draftLifecycle.SetTeams(leagueId, draft);
                     return draft;
                 case (long)DraftType.Linear:
 
                     for (var i = 1; i <= _draftOptions.Rounds; i++)
                         draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
 
-                    await _draftOrder.SetTeams(leagueId, draft);
+                    await _draftLifecycle.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.RRR:
@@ -93,12 +93,12 @@ namespace NBA.Service.Draft
                             .Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ }).Reverse()));
                         else draft.Add(i, new Queue<TeamDraftBoard>(teams.Select(u => new TeamDraftBoard { TeamId = u.TeamId, TeamName = u.TeamName, Pick = pick++ })));
                     }
-                    await _draftOrder.SetTeams(leagueId, draft);
+                    await _draftLifecycle.SetTeams(leagueId, draft);
                     return draft;
 
                 case (long)DraftType.Offline:
                     draft.Add(0, new Queue<TeamDraftBoard>(teams));
-                    await _draftOrder.SetTeams(leagueId, draft);
+                    await _draftLifecycle.SetTeams(leagueId, draft);
                     return draft;
                 default:
                     throw new NBAException("Draft Type does not exist", ErrorCodes.EnumTypeDoesNotExist);

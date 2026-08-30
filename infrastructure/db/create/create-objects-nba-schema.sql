@@ -1,4 +1,4 @@
-DROP SCHEMA IF EXISTS nba CASCADE;
+﻿DROP SCHEMA IF EXISTS nba CASCADE;
 CREATE SCHEMA nba;
 
 CREATE TABLE nba.playermemento (
@@ -83,7 +83,10 @@ CREATE TABLE nba.leagueplayer (
     leagueid BIGINT NOT NULL,
 	isfreeagent BOOLEAN NOT NULL DEFAULT TRUE,
     CONSTRAINT fk_leagueplayer_player FOREIGN KEY (playerid) REFERENCES nba.player(playerid),
-    CONSTRAINT fk_leagueplayer_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid)
+    CONSTRAINT fk_leagueplayer_league FOREIGN KEY (leagueid) REFERENCES nba.league(leagueid),
+    -- One row per player per league. Without this a retried or double-invoked seed would build a
+    -- second pool for the same league, and ToggleFreeAgencyStatus would flip both rows.
+    CONSTRAINT uq_leagueplayer_league_player UNIQUE (leagueid, playerid)
 );
 
 CREATE TABLE nba.playoff (
