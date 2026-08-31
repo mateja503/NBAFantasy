@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T16:49:21.403077+00:00",
+  "generated_at": "2026-08-31T04:16:39.188468+00:00",
   "nodes": {
     "nba_data_redis_entities_playershort_nba_data_redis_entities_playershort": {
       "code_fingerprint": "9fba4776164543fc94431ad2de89c0fb4c1937dc742849c12bcd2d39866e642a",
@@ -12,7 +12,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99679505,
+      "score": 0.98586306,
       "source_file": "NBA.Data/Redis/Entities/PlayerShort.cs",
       "status": "tentative",
       "uses": 1
@@ -28,7 +28,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99679505,
+      "score": 0.98586306,
       "source_file": "NBA.Data/Redis/Operations/PlayerRedisOperations.cs",
       "status": "tentative",
       "uses": 1
@@ -44,7 +44,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99679505,
+      "score": 0.98586306,
       "source_file": "NBA.Data/Redis/RedisSerializer.cs",
       "status": "tentative",
       "uses": 1
@@ -60,7 +60,7 @@
           "q": "Tell me how individual players are stored in redis"
         }
       ],
-      "score": 0.99679505,
+      "score": 0.98586306,
       "source_file": "NBA.Data/Redis/Scopes/LeaguePlayers.cs",
       "status": "tentative",
       "uses": 1
