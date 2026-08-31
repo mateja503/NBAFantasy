@@ -62,3 +62,9 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 graphify-out/graph.json merge=graphify
+
+# infrastructure/init.sh is bind-mounted into the Linux postgres container and exec'd there.
+# With core.autocrlf=true its shebang is checked out with a trailing carriage return, so the
+# kernel looks for an interpreter whose name ends in CR, does not find it, and initdb dies with
+# "cannot execute: required file not found". Force LF for shell scripts.
+*.sh text eol=lf
