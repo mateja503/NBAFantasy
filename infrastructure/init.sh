@@ -63,6 +63,12 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
      -c "SET search_path TO nba, public;" \
      -f "/scripts/seed/seed-teamplayers.sql"
 
+# Reads nba.teamplayer to decide who is a free agent, so it goes last.
+echo "Seeding leagueplayers..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "nbafantasydb" \
+     -c "SET search_path TO nba, public;" \
+     -f "/scripts/seed/seed-leagueplayers.sql"
+
 
 
 
