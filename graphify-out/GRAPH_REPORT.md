@@ -1,16 +1,16 @@
-# Graph Report - NBAFantasy  (2026-08-30)
+# Graph Report - NBAFantasy  (2026-08-31)
 
 ## Corpus Check
-- 195 files · ~57,137 words
+- 196 files · ~57,437 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2093 nodes · 3916 edges · 139 communities (123 shown, 16 thin omitted)
+- 2094 nodes · 3916 edges · 140 communities (124 shown, 16 thin omitted)
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 300 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `cc13e0b6`
+- Built from commit: `92f89759`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -160,16 +160,16 @@
 10. `Team` - 34 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `DraftHub` --references--> `PlayerManager`  [EXTRACTED]
-  NBA.Api/SignalR/Hubs/DraftHub.cs → NBA.Service/Player/PlayerManager.cs
-- `TeamService` --references--> `NbaFantasyContext`  [EXTRACTED]
-  NBA.Service/Team/TeamService.cs → NBA.Data/Context/NbaFantasyContext.cs
-- `AuthTokenIssuer` --references--> `NbaFantasyRedis`  [EXTRACTED]
-  NBA.Api/Authentication/AuthTokenIssuer.cs → NBA.Data/Context/NbaFantasyRedis.cs
-- `DraftTimerProcessor` --references--> `NbaFantasyRedis`  [EXTRACTED]
-  NBA.Api/Draft/DraftTimerProcessor.cs → NBA.Data/Context/NbaFantasyRedis.cs
-- `ApplicationHostedService` --references--> `NbaFantasyRedis`  [EXTRACTED]
-  NBA.Api/HostedService/ApplicationHostedService.cs → NBA.Data/Context/NbaFantasyRedis.cs
+- `DraftTimerProcessor` --references--> `DraftLifecycleService`  [EXTRACTED]
+  NBA.Api/Draft/DraftTimerProcessor.cs → NBA.Service/Draft/DraftLifecycleService.cs
+- `DraftHub` --references--> `DraftLifecycleService`  [EXTRACTED]
+  NBA.Api/SignalR/Hubs/DraftHub.cs → NBA.Service/Draft/DraftLifecycleService.cs
+- `DraftLifecycleService` --references--> `DraftOptions`  [EXTRACTED]
+  NBA.Service/Draft/DraftLifecycleService.cs → ApplicationDefaults/Options/DraftOptions.cs
+- `DraftLifecycleService` --references--> `NbaFantasyContext`  [EXTRACTED]
+  NBA.Service/Draft/DraftLifecycleService.cs → NBA.Data/Context/NbaFantasyContext.cs
+- `DraftLifecycleService` --references--> `NbaFantasyRedis`  [EXTRACTED]
+  NBA.Service/Draft/DraftLifecycleService.cs → NBA.Data/Context/NbaFantasyRedis.cs
 
 ## Import Cycles
 - None detected.
@@ -179,7 +179,7 @@
 - **Draft Timer & Deadline Coordination** — claude_drafttimerhostedservice, claude_draftredisoperations, claude_draftmanager, claude_draft_realtime [EXTRACTED 0.95]
 - **External HTTP Resilience Strategy** — claude_resilience_pipeline_rule, claude_externalclients, claude_nba_servicedefaults [INFERRED 0.85]
 
-## Communities (139 total, 16 thin omitted)
+## Communities (140 total, 16 thin omitted)
 
 ### Community 0 - ".GetAllPlayers"
 Cohesion: 0.33
@@ -642,7 +642,7 @@ Cohesion: 0.50
 Nodes (3): DateTime, AuthToken, ITokenService
 
 ## Knowledge Gaps
-- **704 isolated node(s):** `Name`, `Surname`, `Irlteamname`, `Irlteamid`, `Positions` (+699 more)
+- **704 isolated node(s):** `init.sh script`, `ErrorCodes`, `TradeStatuses`, `BoxScoreEvaluation`, `LeagueId` (+699 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -650,14 +650,14 @@ Nodes (3): DateTime, AuthToken, ITokenService
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `NbaFantasyContext` connect `NbaFantasyContext` to `.GetAllPlayers`, `NBAException`, `DraftSnapshotService`, `Playermemento`, `TradeHubFixture`, `Applicationuser`, `Team`, `DraftEndDraftTests`, `Playoff`, `Transaction`, `AuthTokenIssuer`, `.OnModelCreating`, `NBA.Data.Entities`, `Leagueplayer`, `DraftService`, `.ToggleFreeAgencyStatus`, `ApplicationHostedService`, `Draftsnapshot`, `DraftLifecycleService`, `LeaguePlayerSeedTests`, `Task`, `Userleague`, `.PerformCalculations`?**
-  _High betweenness centrality (0.169) - this node is a cross-community bridge._
+  _High betweenness centrality (0.166) - this node is a cross-community bridge._
 - **Why does `Player` connect `Player` to `EntityMappings`, `PlayerShort`, `Leagueplayer`, `NBAException`, `Playermemento`, `NBA.Data.Redis.Entities`, `NBA.Data.Context`, `Task`, `.ToggleFreeAgencyStatus`, `FreeAgencyEndpoints.cs`, `.ToPlayerDb`, `.PerformCalculations`, `NBA.Service.Player`?**
-  _High betweenness centrality (0.087) - this node is a cross-community bridge._
-- **Why does `TradeBetweenTeams` connect `TradeBetweenTeams` to `NBAException`, `RecordingTradeHubClients`, `TradeHubFixture`, `TradeRedisOperations`, `Trade`, `Recorder`, `LeagueTrades`?**
-  _High betweenness centrality (0.081) - this node is a cross-community bridge._
+  _High betweenness centrality (0.082) - this node is a cross-community bridge._
+- **Why does `NBA.Data.Redis.Entities` connect `NBA.Data.Redis.Entities` to `ExternalClients`, `GameShort`, `DraftBoardTeams`, `GameRedisOperations`, `TradeHubFixture`, `NBA.Data.Context`, `TradeRedisOperations`, `Trade`, `NBA.Api.SignalR.Clients`, `NBA.Api.Authentication`, `DraftEndDraftTests`, `NBA.Service.Player`, `TradeBetweenTeams`?**
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
 - **Are the 28 inferred relationships involving `NBAException` (e.g. with `.GetAsync()` and `.RefreshAsync()`) actually correct?**
   _`NBAException` has 28 INFERRED edges - model-reasoned connections that need verification._
-- **What connects `Name`, `Surname`, `Irlteamname` to the rest of the system?**
+- **What connects `init.sh script`, `ErrorCodes`, `TradeStatuses` to the rest of the system?**
   _704 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `DraftRedisOperations` be split into smaller, more focused modules?**
   _Cohesion score 0.08816326530612245 - nodes in this community are weakly interconnected._
